@@ -16,6 +16,8 @@ export default defineConfig({
         index: path.resolve(import.meta.dirname, "index.html"),
         react: path.resolve(import.meta.dirname, "react/index.html"),
         vanilla: path.resolve(import.meta.dirname, "vanilla/index.html"),
+        // demo/ is the gif-capture scene for scripts/record-demo.mjs —
+        // served by `pnpm dev` but deliberately not built/deployed.
       },
     },
   },
