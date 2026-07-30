@@ -211,6 +211,15 @@ const PhotoTile = () => (
   />
 );
 
+// Solid chip behind bare text sitting on the checkerboard — small grey
+// labels are illegible directly on the pattern.
+const labelChipStyle: CSSProperties = {
+  background: "white",
+  border: "1px solid #e2e8f0",
+  borderRadius: 8,
+  padding: "4px 10px",
+};
+
 const ShapeComparisonDemo = () => {
   const [gap, setGap] = useState(4);
 
@@ -221,12 +230,29 @@ const ShapeComparisonDemo = () => {
           <Cutout gap={gap} shape={shape} overlay={<StarOverlay />}>
             <PhotoTile />
           </Cutout>
-          <figcaption style={{ fontSize: 13, marginTop: 8, color: palette.textMuted }}>
+          <figcaption
+            style={{
+              ...labelChipStyle,
+              display: "inline-block",
+              fontSize: 13,
+              marginTop: 10,
+              color: palette.textMuted,
+            }}
+          >
             shape=&quot;{shape}&quot;
           </figcaption>
         </figure>
       ))}
-      <label style={{ fontSize: 13, display: "flex", gap: 8, color: palette.text }}>
+      <label
+        style={{
+          ...labelChipStyle,
+          fontSize: 13,
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          color: palette.text,
+        }}
+      >
         <span style={{ minWidth: 52, fontVariantNumeric: "tabular-nums" }}>gap: {gap}px</span>
         <input
           type="range"
