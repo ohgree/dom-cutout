@@ -45,35 +45,12 @@
           </div>
         </div>
         <div class="flex flex-col gap-2 text-sm text-slate-600">
-          <p class="text-xs font-medium tracking-wider text-slate-400 uppercase">
-            One call, live geometry
-          </p>
           <div id="hero-snippet">
             <pre class="shiki"><code>createCutout(avatar, dot, { gap: 4 })</code></pre>
           </div>
           <button id="hero-toggle" type="button" class="chip w-fit cursor-pointer">
             Toggle the dot
           </button>
-        </div>
-      </div>
-
-      <!-- Install -->
-      <div class="mt-6">
-        <div id="pm-tabs" class="mb-2 flex gap-1" role="tablist">
-          <button data-pm="npm" type="button" class="chip tab-active cursor-pointer">npm</button>
-          <button data-pm="pnpm" type="button" class="chip cursor-pointer">pnpm</button>
-          <button data-pm="yarn" type="button" class="chip cursor-pointer">yarn</button>
-        </div>
-        <div id="install-blocks">
-          <div data-pm="npm">
-            <pre class="shiki"><code>npm install dom-cutout</code></pre>
-          </div>
-          <div data-pm="pnpm" class="hidden">
-            <pre class="shiki"><code>pnpm add dom-cutout</code></pre>
-          </div>
-          <div data-pm="yarn" class="hidden">
-            <pre class="shiki"><code>yarn add dom-cutout</code></pre>
-          </div>
         </div>
       </div>
 
@@ -93,6 +70,25 @@
           <code class="font-mono text-[13px]">dom-cutout/react</code>, ref-friendly.
         </li>
       </ul>
+
+      <!-- Installation -->
+      <h2 class="mt-10 mb-3 text-lg font-semibold text-slate-900">Installation</h2>
+      <div id="pm-tabs" class="mb-2 flex gap-1" role="tablist">
+        <button data-pm="npm" type="button" class="chip tab-active cursor-pointer">npm</button>
+        <button data-pm="pnpm" type="button" class="chip cursor-pointer">pnpm</button>
+        <button data-pm="yarn" type="button" class="chip cursor-pointer">yarn</button>
+      </div>
+      <div id="install-blocks">
+        <div data-pm="npm">
+          <pre class="shiki"><code>npm install dom-cutout</code></pre>
+        </div>
+        <div data-pm="pnpm" class="hidden">
+          <pre class="shiki"><code>pnpm add dom-cutout</code></pre>
+        </div>
+        <div data-pm="yarn" class="hidden">
+          <pre class="shiki"><code>yarn add dom-cutout</code></pre>
+        </div>
+      </div>
 
       <!-- Example pages -->
       <h2 class="mt-10 mb-3 text-lg font-semibold text-slate-900">Examples</h2>
