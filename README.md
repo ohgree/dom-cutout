@@ -86,13 +86,27 @@ On each update, `dom-cutout` measures the content and overlay rects, builds a sm
 - The first paint after mount is unmasked for one frame (the mask needs a layout pass to measure). With server-rendered/static markup the window lasts until your script runs — if it matters, hide the overlay initially (e.g. `visibility: hidden` inline) and reveal it after `createCutout`, or key CSS off the `data-cutout` attribute.
 - `box` shape with a text-only overlay measures the overlay wrapper itself — wrap text in an element for accurate geometry.
 - Stroke-width compensation reads SVG attributes (`stroke-width` on the root or per element); stroke-widths set via CSS classes or inline styles don't survive the markup copy and aren't compensated.
-- Safari renders cutout edges ~1px softer than Chrome on high-DPI displays: WebKit rasterizes image masks at CSS-pixel resolution. No drop-in fix exists — the generated mask is binary vector, oversampling its intrinsic size changes nothing, compositing-layer tricks are byte-identical no-ops, and WebKit ignores SVG reference masks on HTML elements (all verified empirically). The one working alternative (wrapping content in `svg > foreignObject` and masking in SVG context) renders vector-crisp in WebKit but requires restructuring the content DOM — see Future plans.
+- Safari renders cutout edges ~1px softer than Chrome on high-DPI displays — see [Safari / WebKit](#safari--webkit) for the details and the crisp-edge workaround.
+
+## Safari / WebKit
+
+WebKit rasterizes image masks at CSS-pixel resolution, so on high-DPI displays the cutout edge is ~1px softer than in Chromium or Firefox (measured: 3 blend px vs 1 at 2×). The mask itself is fine — it's binary vector — the softness is introduced at rasterization.
+
+Verified no-ops (screenshot byte-comparison / edge measurement):
+
+- Oversampling the mask SVG's intrinsic size
+- Compositing-layer tricks (`translateZ(0)`, `will-change`, `isolation`)
+- `mask-mode: alpha` (image masks are already alpha)
+- `-webkit-mask-box-image`
+- SVG reference masks (`mask: url(#id)`) — not soft but *absent*: WebKit ignores them on HTML elements entirely
+
+**If pixel-perfect Safari edges matter, use SVG-context masking**: wrap the content in `svg > foreignObject` and apply the mask as an SVG attribute. This renders vector-crisp on every engine tested (WebKit, Chromium, Firefox), with no browser detection needed. The trade-offs: the `svg` wrapper needs explicit dimensions (foreignObject forfeits intrinsic sizing), and foreignObject constrains what the content can be (positioned descendants, form controls — quirkiest on Safari itself). A first-class opt-in mode is planned (see Future plans); until then, a hand-rolled reference lives in [`examples/lab/`](./examples/lab/index.html).
 
 ## Future plans
 
 - **CSS transform support** — read the overlay's computed transform matrix and transplant it into the generated mask, so rotated/scaled overlays stay in sync without the in-SVG `<g transform>` workaround. Stays vector and synchronous.
 - **Raster silhouettes** — a canvas-backed shape mode that cuts out whatever the overlay actually paints (`<img>` badges, emoji), plus soft/feathered halos. Additive to the SVG path, not a replacement: SVG masks stay resolution-independent and synchronous, which raster can't match for glyph overlays.
-- **SVG-context masking (opt-in)** — wrapping content in `svg > foreignObject` and applying the mask as an SVG attribute renders vector-crisp in WebKit (verified: 1 blend px vs 3 for image masks at 2×). A possible opt-in mode for consumers who need pixel-perfect Safari edges and can accept the DOM restructuring plus Safari's foreignObject quirks. Plain reference masks (`mask: url(#id)`) are not a path: WebKit ignores them on HTML elements entirely.
+- **SVG-context masking (opt-in, recommended for crisp Safari edges)** — a first-class mode for the `svg > foreignObject` approach described in [Safari / WebKit](#safari--webkit). It stays opt-in rather than becoming the default for content-compatibility reasons, not rendering ones: the vanilla API can't reparent elements it doesn't own, and a default must not constrain what the content can be. When it ships, the docs will recommend it whenever pixel-perfect Safari edges matter.
 
 ## Prior art
 
