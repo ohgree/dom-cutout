@@ -1,6 +1,5 @@
 import { Bell, Star, TriangleAlert } from "lucide-react";
 import { type CSSProperties, type ReactNode, useEffect, useState } from "react";
-import { codeToHtml } from "shiki";
 
 import { Cutout } from "dom-cutout/react";
 
@@ -57,9 +56,14 @@ const CodeBlock = ({ code }: { code: string }) => {
 
   useEffect(() => {
     let cancelled = false;
-    codeToHtml(code, { lang: "tsx", theme: "github-light-default" }).then((result) => {
-      if (!cancelled) setHtml(result);
-    });
+    // Dynamic so the highlighter stays off the demos' critical path (and so
+    // both example pages import shiki the same way — mixing a static and a
+    // dynamic import of it across pages panics rolldown's chunking).
+    import("shiki")
+      .then(({ codeToHtml }) => codeToHtml(code, { lang: "tsx", theme: "github-light-default" }))
+      .then((result) => {
+        if (!cancelled) setHtml(result);
+      });
     return () => {
       cancelled = true;
     };
