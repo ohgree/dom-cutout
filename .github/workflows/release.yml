@@ -1,0 +1,37 @@
+name: Publish to npm
+
+# Trusted Publishing (OIDC): npm trusts this workflow's identity directly —
+# no token, no OTP — and attaches provenance to the release. Requires the
+# trusted publisher to be configured on npmjs.com (package settings →
+# Trusted Publisher → GitHub Actions, repo ohgree/dom-cutout, release.yml).
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      # OIDC trusted publishing needs a recent npm CLI.
+      - run: npm install -g npm@latest
+      - run: pnpm install --frozen-lockfile
+      - name: Check tag matches package version
+        run: |
+          pkg="v$(node -p "require('./package.json').version")"
+          if [ "$pkg" != "$GITHUB_REF_NAME" ]; then
+            echo "package.json is $pkg but the release tag is $GITHUB_REF_NAME" >&2
+            exit 1
+          fi
+      # prepublishOnly runs type-check, lint, format-check, tests, build.
+      - run: npm publish
