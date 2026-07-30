@@ -1,5 +1,6 @@
 import { Bell, Star, TriangleAlert } from "lucide-react";
-import { type CSSProperties, type ReactNode, useState } from "react";
+import { type CSSProperties, type ReactNode, useEffect, useState } from "react";
+import { codeToHtml } from "shiki";
 
 import { Cutout } from "dom-cutout/react";
 
@@ -13,8 +14,10 @@ const palette = {
   online: "#10b981", // emerald-500
   away: "#94a3b8", // slate-400
   icon: "#334155", // slate-700
-  warningFill: "#fbbf24", // amber-400
+  warningFill: "#fbbf24", // amber-400 (gold star)
   warningStroke: "#92400e", // amber-800
+  signYellow: "#facc15", // yellow-400 (road-sign badge)
+  signBlack: "#0f172a", // slate-900
   text: "#1e293b", // slate-800
   textMuted: "#64748b", // slate-500
 };
@@ -46,15 +49,32 @@ const buttonStyle: CSSProperties = {
   cursor: "pointer",
 };
 
-const codeStyle: CSSProperties = {
-  margin: "12px 0 0",
-  padding: "12px 16px",
-  borderRadius: 10,
-  background: "#0f172a",
-  color: "#e2e8f0",
-  fontSize: 13,
-  lineHeight: 1.6,
-  overflowX: "auto",
+// Shiki-highlighted snippet in the page's light theme. Falls back to a
+// plain block until (or if) highlighting resolves; styling for `.shiki`
+// lives in index.html so the theme's own background wins.
+const CodeBlock = ({ code }: { code: string }) => {
+  const [html, setHtml] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    codeToHtml(code, { lang: "tsx", theme: "github-light-default" }).then((result) => {
+      if (!cancelled) setHtml(result);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [code]);
+
+  if (html === null) {
+    return (
+      <pre className="shiki">
+        <code>{code}</code>
+      </pre>
+    );
+  }
+  // Safe: the HTML is shiki's rendering of our own literal snippets.
+  // eslint-disable-next-line react/no-danger
+  return <div dangerouslySetInnerHTML={{ __html: html }} />;
 };
 
 const Section = ({
@@ -72,11 +92,7 @@ const Section = ({
     <h2 style={{ margin: "0 0 4px", fontSize: 18, color: palette.text }}>{title}</h2>
     <p style={{ margin: "0 0 16px", color: palette.textMuted, fontSize: 14 }}>{description}</p>
     <div style={cardStyle}>{children}</div>
-    {code && (
-      <pre style={codeStyle}>
-        <code>{code}</code>
-      </pre>
-    )}
+    {code && <CodeBlock code={code} />}
   </section>
 );
 
@@ -147,11 +163,13 @@ const AvatarStatusDemo = () => {
 // silhouette (and a readable resting look). Lucide glyphs also carry ~15%
 // viewBox padding, so the badge sits further inward than the box suggests —
 // these offsets center it on the bell's top-right shoulder.
+// Road-sign colorway: yellow body, near-black outline and marks — the
+// canonical warning-triangle treatment.
 const WarningBadge = () => (
   <TriangleAlert
     size={30}
-    fill="#ffffff"
-    stroke={palette.warningStroke}
+    fill={palette.signYellow}
+    stroke={palette.signBlack}
     strokeWidth={1.75}
     style={{ position: "absolute", top: -3, right: 1 }}
   />
@@ -171,41 +189,6 @@ const BadgeDemo = () => {
     </>
   );
 };
-
-// TEMPORARY fill picker — delete once a badge treatment is chosen.
-// Same bell + triangle cutout, five fill/stroke candidates side by side.
-const badgeFillCandidates = [
-  { label: "white chip", fill: "#ffffff", stroke: "#92400e" },
-  { label: "solid amber", fill: "#fbbf24", stroke: "#92400e" },
-  { label: "road sign", fill: "#facc15", stroke: "#0f172a" },
-  { label: "rose alert", fill: "#f43f5e", stroke: "#ffffff" },
-  { label: "indigo chip", fill: "#eef2ff", stroke: "#4338ca" },
-];
-
-const BadgeFillPicker = () => (
-  <>
-    {badgeFillCandidates.map(({ label, fill, stroke }) => (
-      <figure key={label} style={{ margin: 0, textAlign: "center" }}>
-        <Cutout
-          overlay={
-            <TriangleAlert
-              size={30}
-              fill={fill}
-              stroke={stroke}
-              strokeWidth={1.75}
-              style={{ position: "absolute", top: -3, right: 1 }}
-            />
-          }
-        >
-          <Bell size={64} stroke={palette.icon} strokeWidth={1.5} />
-        </Cutout>
-        <figcaption style={{ fontSize: 12, marginTop: 8, color: palette.textMuted }}>
-          {label}
-        </figcaption>
-      </figure>
-    ))}
-  </>
-);
 
 const StarOverlay = () => (
   <Star
@@ -278,7 +261,7 @@ export const App = () => (
     <Section
       title="Warning badge on an icon"
       description="A lucide TriangleAlert cut out of a Bell, contour-for-contour. shape='auto' picks contour tracing because the overlay contains an svg."
-      code={`<Cutout overlay={hasWarning && <TriangleAlert fill="#fff" />}>
+      code={`<Cutout overlay={hasWarning && <TriangleAlert fill="#facc15" />}>
   <Bell />
 </Cutout>`}
     >

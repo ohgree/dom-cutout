@@ -1,3 +1,5 @@
+import { codeToHtml } from "shiki";
+
 import { createCutout, type CutoutInstance } from "dom-cutout";
 
 const content = document.getElementById("content")!;
@@ -38,3 +40,12 @@ destroyButton.addEventListener("click", () => {
   destroyButton.textContent = "destroyed (reload to reset)";
   destroyButton.setAttribute("disabled", "");
 });
+
+// Progressive enhancement: syntax-highlight the static snippet. The plain
+// block stays if highlighting fails.
+const codeEl = document.querySelector<HTMLPreElement>("pre.code");
+if (codeEl?.textContent) {
+  codeToHtml(codeEl.textContent, { lang: "ts", theme: "github-light-default" }).then((html) => {
+    codeEl.outerHTML = html;
+  });
+}
