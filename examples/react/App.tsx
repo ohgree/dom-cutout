@@ -153,7 +153,7 @@ const ShapeComparisonDemo = () => {
           <Cutout gap={gap} shape={shape} overlay={<StarOverlay />}>
             <PhotoTile />
           </Cutout>
-          <figcaption className="chip mt-2.5 inline-block text-slate-500">
+          <figcaption className="chip mx-auto mt-2.5 block w-fit text-slate-500">
             shape=&quot;{shape}&quot;
           </figcaption>
         </figure>
