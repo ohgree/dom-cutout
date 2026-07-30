@@ -1,6 +1,7 @@
 {
   "name": "dom-cutout",
   "version": "0.1.0",
+  "packageManager": "pnpm@10.34.3",
   "description": "Cut the silhouette of one DOM element out of another — badge cutouts, notification dots, status halos — with a runtime-generated SVG mask that follows the overlay's contours. Zero-dependency core, React adapter included.",
   "keywords": [
     "badge",
