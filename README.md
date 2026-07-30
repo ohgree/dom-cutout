@@ -19,6 +19,7 @@ The pattern you've seen on avatar status dots (Discord, Messenger): the badge do
 
 ```sh
 npm install dom-cutout
+# or: pnpm add dom-cutout / yarn add dom-cutout
 ```
 
 ## React
