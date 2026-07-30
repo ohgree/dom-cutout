@@ -180,11 +180,7 @@ export const App = () => (
     <h1 className="mt-2 mb-1 text-2xl font-semibold text-slate-900">
       &lt;Cutout /&gt; &mdash; React
     </h1>
-    <p className="mb-8 text-slate-500">
-      The React adapter over the zero-dependency core: overlay and children as props, the mask kept
-      in sync before every paint. The checkerboard shows through wherever a silhouette is cut out.
-      View /react/App.tsx for the wiring.
-    </p>
+    <p className="mb-8 text-slate-500">The React adapter over the zero-dependency core.</p>
 
     <Section
       title="Avatar status dot"
