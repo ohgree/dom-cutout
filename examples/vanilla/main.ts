@@ -1,0 +1,40 @@
+import { createCutout, type CutoutInstance } from "dom-cutout";
+
+const content = document.getElementById("content")!;
+const overlay = document.getElementById("overlay")!;
+const dot = overlay.querySelector<HTMLElement>(".dot")!;
+
+let gap = 3;
+let dotShown = true;
+let instance: CutoutInstance | null = createCutout(content, overlay, { gap });
+
+// Options are read at creation time, so a gap change means re-create.
+const recreate = () => {
+  instance?.destroy();
+  instance = createCutout(content, overlay, { gap });
+};
+
+const dotButton = document.getElementById("toggle-dot")!;
+dotButton.addEventListener("click", () => {
+  dotShown = !dotShown;
+  dot.style.display = dotShown ? "" : "none";
+  dotButton.textContent = `Dot: ${dotShown ? "shown" : "hidden"}`;
+  // display:none is a size change, so ResizeObserver catches it — but calling
+  // update() keeps the mask in sync even in environments without RO.
+  instance?.update();
+});
+
+const gapButton = document.getElementById("toggle-gap")!;
+gapButton.addEventListener("click", () => {
+  gap = gap === 3 ? 6 : 3;
+  gapButton.textContent = `Gap: ${gap}px`;
+  recreate();
+});
+
+const destroyButton = document.getElementById("destroy")!;
+destroyButton.addEventListener("click", () => {
+  instance?.destroy();
+  instance = null;
+  destroyButton.textContent = "destroyed (reload to reset)";
+  destroyButton.setAttribute("disabled", "");
+});

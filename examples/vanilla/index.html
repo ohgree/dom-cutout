@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>dom-cutout — vanilla DOM example</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        color: #1a1a2e;
+        background: #f4f4f8;
+      }
+      main {
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 40px 20px;
+      }
+      p.lead {
+        color: #555;
+      }
+      .card {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 48px;
+        padding: 40px 32px;
+        border-radius: 12px;
+        background: repeating-linear-gradient(45deg, #dcd6f7 0 12px, #c9e4de 12px 24px);
+      }
+      .stack {
+        display: inline-grid;
+      }
+      .stack > * {
+        grid-area: 1 / 1;
+      }
+      .avatar {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #5b6ee1, #8850c8);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        font-weight: 600;
+      }
+      .overlay {
+        position: relative;
+      }
+      .dot {
+        position: absolute;
+        bottom: 2px;
+        right: 2px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #3ba55c;
+      }
+      .controls {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>createCutout() — vanilla DOM</h1>
+      <p class="lead">
+        The zero-dependency core operating on hand-written markup: an inline-grid stack, a content
+        layer, an overlay layer, and one createCutout() call. View source of /vanilla/main.ts for
+        the wiring.
+      </p>
+      <div class="card">
+        <div class="stack">
+          <div id="content"><div class="avatar">MJ</div></div>
+          <div id="overlay" class="overlay"><div class="dot"></div></div>
+        </div>
+        <div class="controls">
+          <button id="toggle-dot" type="button">Dot: shown</button>
+          <button id="toggle-gap" type="button">Gap: 3px</button>
+          <button id="destroy" type="button">destroy()</button>
+        </div>
+      </div>
+    </main>
+    <script type="module" src="/vanilla/main.ts"></script>
+  </body>
+</html>
