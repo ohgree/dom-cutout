@@ -14,10 +14,17 @@
       >
       <h1 class="mt-2 mb-1 text-2xl font-semibold text-slate-900">Pinch-zoom test</h1>
       <p class="mb-6 text-slate-500">
-        Four hand-rolled masks (no library code). Pinch in slowly and note, per square: at roughly
-        what zoom the hole vanishes, and whether it returns on zoom-out. Luminance = what the
-        library generates; alpha = the old internal-<code class="font-mono text-[13px]">mask</code>
-        structure.
+        Six hand-rolled masks (no library code) probing
+        <a
+          class="text-slate-700 underline hover:text-slate-900"
+          href="https://bugs.webkit.org/show_bug.cgi?id=282530"
+          >WebKit bug 282530</a
+        >
+        on iOS. Expected there: <em>luminance</em> 200px never renders and 96px vanishes under
+        pinch zoom (verified); <em>alpha</em> (internal
+        <code class="font-mono text-[13px]">&lt;mask&gt;</code>) always renders;
+        <em>composite</em> (two plain alpha layers, canvas-subtract-shape) is the candidate that
+        should both render crisp and survive any pinch — that's what this page is testing.
       </p>
       <div id="grid" class="grid grid-cols-2 gap-6"></div>
     </main>
@@ -30,21 +37,44 @@
         `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><defs>` +
         `<mask id="m"><rect width="100%" height="100%" fill="white"/>${hole(s)}</mask>` +
         `</defs><rect width="100%" height="100%" fill="white" mask="url(#m)"/></svg>`;
+      // Composite layers: tiny repeated white tile as the canvas, and the
+      // shape alone (white on transparent, alpha coverage) as a small
+      // no-repeat layer subtracted from it.
+      const whiteTile =
+        `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">` +
+        `<rect width="16" height="16" fill="white"/></svg>`;
+      const shapeTile = (s) =>
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${s / 2}" height="${s / 2}">` +
+        `<circle cx="${s / 4}" cy="${s / 4}" r="${s / 4}" fill="white"/></svg>`;
+
+      const u = (svg) => `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+
+      const single = (make, mode) => (box, size) => {
+        box.style.setProperty("mask-image", u(make(size)));
+        box.style.setProperty("mask-size", "100% 100%");
+        box.style.setProperty("mask-mode", mode);
+      };
+      const composite = (box, size) => {
+        const box2 = size / 2; // shape layer tile: the hole's bbox
+        box.style.setProperty("mask-image", `${u(whiteTile)}, ${u(shapeTile(size))}`);
+        box.style.setProperty("mask-size", `16px 16px, ${box2}px ${box2}px`);
+        box.style.setProperty("mask-repeat", "repeat, no-repeat");
+        box.style.setProperty("mask-position", `0 0, ${size / 4}px ${size / 4}px`);
+        box.style.setProperty("mask-composite", "subtract, add");
+      };
 
       const grid = document.getElementById("grid");
-      for (const [label, make, mode] of [
-        ["luminance", lum, "luminance"],
-        ["alpha", alpha, "alpha"],
+      for (const [label, apply] of [
+        ["luminance", single(lum, "luminance")],
+        ["alpha", single(alpha, "alpha")],
+        ["composite", composite],
       ]) {
         for (const size of [96, 200]) {
           const cell = document.createElement("figure");
           cell.className = "m-0 text-center";
           const box = document.createElement("div");
           box.style.cssText = `width:${size}px;height:${size}px;margin:0 auto;background:linear-gradient(135deg,#6366f1,#7c3aed)`;
-          const url = `url("data:image/svg+xml,${encodeURIComponent(make(size))}")`;
-          box.style.setProperty("mask-image", url);
-          box.style.setProperty("mask-size", "100% 100%");
-          box.style.setProperty("mask-mode", mode);
+          apply(box, size);
           const cap = document.createElement("figcaption");
           cap.className = "chip mx-auto mt-2 block w-fit text-slate-500";
           cap.textContent = `${label} ${size}px`;
