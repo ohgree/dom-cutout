@@ -11,7 +11,9 @@ const instance = createCutout(content, overlay, { gap: 4 });
 // The page title is a cutout too — through text glyphs, which mask-image
 // handles like any other painted output.
 const titleOverlay = document.getElementById("title-overlay")!;
-createCutout(document.getElementById("title-content")!, titleOverlay, { gap: 3 });
+createCutout(document.getElementById("title-content")!, titleOverlay, {
+  gap: 2,
+});
 
 // FOUC guard: static markup paints before this module runs; reveal overlays
 // only once their first masks are applied.
@@ -34,9 +36,11 @@ const highlightWithin = (root: HTMLElement, lang: "ts" | "sh") => {
     const source = pre.textContent;
     if (!source) continue;
     import("shiki").then(({ codeToHtml }) =>
-      codeToHtml(source, { lang, theme: "github-light-default" }).then((html) => {
-        pre.outerHTML = html;
-      }),
+      codeToHtml(source, { lang, theme: "github-light-default" }).then(
+        (html) => {
+          pre.outerHTML = html;
+        },
+      ),
     );
   }
 };
@@ -45,7 +49,9 @@ highlightWithin(document.getElementById("install-blocks")!, "sh");
 
 // Package-manager tabs for the install command.
 const pmTabs = document.querySelectorAll<HTMLButtonElement>("#pm-tabs button");
-const pmBlocks = document.querySelectorAll<HTMLElement>("#install-blocks > div");
+const pmBlocks = document.querySelectorAll<HTMLElement>(
+  "#install-blocks > div",
+);
 for (const tab of pmTabs) {
   tab.addEventListener("click", () => {
     for (const t of pmTabs) t.classList.toggle("tab-active", t === tab);

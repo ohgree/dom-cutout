@@ -9,6 +9,7 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "noEmit": true,
+    "types": ["vite/client", "node"],
     "paths": {
       "dom-cutout/react": ["../src/react.tsx"],
       "dom-cutout": ["../src/index.ts"]
