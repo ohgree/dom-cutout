@@ -114,7 +114,10 @@
       <div class="card">
         <div class="stack">
           <div id="content"><div class="avatar">MJ</div></div>
-          <div id="overlay" class="overlay"><div class="dot"></div></div>
+          <!-- hidden until the first mask lands (see main.ts FOUC guard) -->
+          <div id="overlay" class="overlay" style="visibility: hidden">
+            <div class="dot"></div>
+          </div>
         </div>
         <div class="controls">
           <button id="toggle-dot" type="button">Dot: shown</button>

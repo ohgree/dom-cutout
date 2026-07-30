@@ -75,7 +75,7 @@ On each update, `dom-cutout` measures the content and overlay rects, builds a sm
 ## Caveats
 
 - Measurement uses `getBoundingClientRect`, so ancestors with CSS `transform: scale(...)` will skew the mask geometry.
-- The first paint after mount is unmasked for one frame (the mask needs a layout pass to measure).
+- The first paint after mount is unmasked for one frame (the mask needs a layout pass to measure). With server-rendered/static markup the window lasts until your script runs — if it matters, hide the overlay initially (e.g. `visibility: hidden` inline) and reveal it after `createCutout`, or key CSS off the `data-cutout` attribute.
 - `box` shape with a text-only overlay measures the overlay wrapper itself — wrap text in an element for accurate geometry.
 - Stroke-width compensation reads SVG attributes (`stroke-width` on the root or per element); stroke-widths set via CSS classes or inline styles don't survive the markup copy and aren't compensated.
 

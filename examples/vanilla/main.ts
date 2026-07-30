@@ -1,5 +1,3 @@
-import { codeToHtml } from "shiki";
-
 import { createCutout, type CutoutInstance } from "dom-cutout";
 
 const content = document.getElementById("content")!;
@@ -9,6 +7,11 @@ const dot = overlay.querySelector<HTMLElement>(".dot")!;
 let gap = 4;
 let dotShown = true;
 let instance: CutoutInstance | null = createCutout(content, overlay, { gap });
+
+// FOUC guard: the static markup paints before this module runs, which would
+// briefly show the dot without its gap. index.html hides the overlay
+// inline; reveal it only once the first mask is applied.
+overlay.style.visibility = "";
 
 // Options are read at creation time, so a gap change means re-create.
 const recreate = () => {
@@ -41,11 +44,16 @@ destroyButton.addEventListener("click", () => {
   destroyButton.setAttribute("disabled", "");
 });
 
-// Progressive enhancement: syntax-highlight the static snippet. The plain
-// block stays if highlighting fails.
+// Progressive enhancement: syntax-highlight the static snippet. Imported
+// dynamically so the (heavy) highlighter never delays the cutout above —
+// a static import would hold the whole module graph, mask included, until
+// shiki's chunks load. The plain block stays if highlighting fails.
 const codeEl = document.querySelector<HTMLPreElement>("pre.code");
 if (codeEl?.textContent) {
-  codeToHtml(codeEl.textContent, { lang: "ts", theme: "github-light-default" }).then((html) => {
-    codeEl.outerHTML = html;
-  });
+  const snippet = codeEl.textContent;
+  import("shiki").then(({ codeToHtml }) =>
+    codeToHtml(snippet, { lang: "ts", theme: "github-light-default" }).then((html) => {
+      codeEl.outerHTML = html;
+    }),
+  );
 }
