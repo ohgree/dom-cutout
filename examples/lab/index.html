@@ -110,6 +110,31 @@
         Which is why the library uses image masks: slightly soft on Safari beats absent on Safari.
         Details in the README caveats.
       </p>
+
+      <h2 class="mt-8 mb-2 text-lg font-semibold text-slate-900">Tried against the softness</h2>
+      <p class="mb-2 text-sm text-slate-600">
+        All verified no-ops on WebKit (screenshot byte-comparison or edge measurement):
+      </p>
+      <ul class="list-disc pl-5 text-sm text-slate-600">
+        <li>Oversampling the mask SVG's intrinsic size (2&times; + viewBox)</li>
+        <li>
+          <code class="font-mono text-[13px]">transform: translateZ(0)</code> /
+          <code class="font-mono text-[13px]">will-change: transform</code> /
+          <code class="font-mono text-[13px]">isolation: isolate</code> (compositing-layer tricks)
+        </li>
+        <li>
+          <code class="font-mono text-[13px]">mask-mode: alpha</code> (image masks are already
+          alpha)
+        </li>
+        <li>
+          <code class="font-mono text-[13px]">-webkit-mask-box-image</code> (same edge blur,
+          different slicing geometry)
+        </li>
+        <li>
+          SVG reference masks (<code class="font-mono text-[13px]">mask: url(#id)</code>) — not soft
+          but absent: WebKit ignores them on HTML elements (the right-hand demo above)
+        </li>
+      </ul>
     </main>
     <script type="module" src="/lab/main.ts"></script>
   </body>
