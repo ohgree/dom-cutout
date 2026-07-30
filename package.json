@@ -18,6 +18,7 @@
     "type": "git",
     "url": "git+https://github.com/ohgree/dom-cutout.git"
   },
+  "homepage": "https://ohgree.github.io/dom-cutout/",
   "files": [
     "dist"
   ],
