@@ -269,13 +269,6 @@ export const App = () => (
     </Section>
 
     <Section
-      title="Badge fill candidates (temporary)"
-      description="Pick a treatment; this strip gets deleted afterwards."
-    >
-      <BadgeFillPicker />
-    </Section>
-
-    <Section
       title="contour vs box"
       description="The same star overlay traced two ways. contour follows the glyph outline via stroke expansion; box uses the expanded bounding box with border-radius."
       code={`<Cutout shape="contour" gap={gap} overlay={<Star fill="gold" />}>
