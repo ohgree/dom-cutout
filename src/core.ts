@@ -130,6 +130,11 @@ export const computeMaskUrl = (
   // Inner <mask>: white rect (visible everywhere) + shape in black (cutout).
   // Outer rect with the mask applied → opaque white with transparent holes.
   // CSS mask-image uses alpha mode: transparent = hidden.
+  //
+  // Note: WebKit rasterizes image masks at CSS-pixel resolution, so edges
+  // render ~1px softer than Chromium on high-DPI displays. Oversampling the
+  // SVG's intrinsic size does not change this (verified empirically) — the
+  // resolution-independent fix would be SVG reference masks (future plan).
   const svgMarkup = [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${contentRect.width}" height="${contentRect.height}">`,
     `<defs>`,
