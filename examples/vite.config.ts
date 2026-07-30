@@ -10,9 +10,9 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        index: path.resolve(__dirname, "index.html"),
-        react: path.resolve(__dirname, "react/index.html"),
-        vanilla: path.resolve(__dirname, "vanilla/index.html"),
+        index: path.resolve(import.meta.dirname, "index.html"),
+        react: path.resolve(import.meta.dirname, "react/index.html"),
+        vanilla: path.resolve(import.meta.dirname, "vanilla/index.html"),
       },
     },
   },
@@ -20,11 +20,11 @@ export default defineConfig({
     alias: [
       {
         find: "dom-cutout/react",
-        replacement: path.resolve(__dirname, "../src/react.tsx"),
+        replacement: path.resolve(import.meta.dirname, "../src/react.tsx"),
       },
       {
         find: "dom-cutout",
-        replacement: path.resolve(__dirname, "../src/index.ts"),
+        replacement: path.resolve(import.meta.dirname, "../src/index.ts"),
       },
     ],
   },
