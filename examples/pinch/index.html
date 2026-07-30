@@ -23,8 +23,10 @@
         on iOS. Expected there: <em>luminance</em> 200px never renders and 96px vanishes under
         pinch zoom (verified); <em>alpha</em> (internal
         <code class="font-mono text-[13px]">&lt;mask&gt;</code>) always renders;
-        <em>composite</em> (two plain alpha layers, canvas-subtract-shape) is the candidate that
-        should both render crisp and survive any pinch — that's what this page is testing.
+        <em>composite</em> (gradient canvas minus a small alpha shape layer, via
+        <code class="font-mono text-[13px]">mask-composite: subtract</code>) is the candidate that
+        should render crisp, survive any pinch, and show no tile seams — that's what this page is
+        testing.
       </p>
       <div id="grid" class="grid grid-cols-2 gap-6"></div>
     </main>
@@ -37,12 +39,10 @@
         `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><defs>` +
         `<mask id="m"><rect width="100%" height="100%" fill="white"/>${hole(s)}</mask>` +
         `</defs><rect width="100%" height="100%" fill="white" mask="url(#m)"/></svg>`;
-      // Composite layers: tiny repeated white tile as the canvas, and the
-      // shape alone (white on transparent, alpha coverage) as a small
+      // Composite layers: a CSS gradient as the full-coverage canvas (a
+      // generated image — no tiles, so no seams and no pattern budget), and
+      // the shape alone (white on transparent, alpha coverage) as a small
       // no-repeat layer subtracted from it.
-      const whiteTile =
-        `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">` +
-        `<rect width="16" height="16" fill="white"/></svg>`;
       const shapeTile = (s) =>
         `<svg xmlns="http://www.w3.org/2000/svg" width="${s / 2}" height="${s / 2}">` +
         `<circle cx="${s / 4}" cy="${s / 4}" r="${s / 4}" fill="white"/></svg>`;
@@ -56,9 +56,9 @@
       };
       const composite = (box, size) => {
         const box2 = size / 2; // shape layer tile: the hole's bbox
-        box.style.setProperty("mask-image", `${u(whiteTile)}, ${u(shapeTile(size))}`);
-        box.style.setProperty("mask-size", `16px 16px, ${box2}px ${box2}px`);
-        box.style.setProperty("mask-repeat", "repeat, no-repeat");
+        box.style.setProperty("mask-image", `linear-gradient(#000,#000), ${u(shapeTile(size))}`);
+        box.style.setProperty("mask-size", `100% 100%, ${box2}px ${box2}px`);
+        box.style.setProperty("mask-repeat", "no-repeat, no-repeat");
         box.style.setProperty("mask-position", `0 0, ${size / 4}px ${size / 4}px`);
         box.style.setProperty("mask-composite", "subtract, add");
       };
