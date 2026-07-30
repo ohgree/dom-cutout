@@ -121,14 +121,16 @@ const AvatarStatusDemo = () => {
 
 // Lucide icons are stroke-based; the contour tracer both fills and strokes
 // the overlay's paths, so give badge glyphs an explicit fill for a solid
-// silhouette (and a readable resting look).
+// silhouette (and a readable resting look). Lucide glyphs also carry ~15%
+// viewBox padding, so the badge sits further inward than the box suggests —
+// these offsets center it on the bell's top-right shoulder.
 const WarningBadge = () => (
   <TriangleAlert
     size={30}
     fill={palette.warningFill}
     stroke={palette.warningStroke}
     strokeWidth={1.75}
-    style={{ position: "absolute", top: -8, right: -10 }}
+    style={{ position: "absolute", top: -3, right: 1 }}
   />
 );
 
