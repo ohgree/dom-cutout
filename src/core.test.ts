@@ -43,7 +43,7 @@ describe("computeMaskUrl", () => {
     const url = computeMaskUrl(content, overlay);
 
     expect(url).toContain("data:image/svg+xml");
-    expect(url).toContain(encodeURIComponent("<mask"));
+    expect(decoded(url)).toContain('fill="white"');
   });
 
   it("returns a rect mask for a non-svg overlay", () => {
@@ -84,6 +84,37 @@ describe("computeMaskUrl", () => {
 
     expect(decoded(url)).toContain("<rect");
     expect(decoded(url)).not.toContain("<g ");
+  });
+
+  describe("mode", () => {
+    it('emits the internal-<mask> knockout structure for mode "alpha"', () => {
+      const { content, overlay } = setup('<svg viewBox="0 0 24 24"></svg>');
+
+      expect(decoded(computeMaskUrl(content, overlay, { mode: "alpha" }))).toContain("<mask");
+    });
+
+    it('emits a simple SVG without an internal <mask> for mode "luminance"', () => {
+      const { content, overlay } = setup('<svg viewBox="0 0 24 24"></svg>');
+
+      const markup = decoded(computeMaskUrl(content, overlay, { mode: "luminance" }));
+
+      expect(markup).not.toContain("<mask");
+      expect(markup).toContain('fill="white"');
+    });
+
+    it("normalizes artwork paint colors to black (luminance reads color)", () => {
+      const { content, overlay } = setup(
+        '<svg viewBox="0 0 24 24"><path d="M4 4h16" fill="#facc15" stroke="none" /></svg>',
+      );
+
+      const markup = decoded(computeMaskUrl(content, overlay, { mode: "luminance" }));
+
+      expect(markup).toContain('fill="black"');
+      expect(markup).not.toContain("#facc15");
+      // fill="none" / stroke="none" must survive — they mean "no paint",
+      // not "paint me black".
+      expect(markup).toContain('stroke="none"');
+    });
   });
 
   describe("stroke-width compensation", () => {

@@ -127,26 +127,34 @@
       <ul class="list-disc pl-5 text-sm text-slate-600">
         <li class="mb-1">
           <strong class="text-slate-900">Chrome / Edge / Firefox:</strong> all three cutouts render,
-          all crisp. (Chromium rasterizes image masks at device resolution and supports reference
-          masks.)
+          all crisp.
         </li>
         <li class="mb-1">
-          <strong class="text-slate-900">Safari:</strong> first cutout renders with ~1px soft edges
-          (WebKit rasterizes image masks at CSS-pixel resolution); second circle shows
+          <strong class="text-slate-900">Safari:</strong> first cutout renders <em>crisp</em> (the
+          library generates a luminance mask — no internal
+          <code class="font-mono text-[13px]">&lt;mask&gt;</code>, see below); second circle shows
           <em>no cutout at all</em> (WebKit ignores SVG reference masks on HTML elements); third —
           content wrapped in <code class="font-mono text-[13px]">svg &gt; foreignObject</code>,
-          masked in SVG context — renders <em>crisp</em> (measured 1 blend px vs 3 at 2&times;).
+          masked in SVG context — also renders crisp.
         </li>
       </ul>
       <p class="mt-3 text-sm text-slate-500">
-        The library uses image masks: slightly soft on Safari beats absent, and the crisp
-        foreignObject route requires restructuring the content DOM (candidate future opt-in mode —
-        see README).
+        WebKit rasterizes mask images that contain internal
+        <code class="font-mono text-[13px]">&lt;mask&gt;</code> elements at CSS-pixel resolution
+        (~1px soft on high-DPI). The classic alpha knockout needs exactly that structure; a
+        luminance mask (<code class="font-mono text-[13px]">mask-mode: luminance</code>, white
+        canvas + black shape, no indirection) doesn't — so the library emits luminance masks
+        wherever <code class="font-mono text-[13px]">mask-mode</code> is supported and falls back to
+        the alpha structure elsewhere. The foreignObject exhibit is kept as the route that was crisp
+        even against the internal-mask quirk.
       </p>
 
       <h2 class="mt-8 mb-2 text-lg font-semibold text-slate-900">Tried against the softness</h2>
       <p class="mb-2 text-sm text-slate-600">
-        All verified no-ops on WebKit (screenshot byte-comparison or edge measurement):
+        The fix that worked: dropping the internal
+        <code class="font-mono text-[13px]">&lt;mask&gt;</code> from the generated SVG (luminance
+        mode). Everything else was a verified no-op on WebKit (screenshot byte-comparison or edge
+        measurement):
       </p>
       <ul class="list-disc pl-5 text-sm text-slate-600">
         <li>Oversampling the mask SVG's intrinsic size (2&times; + viewBox)</li>

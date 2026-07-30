@@ -21,7 +21,37 @@ export interface CutoutOptions {
    * @default 'auto'
    */
   shape?: CutoutShape;
+  /**
+   * How the generated mask knocks the silhouette out.
+   * - `'luminance'` — simple SVG (white canvas, black shape) applied with
+   *   `mask-mode: luminance`. Renders crisp at device resolution in every
+   *   engine, but requires `mask-mode` support (Safari 15.4+, Chrome 120+,
+   *   Firefox 53+).
+   * - `'alpha'` — the shape is knocked out to transparency via an internal
+   *   SVG `<mask>`. Works wherever `mask-image` works, but WebKit
+   *   rasterizes this structure at CSS-pixel resolution (~1px soft edges
+   *   on high-DPI displays).
+   * - `'auto'` picks `'luminance'` when the browser supports it.
+   * @default 'auto'
+   */
+  mode?: CutoutMode;
 }
+
+export type CutoutMode = "auto" | "luminance" | "alpha";
+
+// WebKit rasterizes alpha image masks that contain internal <mask> elements
+// at CSS-pixel resolution (soft edges on high-DPI), and that structure is
+// also implicated in intermittent Safari rasterization bugs. A luminance
+// mask needs no internal <mask> — white canvas + black shape as direct
+// children — and rasterizes at device resolution everywhere (verified:
+// WebKit/Chromium/Firefox). Detected once; `mask-mode` support implies
+// support for everything else the luminance path uses.
+let luminanceSupport: boolean | undefined;
+const supportsLuminance = () =>
+  (luminanceSupport ??=
+    typeof CSS !== "undefined" &&
+    typeof CSS.supports === "function" &&
+    CSS.supports("mask-mode", "luminance"));
 
 export interface CutoutInstance {
   /**
@@ -45,8 +75,9 @@ export const MASKED_ATTRIBUTE = "data-cutout";
 export const computeMaskUrl = (
   content: Element,
   overlay: Element,
-  { gap = DEFAULT_GAP, shape = "auto" }: CutoutOptions = {},
+  { gap = DEFAULT_GAP, shape = "auto", mode = "auto" }: CutoutOptions = {},
 ): string | null => {
+  const luminance = mode === "luminance" || (mode === "auto" && supportsLuminance());
   // An empty overlay means "no cutout". Whitespace and comment nodes don't
   // count as content (hand-written markup always contains them). Without
   // this, the box branch would measure the overlay element itself — often
@@ -97,6 +128,15 @@ export const computeMaskUrl = (
       const own = parseFloat(el.getAttribute("stroke-width") ?? "") || 0;
       el.setAttribute("stroke-width", String(own + dilation));
     }
+    // Normalize paint colors to black: a luminance mask reads color (a red
+    // fill would only half-hide), and broken paint-server references
+    // (fill="url(#…)") never resolve inside a standalone mask image.
+    // Harmless for alpha masks, where any non-none paint is opaque anyway.
+    for (const attr of ["fill", "stroke"] as const) {
+      for (const el of clone.querySelectorAll(`[${attr}]`)) {
+        if (el.getAttribute(attr) !== "none") el.setAttribute(attr, "black");
+      }
+    }
 
     shapeMarkup = [
       `<svg x="${x}" y="${y}" width="${svgRect.width}" height="${svgRect.height}" viewBox="${viewBox}" overflow="visible">`,
@@ -127,25 +167,32 @@ export const computeMaskUrl = (
   }
 
   // Self-contained SVG mask sized to the content element.
-  // Inner <mask>: white rect (visible everywhere) + shape in black (cutout).
-  // Outer rect with the mask applied → opaque white with transparent holes.
-  // CSS mask-image uses alpha mode: transparent = hidden.
   //
-  // Note: WebKit rasterizes image masks at CSS-pixel resolution, so edges
-  // render ~1px softer than Chromium on high-DPI displays. Oversampling the
-  // SVG's intrinsic size does not change this (verified empirically) — the
-  // resolution-independent fix would be SVG reference masks (future plan).
-  const svgMarkup = [
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${contentRect.width}" height="${contentRect.height}">`,
-    `<defs>`,
-    `<mask id="_m" x="-50%" y="-50%" width="200%" height="200%">`,
-    `<rect x="-50%" y="-50%" width="200%" height="200%" fill="white"/>`,
-    shapeMarkup,
-    `</mask>`,
-    `</defs>`,
-    `<rect width="100%" height="100%" fill="white" mask="url(#_m)"/>`,
-    `</svg>`,
-  ].join("");
+  // Luminance structure: white canvas rect (visible) + shape in black
+  // (cutout) as direct children, applied with `mask-mode: luminance`.
+  // Alpha structure (fallback): the same canvas + shape inside an internal
+  // <mask>, knocking a transparent hole into a white rect. WebKit
+  // rasterizes mask images CONTAINING internal <mask> elements at
+  // CSS-pixel resolution (~1px soft edges on high-DPI; verified), which is
+  // why luminance is preferred wherever `mask-mode` is supported.
+  const svgMarkup = luminance
+    ? [
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${contentRect.width}" height="${contentRect.height}">`,
+        `<rect width="100%" height="100%" fill="white"/>`,
+        shapeMarkup,
+        `</svg>`,
+      ].join("")
+    : [
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${contentRect.width}" height="${contentRect.height}">`,
+        `<defs>`,
+        `<mask id="_m" x="-50%" y="-50%" width="200%" height="200%">`,
+        `<rect x="-50%" y="-50%" width="200%" height="200%" fill="white"/>`,
+        shapeMarkup,
+        `</mask>`,
+        `</defs>`,
+        `<rect width="100%" height="100%" fill="white" mask="url(#_m)"/>`,
+        `</svg>`,
+      ].join("");
 
   return `url("data:image/svg+xml,${encodeURIComponent(svgMarkup)}")`;
 };
@@ -153,6 +200,7 @@ export const computeMaskUrl = (
 const MASK_PROPERTIES = [
   "mask-image",
   "mask-size",
+  "mask-mode",
   "-webkit-mask-image",
   "-webkit-mask-size",
 ] as const;
@@ -188,10 +236,17 @@ export const createCutout = (
       clearMask(content);
       return;
     }
+    const { mode = "auto" } = options;
+    const luminance = mode === "luminance" || (mode === "auto" && supportsLuminance());
     content.style.setProperty("mask-image", url);
     content.style.setProperty("mask-size", "100% 100%");
     content.style.setProperty("-webkit-mask-image", url);
     content.style.setProperty("-webkit-mask-size", "100% 100%");
+    if (luminance) {
+      content.style.setProperty("mask-mode", "luminance");
+    } else {
+      content.style.removeProperty("mask-mode");
+    }
     content.setAttribute(MASKED_ATTRIBUTE, "");
   };
 
