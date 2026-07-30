@@ -47,10 +47,12 @@ export const computeMaskUrl = (
   overlay: Element,
   { gap = DEFAULT_GAP, shape = "auto" }: CutoutOptions = {},
 ): string | null => {
-  // An empty overlay means "no cutout". Without this, the box branch would
-  // measure the overlay element itself — often stretched to the content's
-  // full size by the host layout — and cut out everything.
-  if (overlay.childNodes.length === 0) return null;
+  // An empty overlay means "no cutout". Whitespace and comment nodes don't
+  // count as content (hand-written markup always contains them). Without
+  // this, the box branch would measure the overlay element itself — often
+  // stretched to the content's full size by the host layout — and cut out
+  // everything.
+  if (!overlay.querySelector("*") && !overlay.textContent?.trim()) return null;
 
   const contentRect = content.getBoundingClientRect();
 
@@ -63,6 +65,9 @@ export const computeMaskUrl = (
     // Stroke expansion follows the glyph's contours uniformly, so the gap
     // reads as a halo around the actual shape rather than a box.
     const svgRect = svg.getBoundingClientRect();
+    // A zero-area overlay (e.g. a display:none badge) renders nothing and
+    // must clear the mask — and the viewBox scale divides by these.
+    if (svgRect.width === 0 || svgRect.height === 0) return null;
     const x = svgRect.left - contentRect.left;
     const y = svgRect.top - contentRect.top;
     const vb = svg.viewBox?.baseVal;
@@ -107,6 +112,9 @@ export const computeMaskUrl = (
     // layout, not by the visible badge.
     const target = (overlay.firstElementChild ?? overlay) as Element;
     const targetRect = target.getBoundingClientRect();
+    // A zero-area overlay (e.g. a display:none badge) renders nothing and
+    // must clear the mask rather than trace a phantom gap-sized shape.
+    if (targetRect.width === 0 || targetRect.height === 0) return null;
     const x = targetRect.left - contentRect.left - gap;
     const y = targetRect.top - contentRect.top - gap;
     const w = targetRect.width + gap * 2;

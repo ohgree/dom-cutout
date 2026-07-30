@@ -4,7 +4,7 @@ import { createCutout } from "dom-cutout";
 
 const content = document.getElementById("hero-content")!;
 const overlay = document.getElementById("hero-overlay")!;
-const dot = document.getElementById("hero-dot")!;
+const star = document.getElementById("hero-star")!;
 
 const instance = createCutout(content, overlay, { gap: 4 });
 
@@ -12,10 +12,10 @@ const instance = createCutout(content, overlay, { gap: 4 });
 // only once the first mask is applied.
 overlay.style.visibility = "";
 
-let dotShown = true;
+let starShown = true;
 document.getElementById("hero-toggle")!.addEventListener("click", () => {
-  dotShown = !dotShown;
-  dot.style.display = dotShown ? "" : "none";
+  starShown = !starShown;
+  star.style.display = starShown ? "" : "none";
   instance.update();
 });
 

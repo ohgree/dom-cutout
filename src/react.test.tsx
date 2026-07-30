@@ -1,9 +1,22 @@
 import { render } from "@testing-library/react";
 import { type ReactNode } from "react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 
 import { MASKED_ATTRIBUTE } from "./core";
 import { Cutout } from "./react";
+
+// jsdom measures everything as 0×0, and zero-area overlays (correctly)
+// clear the mask — give every element a real box so overlays count.
+const realGetBoundingClientRect = Element.prototype.getBoundingClientRect;
+
+beforeAll(() => {
+  Element.prototype.getBoundingClientRect = () =>
+    ({ left: 0, top: 0, width: 24, height: 24 }) as DOMRect;
+});
+
+afterAll(() => {
+  Element.prototype.getBoundingClientRect = realGetBoundingClientRect;
+});
 
 afterEach(() => {
   document.body.innerHTML = "";
