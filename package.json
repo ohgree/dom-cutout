@@ -1,6 +1,6 @@
 {
   "name": "dom-cutout",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Cut the silhouette of one DOM element out of another — badge cutouts, notification dots, status halos — with a runtime-generated SVG mask that follows the overlay's contours. Zero-dependency core, React adapter included.",
   "keywords": [
     "badge",
@@ -12,13 +12,13 @@
     "react",
     "svg-mask"
   ],
+  "homepage": "https://ohgree.github.io/dom-cutout/",
   "license": "MIT",
   "author": "MJ Shin <ohgree.dev@gmail.com> (https://github.com/ohgree)",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ohgree/dom-cutout.git"
   },
-  "homepage": "https://ohgree.github.io/dom-cutout/",
   "files": [
     "dist"
   ],
