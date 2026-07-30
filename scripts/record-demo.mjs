@@ -32,21 +32,19 @@ const resolveGifsicle = () => resolveBinary("GIFSICLE_BIN", "gifsicle", "gifsicl
 const BASE = process.env.DEMO_URL ?? "http://localhost:5199";
 const OUT = process.argv[2] ?? "docs/assets/demo.gif";
 const SIZE = { width: 1100, height: 600 };
-// Page zoom doubles the rendered (and thus recorded) resolution; the README
-// displays at half width, so the gif is crisp on high-DPI screens. Zoom is
-// a layout-level scale — the library re-measures, masks stay exact.
-const ZOOM = 2;
+// The scene renders at 2× real layout (?scale=2: root font-size, gap
+// options), so the recording is crisp when the README displays it at half
+// width. NOT CSS zoom — zoom double-applies to measured geometry and
+// breaks masks recomputed mid-recording.
+const SCALE = 2;
 
 const ffmpeg = await resolveFfmpeg();
 if (!ffmpeg) throw new Error("No ffmpeg found: install ffmpeg or `pnpm add -D ffmpeg-static`");
 const browser = await chromium.launch();
 const context = await browser.newContext({ viewport: SIZE, recordVideo: { dir: ".", size: SIZE } });
 const page = await context.newPage();
-await page.goto(`${BASE}/demo/`, { waitUntil: "load" });
+await page.goto(`${BASE}/demo/?scale=${SCALE}`, { waitUntil: "load" });
 await page.waitForFunction(() => typeof window.runDemo === "function");
-await page.evaluate((zoom) => {
-  document.body.style.zoom = String(zoom);
-}, ZOOM);
 await page.waitForTimeout(700); // first mask paint settles on tape
 const scene = await page.locator("#scene").boundingBox();
 await page.evaluate(() => window.runDemo());

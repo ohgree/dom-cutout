@@ -11,7 +11,7 @@
          The recorder calls window.runDemo() and crops to #scene.
          Finer, higher-contrast checkerboard than .demo-card's: the cutout
          gap must straddle several cells to read as transparency in the
-         recorded gif (a 6px ring inside one 16px white cell reads as a
+         recorded gif (a thin ring inside one 16px white cell reads as a
          painted border). -->
     <div
       id="scene"
@@ -20,39 +20,16 @@
     >
       <figure class="m-0 text-center">
         <div class="inline-grid *:[grid-area:1/1]">
-          <div id="avatar-content">
-            <div
-              class="flex h-24 w-24 items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-violet-600 text-3xl font-semibold text-white"
-            >
-              MJ
-            </div>
-          </div>
-          <div id="avatar-overlay" class="relative">
-            <div
-              id="avatar-dot"
-              class="absolute right-1 bottom-1 h-6 w-6 rounded-full bg-emerald-500"
-            ></div>
-          </div>
-        </div>
-        <figcaption
-          id="avatar-caption"
-          class="chip mx-auto mt-2.5 block w-28 text-center text-slate-500"
-        >
-          dot: shown
-        </figcaption>
-      </figure>
-
-      <figure class="m-0 text-center">
-        <div class="inline-grid *:[grid-area:1/1]">
           <div id="tile-content">
             <div
-              class="h-24 w-24 rounded-[16px] bg-linear-to-br from-rose-400 via-fuchsia-600 to-indigo-600"
+              class="h-32 w-32 rounded-2xl bg-linear-to-br from-rose-400 via-fuchsia-600 to-indigo-600"
             ></div>
           </div>
           <div id="tile-overlay" class="relative">
             <svg
+              id="tile-star"
               viewBox="0 0 24 24"
-              class="absolute -right-1.5 -bottom-1.5 h-11 w-11 fill-amber-400 stroke-amber-800"
+              class="absolute -right-2 -bottom-2 h-14 w-14 fill-amber-400 stroke-amber-800"
               stroke-width="1.5"
               stroke-linejoin="round"
             >
@@ -64,7 +41,7 @@
         </div>
         <figcaption
           id="tile-caption"
-          class="chip mx-auto mt-2.5 block w-56 text-center tabular-nums text-slate-500"
+          class="chip mx-auto mt-3 block w-56 text-center tabular-nums text-slate-500"
         >
           shape=contour&ensp;gap: 6px
         </figcaption>

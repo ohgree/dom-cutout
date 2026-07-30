@@ -20,8 +20,8 @@ Cut the silhouette of one DOM element out of another — badge cutouts, notifica
 <p align="center">
   <img
     src="./docs/assets/demo.gif"
-    alt="Status-dot toggling and a concave star traced contour-for-contour with a sweeping gap — the cutout follows live DOM changes"
-    width="454"
+    alt="A concave star traced contour-for-contour: conditional overlay toggling, a sweeping gap, and contour vs box — the cutout follows live DOM changes"
+    width="320"
   />
 </p>
 
