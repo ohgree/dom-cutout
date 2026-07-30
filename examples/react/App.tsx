@@ -6,6 +6,19 @@ import { Cutout } from "dom-cutout/react";
 // Colors reference Tailwind's default palette directly; shared surface
 // styles (.chip, .demo-card, .bg-checker, .shiki) live in ../styles.css.
 
+// Strips the common leading indent, so snippet literals can be indented
+// with the JSX they sit in instead of anchoring to column 0.
+const dedent = (strings: TemplateStringsArray, ...values: unknown[]) => {
+  const lines = String.raw(strings, ...values)
+    .replace(/^\n/, "")
+    .trimEnd()
+    .split("\n");
+  const indent = Math.min(
+    ...lines.filter((line) => line.trim()).map((line) => /^ */.exec(line)![0].length),
+  );
+  return lines.map((line) => line.slice(indent)).join("\n");
+};
+
 // Shiki-highlighted snippet in the page's light theme. Falls back to a
 // plain block until (or if) highlighting resolves.
 const CodeBlock = ({ code }: { code: string }) => {
@@ -185,9 +198,11 @@ export const App = () => (
     <Section
       title="Avatar status dot"
       description="The classic: a status dot punching through the avatar. Toggling the dot off clears the mask (nullish overlay renders children unmasked)."
-      code={`<Cutout gap={4} overlay={showDot && <StatusDot />}>
-  <Avatar />
-</Cutout>`}
+      code={dedent`
+        <Cutout gap={4} overlay={showDot && <StatusDot />}>
+          <Avatar />
+        </Cutout>
+      `}
     >
       <AvatarStatusDemo />
     </Section>
@@ -195,9 +210,11 @@ export const App = () => (
     <Section
       title="Warning badge on an icon"
       description="A lucide TriangleAlert cut out of a Bell, contour-for-contour. shape='auto' picks contour tracing because the overlay contains an svg."
-      code={`<Cutout overlay={hasWarning && <TriangleAlert fill="#facc15" />}>
-  <Bell />
-</Cutout>`}
+      code={dedent`
+        <Cutout overlay={hasWarning && <TriangleAlert fill="#facc15" />}>
+          <Bell />
+        </Cutout>
+      `}
     >
       <BadgeDemo />
     </Section>
@@ -205,9 +222,11 @@ export const App = () => (
     <Section
       title="contour vs box"
       description="The same star overlay traced two ways. contour follows the glyph outline via stroke expansion; box uses the expanded bounding box with border-radius."
-      code={`<Cutout shape="contour" gap={gap} overlay={<Star fill="gold" />}>
-  <PhotoTile />
-</Cutout>`}
+      code={dedent`
+        <Cutout shape="contour" gap={gap} overlay={<Star fill="gold" />}>
+          <PhotoTile />
+        </Cutout>
+      `}
     >
       <ShapeComparisonDemo />
     </Section>
