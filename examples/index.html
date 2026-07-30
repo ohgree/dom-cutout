@@ -6,6 +6,21 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="stylesheet" href="./styles.css" />
     <title>dom-cutout</title>
+    <meta
+      name="description"
+      content="Cut the silhouette of one DOM element out of another — badge cutouts, notification dots, status halos — with a runtime-generated SVG mask that follows the overlay's contours."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="dom-cutout" />
+    <meta
+      property="og:description"
+      content="Cut the silhouette of one DOM element out of another — badge cutouts, notification dots, status halos — with a runtime-generated SVG mask that follows the overlay's contours."
+    />
+    <meta property="og:url" content="https://ohgree.github.io/dom-cutout/" />
+    <meta property="og:image" content="https://ohgree.github.io/dom-cutout/og.png" />
+    <meta property="og:image:width" content="1280" />
+    <meta property="og:image:height" content="640" />
+    <meta name="twitter:card" content="summary_large_image" />
   </head>
   <body class="bg-slate-100 font-sans text-slate-800 antialiased">
     <main class="mx-auto max-w-2xl px-5 py-6">
@@ -24,9 +39,11 @@
                    Rotation lives INSIDE the svg (<g transform>) so the mask
                    copy rotates with the pixels — a CSS transform on the
                    element would leave the mask axis-aligned. -->
+              <!-- em-sized so the scissors scales with the wordmark's font
+                   size (the social-preview capture renders it at 64px). -->
               <svg
                 viewBox="0 0 24 24"
-                class="absolute top-0.5 left-[31%] h-6 w-6 overflow-visible fill-none stroke-slate-700"
+                class="absolute top-[0.067em] left-[31%] h-[0.8em] w-[0.8em] overflow-visible fill-none stroke-slate-700"
                 stroke-width="1.75"
                 stroke-linecap="round"
                 stroke-linejoin="round"
