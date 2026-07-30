@@ -4,11 +4,10 @@ import { type CSSProperties, type ReactNode, useState } from "react";
 import { Cutout } from "dom-cutout/react";
 
 // Palette: indigo/violet core, emerald for status, amber for warnings.
-// The backdrop stripes stay in one hue so the cutout gap reads clearly
-// against both stripe tones without competing with the demos.
+// The backdrop is the design-tool transparency checkerboard — the universal
+// "see-through here" texture, which is exactly what the cutout gap is.
 const palette = {
-  stripeA: "#e0e7ff", // indigo-100
-  stripeB: "#c7d2fe", // indigo-200
+  checker: "#e5e7eb", // gray-200 squares on white
   avatarFrom: "#6366f1", // indigo-500
   avatarTo: "#7c3aed", // violet-600
   online: "#10b981", // emerald-500
@@ -27,7 +26,8 @@ const cardStyle: CSSProperties = {
   gap: 48,
   padding: "40px 32px",
   borderRadius: 12,
-  background: `repeating-linear-gradient(45deg, ${palette.stripeA} 0 12px, ${palette.stripeB} 12px 24px)`,
+  border: "1px solid #e2e8f0",
+  background: `repeating-conic-gradient(${palette.checker} 0% 25%, #ffffff 0% 50%) 0 0 / 16px 16px`,
 };
 
 const buttonStyle: CSSProperties = {
