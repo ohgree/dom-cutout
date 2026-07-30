@@ -68,7 +68,7 @@ const Controls = ({ children }: { children: ReactNode }) => (
 const demoButtonClass = "chip w-46 cursor-pointer text-left";
 
 const Avatar = () => (
-  <div className="flex h-18 w-18 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-2xl font-semibold text-white">
+  <div className="flex h-18 w-18 items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-violet-600 text-2xl font-semibold text-white">
     MJ
   </div>
 );
@@ -111,7 +111,7 @@ const AvatarStatusDemo = () => {
 const WarningBadge = () => (
   <TriangleAlert
     size={30}
-    className="absolute -top-[3px] right-[1px] fill-yellow-400 stroke-slate-900"
+    className="absolute -top-0.75 right-px fill-yellow-400 stroke-slate-900"
     strokeWidth={1.75}
   />
 );
@@ -140,7 +140,7 @@ const StarOverlay = () => (
 );
 
 const PhotoTile = () => (
-  <div className="h-20 w-20 rounded-[14px] bg-gradient-to-br from-rose-400 via-fuchsia-600 to-indigo-600" />
+  <div className="h-20 w-20 rounded-[14px] bg-linear-to-br from-rose-400 via-fuchsia-600 to-indigo-600" />
 );
 
 const ShapeComparisonDemo = () => {

@@ -6,10 +6,20 @@
   },
   "plugins": ["typescript", "react", "unicorn", "oxc"],
   "rules": {
-    "react/react-in-jsx-scope": "off"
+    "react/react-in-jsx-scope": "off",
+    "tailwindcss/no-unknown-classes": "error",
+    "tailwindcss/no-conflicting-classes": "error",
+    "tailwindcss/no-deprecated-classes": "error",
+    "tailwindcss/enforce-canonical": "warn"
   },
   "env": {
     "browser": true
   },
-  "ignorePatterns": ["dist", "node_modules", "examples/dist"]
+  "ignorePatterns": ["dist", "node_modules", "examples/dist"],
+  "jsPlugins": ["oxlint-tailwindcss"],
+  "settings": {
+    "tailwindcss": {
+      "entryPoint": "examples/styles.css"
+    }
+  }
 }
