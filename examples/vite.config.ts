@@ -20,6 +20,11 @@ export default defineConfig({
     },
   },
   resolve: {
+    // The dom-cutout aliases point outside this app's root, so the adapter's
+    // bare `react` import would resolve to the package's node_modules — a
+    // second React copy that null-dispatchers every hook in production
+    // builds (dev masks it by prebundling all `react` imports to one copy).
+    dedupe: ["react", "react-dom"],
     alias: [
       {
         find: "dom-cutout/react",

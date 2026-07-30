@@ -9,7 +9,9 @@
   <body class="bg-slate-100 font-sans text-slate-800 antialiased">
     <main class="mx-auto max-w-2xl px-5 py-12">
       <!-- Hero -->
-      <header class="flex items-baseline justify-between">
+      <header
+        class="sticky top-0 z-20 -mx-5 flex items-baseline justify-between bg-slate-100/85 px-5 py-3 backdrop-blur"
+      >
         <!-- The title itself is a live cutout — the first thing on the page
              is the library working (on text, no less). -->
         <h1 class="text-3xl font-semibold tracking-tight text-slate-900">
@@ -96,12 +98,12 @@
             </svg>
           </div>
         </div>
-        <div class="flex flex-col gap-2 text-sm text-slate-600">
+        <div class="flex min-w-0 flex-col gap-2 text-sm text-slate-600">
           <div id="hero-snippet">
             <pre class="shiki"><code>createCutout(avatar, star, { gap: 4 })</code></pre>
           </div>
           <button id="hero-toggle" type="button" class="chip w-fit cursor-pointer">
-            Toggle the star
+            Toggle star
           </button>
         </div>
       </div>

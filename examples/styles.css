@@ -12,9 +12,10 @@
     @apply rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-[13px] text-slate-800;
   }
 
-  /* Demo card: the checkerboard stage the cutouts sit on. */
+  /* Demo card: the checkerboard stage the cutouts sit on. flex-wrap keeps
+     artwork + controls usable on narrow viewports. */
   .demo-card {
-    @apply bg-checker flex items-center justify-center gap-12 rounded-xl border border-slate-200 px-8 py-10;
+    @apply bg-checker flex flex-wrap items-center justify-center gap-x-12 gap-y-6 rounded-xl border border-slate-200 px-6 py-10 sm:px-8;
   }
 
   /* Active package-manager tab. */
