@@ -86,13 +86,13 @@ On each update, `dom-cutout` measures the content and overlay rects, builds a sm
 - The first paint after mount is unmasked for one frame (the mask needs a layout pass to measure). With server-rendered/static markup the window lasts until your script runs — if it matters, hide the overlay initially (e.g. `visibility: hidden` inline) and reveal it after `createCutout`, or key CSS off the `data-cutout` attribute.
 - `box` shape with a text-only overlay measures the overlay wrapper itself — wrap text in an element for accurate geometry.
 - Stroke-width compensation reads SVG attributes (`stroke-width` on the root or per element); stroke-widths set via CSS classes or inline styles don't survive the markup copy and aren't compensated.
-- Safari renders cutout edges ~1px softer than Chrome on high-DPI displays: WebKit rasterizes image masks at CSS-pixel resolution (the generated mask itself is binary vector; oversampling its intrinsic size doesn't help — verified). A resolution-independent path via SVG reference masks is under Future plans.
+- Safari renders cutout edges ~1px softer than Chrome on high-DPI displays: WebKit rasterizes image masks at CSS-pixel resolution. This is a WebKit limitation with no current workaround — the generated mask is binary vector, oversampling its intrinsic size changes nothing, and the vector alternative (SVG reference masks on HTML elements) is not supported by WebKit at all (both verified empirically).
 
 ## Future plans
 
 - **CSS transform support** — read the overlay's computed transform matrix and transplant it into the generated mask, so rotated/scaled overlays stay in sync without the in-SVG `<g transform>` workaround. Stays vector and synchronous.
 - **Raster silhouettes** — a canvas-backed shape mode that cuts out whatever the overlay actually paints (`<img>` badges, emoji), plus soft/feathered halos. Additive to the SVG path, not a replacement: SVG masks stay resolution-independent and synchronous, which raster can't match for glyph overlays.
-- **SVG reference masks** — apply the mask via an inline `<mask>` element reference instead of a data-URI image, keeping the mask vector all the way through the compositor. Would fix Safari's soft edges on high-DPI displays; needs cross-engine support research for `mask: url(#id)` on HTML elements.
+- **SVG reference masks** — apply the mask via an inline `<mask>` element reference (`mask: url(#id)`), keeping it vector through the compositor. Tested: works in Chromium, but WebKit ignores reference masks on HTML elements entirely — so this can't fix Safari's soft edges today. Revisit if WebKit ships support.
 
 ## Prior art
 
