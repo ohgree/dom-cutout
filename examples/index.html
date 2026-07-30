@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="./styles.css" />
     <title>dom-cutout</title>
   </head>
   <body class="bg-slate-100 font-sans text-slate-800 antialiased">
@@ -151,7 +152,20 @@
           class="block rounded-xl border border-slate-200 bg-white p-4 no-underline hover:border-indigo-500"
           href="vanilla/"
         >
-          <strong class="text-slate-900">Vanilla DOM</strong><br />
+          <strong class="flex items-center gap-2 text-slate-900">
+            Vanilla DOM
+            <svg
+              viewBox="0 0 24 24"
+              class="h-4 w-4 fill-none stroke-slate-500"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m16 18 6-6-6-6" />
+              <path d="m8 6-6 6 6 6" />
+            </svg>
+          </strong>
           <small class="text-slate-500"
             >createCutout() from the zero-dependency core — no framework</small
           >
@@ -160,7 +174,17 @@
           class="block rounded-xl border border-slate-200 bg-white p-4 no-underline hover:border-indigo-500"
           href="react/"
         >
-          <strong class="text-slate-900">React</strong><br />
+          <strong class="flex items-center gap-2 text-slate-900">
+            React
+            <svg viewBox="-12 -12 24 24" class="h-4 w-4 stroke-slate-500" aria-hidden="true">
+              <circle r="2.1" class="fill-slate-500" stroke="none" />
+              <g fill="none" stroke-width="1.2">
+                <ellipse rx="10.5" ry="4.2" />
+                <ellipse rx="10.5" ry="4.2" transform="rotate(60)" />
+                <ellipse rx="10.5" ry="4.2" transform="rotate(120)" />
+              </g>
+            </svg>
+          </strong>
           <small class="text-slate-500"
             >&lt;Cutout&gt; from dom-cutout/react — avatar status dot, warning badge, contour vs
             box</small

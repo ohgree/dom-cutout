@@ -1,5 +1,3 @@
-import "./styles.css";
-
 import { createCutout } from "dom-cutout";
 
 const content = document.getElementById("hero-content")!;

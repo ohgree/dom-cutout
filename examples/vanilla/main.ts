@@ -1,5 +1,3 @@
-import "../styles.css";
-
 import { createCutout, type CutoutInstance } from "dom-cutout";
 
 const content = document.getElementById("content")!;
