@@ -1,12 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#334155" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
-  <style>
-    @media (prefers-color-scheme: dark) {
-      circle, path { stroke: #cbd5e1; }
-    }
-  </style>
-  <circle cx="6" cy="6" r="3" />
-  <path d="M8.12 8.12 12 12" />
-  <path d="M20 4 8.12 15.88" />
-  <circle cx="6" cy="18" r="3" />
-  <path d="M14.8 14.8 20 20" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- The mark is the product: a tile with a corner badge cut out of it,
+       gap ring included — an actual SVG mask, original artwork. -->
+  <defs>
+    <mask id="cut">
+      <rect width="32" height="32" fill="white" />
+      <circle cx="25" cy="25" r="9.5" fill="black" />
+    </mask>
+  </defs>
+  <rect x="1" y="1" width="30" height="30" rx="9" fill="#6366f1" mask="url(#cut)" />
+  <circle cx="25" cy="25" r="6" fill="#fbbf24" />
 </svg>
