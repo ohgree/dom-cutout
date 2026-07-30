@@ -61,6 +61,15 @@ describe("<Cutout />", () => {
     expect(contentEl(container).hasAttribute(MASKED_ATTRIBUTE)).toBe(false);
   });
 
+  it("keeps children clickable: the overlay layer has pointer-events none", () => {
+    // The overlay layer stretches over the whole grid cell; without this it
+    // swallows every click aimed at the content (regression from 0.1.x).
+    const { container } = renderCutout(<svg viewBox="0 0 10 10" />);
+
+    const overlayLayer = container.querySelector<HTMLElement>("[data-cutout-overlay]")!;
+    expect(overlayLayer.style.pointerEvents).toBe("none");
+  });
+
   it("forwards ref to the wrapper element", () => {
     const ref = { current: null as HTMLDivElement | null };
     render(

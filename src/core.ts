@@ -36,17 +36,42 @@ export interface CutoutInstance {
 /** Attribute set on the content element while a mask is applied. */
 export const MASKED_ATTRIBUTE = "data-cutout";
 
+/** The mask longhands `computeMaskStyle` returns and `destroy()` clears. */
+export const MASK_PROPERTIES = [
+  "mask-image",
+  "mask-position",
+  "mask-size",
+  "mask-repeat",
+  "mask-composite",
+] as const;
+
+/** The CSS mask longhands that render a cutout, as a property → value map. */
+export type CutoutMaskStyle = Record<(typeof MASK_PROPERTIES)[number], string>;
+
 /**
- * Compute the CSS `mask-image` url() that cuts the overlay's silhouette out
- * of the content element, or `null` when the overlay renders nothing.
+ * Compute the CSS mask longhands that cut the overlay's silhouette out of
+ * the content element, or `null` when the overlay renders nothing.
+ *
+ * The mask is two composited alpha layers: a full-coverage gradient canvas,
+ * `subtract`-ed by a small SVG image containing only the (dilated) shape.
+ * This construction is deliberate, the survivor of a long WebKit
+ * elimination (docs/webkit-masking.md):
+ * - no internal `<mask>` in any mask image — WebKit rasterizes mask images
+ *   containing one at CSS-pixel resolution (~1px soft edges on high-DPI);
+ * - no `mask-mode: luminance` — WebKit silently stops honoring it past a
+ *   pattern-tile budget of 512×512 device px on iOS (bug 282530), which an
+ *   ordinary element crosses at rest;
+ * - no repeated image tiles — antialiased tile edges seam into a visible
+ *   grid at fractional zoom scales. The gradient canvas is a generated
+ *   image: full coverage, no tiles, no budget.
  *
  * Pure measurement + string building: applies nothing to the DOM.
  */
-export const computeMaskUrl = (
+export const computeMaskStyle = (
   content: Element,
   overlay: Element,
   { gap = DEFAULT_GAP, shape = "auto" }: CutoutOptions = {},
-): string | null => {
+): CutoutMaskStyle | null => {
   // An empty overlay means "no cutout". Whitespace and comment nodes don't
   // count as content (hand-written markup always contains them). Without
   // this, the box branch would measure the overlay element itself — often
@@ -59,7 +84,10 @@ export const computeMaskUrl = (
   const svg = shape === "box" ? null : overlay.querySelector("svg");
   if (shape === "contour" && !svg) return null;
 
-  let shapeMarkup: string;
+  // The shape layer: a small standalone SVG image covering just the dilated
+  // silhouette, placed over the content via mask-position/mask-size.
+  let shapeSvg: string;
+  let layer: { x: number; y: number; w: number; h: number };
 
   if (svg) {
     // Stroke expansion follows the glyph's contours uniformly, so the gap
@@ -68,8 +96,6 @@ export const computeMaskUrl = (
     // A zero-area overlay (e.g. a display:none badge) renders nothing and
     // must clear the mask — and the viewBox scale divides by these.
     if (svgRect.width === 0 || svgRect.height === 0) return null;
-    const x = svgRect.left - contentRect.left;
-    const y = svgRect.top - contentRect.top;
     const vb = svg.viewBox?.baseVal;
     const vbW = vb && vb.width > 0 ? vb.width : svgRect.width;
     const vbH = vb && vb.height > 0 ? vb.height : svgRect.height;
@@ -92,26 +118,40 @@ export const computeMaskUrl = (
     // stroke-widths don't survive the copy and aren't compensated (README
     // caveat).
     const rootStrokeWidth = parseFloat(svg.getAttribute("stroke-width") ?? "") || 0;
+    let maxOwnStrokeWidth = 0;
     const clone = svg.cloneNode(true) as SVGSVGElement;
     for (const el of clone.querySelectorAll("[stroke-width]")) {
       const own = parseFloat(el.getAttribute("stroke-width") ?? "") || 0;
+      maxOwnStrokeWidth = Math.max(maxOwnStrokeWidth, own);
       el.setAttribute("stroke-width", String(own + dilation));
     }
-    // Normalize paint colors to black: a luminance mask reads color (a red
-    // fill would only half-hide), and broken paint-server references
-    // (fill="url(#…)") never resolve inside a standalone mask image.
-    // Harmless for alpha masks, where any non-none paint is opaque anyway.
+    // Normalize paint colors to black: broken paint-server references
+    // (fill="url(#…)") never resolve inside a standalone mask image, and
+    // for the knockout only the silhouette matters — any non-none paint is
+    // equally opaque.
     for (const attr of ["fill", "stroke"] as const) {
       for (const el of clone.querySelectorAll(`[${attr}]`)) {
         if (el.getAttribute(attr) !== "none") el.setAttribute(attr, "black");
       }
     }
 
-    shapeMarkup = [
-      `<svg x="${x}" y="${y}" width="${svgRect.width}" height="${svgRect.height}" viewBox="${viewBox}" overflow="visible">`,
+    // The layer image clips at its bounds, so pad it by the widest possible
+    // stroke spill: gap (the dilation, in px) plus half the largest artwork
+    // stroke, plus 1px slack for antialiasing.
+    const pad = gap + Math.max(rootStrokeWidth, maxOwnStrokeWidth) / (2 * scale) + 1;
+    layer = {
+      x: svgRect.left - contentRect.left - pad,
+      y: svgRect.top - contentRect.top - pad,
+      w: svgRect.width + 2 * pad,
+      h: svgRect.height + 2 * pad,
+    };
+    shapeSvg = [
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${layer.w}" height="${layer.h}">`,
+      `<svg x="${pad}" y="${pad}" width="${svgRect.width}" height="${svgRect.height}" viewBox="${viewBox}" overflow="visible">`,
       `<g fill="black" stroke="black" stroke-width="${dilation + rootStrokeWidth}" stroke-linejoin="round" stroke-linecap="round">`,
       clone.innerHTML,
       `</g>`,
+      `</svg>`,
       `</svg>`,
     ].join("");
   } else {
@@ -124,39 +164,31 @@ export const computeMaskUrl = (
     // A zero-area overlay (e.g. a display:none badge) renders nothing and
     // must clear the mask rather than trace a phantom gap-sized shape.
     if (targetRect.width === 0 || targetRect.height === 0) return null;
-    const x = targetRect.left - contentRect.left - gap;
-    const y = targetRect.top - contentRect.top - gap;
-    const w = targetRect.width + gap * 2;
-    const h = targetRect.height + gap * 2;
     const br = getComputedStyle(target).borderRadius;
     const rx =
       (br.includes("%") ? (parseFloat(br) / 100) * targetRect.width : parseFloat(br) || 0) + gap;
 
-    shapeMarkup = `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="black"/>`;
+    layer = {
+      x: targetRect.left - contentRect.left - gap,
+      y: targetRect.top - contentRect.top - gap,
+      w: targetRect.width + gap * 2,
+      h: targetRect.height + gap * 2,
+    };
+    shapeSvg = [
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${layer.w}" height="${layer.h}">`,
+      `<rect width="100%" height="100%" rx="${rx}" fill="black"/>`,
+      `</svg>`,
+    ].join("");
   }
 
-  // Self-contained SVG mask sized to the content element: white canvas
-  // rect (visible) + the shape in black (cutout), applied with
-  // `mask-mode: luminance`. Deliberately NOT an alpha mask — the alpha
-  // knockout requires an internal <mask> element, and WebKit rasterizes
-  // mask images containing internal <mask> elements at CSS-pixel
-  // resolution (~1px soft edges on high-DPI; verified empirically).
-  // `mask-mode` is Baseline widely available (everywhere since 2023-12);
-  // on older engines the property is ignored, the all-opaque image masks
-  // nothing, and the cutout simply doesn't appear.
-  const svgMarkup = [
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${contentRect.width}" height="${contentRect.height}">`,
-    `<rect width="100%" height="100%" fill="white"/>`,
-    shapeMarkup,
-    `</svg>`,
-  ].join("");
-
-  return `url("data:image/svg+xml,${encodeURIComponent(svgMarkup)}")`;
+  return {
+    "mask-image": `linear-gradient(#000,#000),url("data:image/svg+xml,${encodeURIComponent(shapeSvg)}")`,
+    "mask-position": `0 0,${layer.x}px ${layer.y}px`,
+    "mask-size": `100% 100%,${layer.w}px ${layer.h}px`,
+    "mask-repeat": "no-repeat,no-repeat",
+    "mask-composite": "subtract,add",
+  };
 };
-
-// No -webkit- prefixes: every engine with mask-mode supports unprefixed
-// mask properties (both landed in the same versions).
-const MASK_PROPERTIES = ["mask-image", "mask-size", "mask-mode"] as const;
 
 const clearMask = (content: HTMLElement) => {
   for (const property of MASK_PROPERTIES) {
@@ -178,20 +210,21 @@ export const createCutout = (
   overlay: HTMLElement,
   options: CutoutOptions = {},
 ): CutoutInstance => {
-  let lastUrl: string | null | undefined;
+  let lastKey: string | null | undefined;
 
   const update = () => {
-    const url = computeMaskUrl(content, overlay, options);
-    if (url === lastUrl) return;
-    lastUrl = url;
+    const style = computeMaskStyle(content, overlay, options);
+    const key = style && JSON.stringify(style);
+    if (key === lastKey) return;
+    lastKey = key;
 
-    if (url === null) {
+    if (style === null) {
       clearMask(content);
       return;
     }
-    content.style.setProperty("mask-image", url);
-    content.style.setProperty("mask-size", "100% 100%");
-    content.style.setProperty("mask-mode", "luminance");
+    for (const property of MASK_PROPERTIES) {
+      content.style.setProperty(property, style[property]);
+    }
     content.setAttribute(MASKED_ATTRIBUTE, "");
   };
 
@@ -206,7 +239,7 @@ export const createCutout = (
     update,
     destroy: () => {
       resizeObserver?.disconnect();
-      lastUrl = undefined;
+      lastKey = undefined;
       clearMask(content);
     },
   };

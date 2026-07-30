@@ -13,8 +13,8 @@ The pattern you've seen on avatar status dots (Discord, Messenger): the badge do
 - **Zero-dependency core** — plain DOM, works with any framework or none
 - **React adapter** at `dom-cutout/react`
 - **Contour-following** — SVG overlays are traced via stroke expansion, so the gap reads as a halo around the actual glyph, not a box
+- **Crisp on every engine** — the mask construction was chosen by elimination against WebKit's rendering quirks ([the full story](./docs/webkit-masking.md))
 - Keeps itself in sync via `ResizeObserver`; SSR-safe
-- Requires `mask-mode` ([Baseline widely available](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/mask-mode)) — degrades to no cutout on older engines
 
 ## Install
 
@@ -69,7 +69,7 @@ instance.destroy();
 
 While a mask is applied, the content element carries a `data-cutout` attribute (exported as `MASKED_ATTRIBUTE`) — a hook for CSS or tests. An overlay that renders nothing — empty, whitespace/comments only, or zero-area (e.g. `display: none`) — clears the mask.
 
-`computeMaskUrl(content, overlay, options)` is also exported if you only want the generated `mask-image` value and full control over applying it.
+`computeMaskStyle(content, overlay, options)` is also exported if you want full control over applying the mask: it returns the CSS mask longhands as a property → value map (`mask-image`, `mask-position`, `mask-size`, `mask-repeat`, `mask-composite` — the list is exported as `MASK_PROPERTIES`), or `null` when the overlay renders nothing.
 
 ## Shapes
 
@@ -79,7 +79,9 @@ While a mask is applied, the content element carries a `data-cutout` attribute (
 
 ## How it works
 
-On each update, `dom-cutout` measures the content and overlay rects, builds a small self-contained SVG (`white` canvas + the overlay's shape in `black`), and sets it as the content element's `mask-image` as a `data:` URI, applied with `mask-mode: luminance` (black = hidden). No shared `<defs>`, no extra DOM, no stacking-context tricks. `ResizeObserver` re-runs measurement on size changes; the React adapter additionally recomputes before every paint, deduped by comparing the generated URL.
+On each update, `dom-cutout` measures the content and overlay rects and applies a two-layer composite mask: a full-coverage gradient canvas (`linear-gradient(#000,#000)`), minus a small standalone SVG containing just the dilated silhouette, positioned over the overlay via `mask-position` and combined with `mask-composite: subtract`. No shared `<defs>`, no extra DOM, no stacking-context tricks. `ResizeObserver` re-runs measurement on size changes; the React adapter additionally recomputes before every paint, deduped by comparing the generated properties.
+
+The two-layer construction isn't incidental — it's the only one of six approaches that renders crisp at device resolution on every engine _and_ survives iOS: single-image masks with an internal SVG `<mask>` rasterize soft on high-DPI WebKit, and `mask-mode: luminance` masks silently stop masking on iOS past a 512×512 device-px budget ([WebKit bug 282530](https://bugs.webkit.org/show_bug.cgi?id=282530)). The elimination is documented in [docs/webkit-masking.md](./docs/webkit-masking.md).
 
 ## Caveats
 
@@ -89,20 +91,22 @@ On each update, `dom-cutout` measures the content and overlay rects, builds a sm
 - Stroke-width compensation reads SVG attributes (`stroke-width` on the root or per element); stroke-widths set via CSS classes or inline styles don't survive the markup copy and aren't compensated.
 - The overlay artwork's paint colors are normalized to black in the mask copy (`fill="none"`/`stroke="none"` are respected) — only the silhouette matters, but paints applied via CSS classes don't survive the copy, same as stroke-widths.
 
-## Browser support & the WebKit story
+## Browser support
 
-`dom-cutout` requires `mask-mode` — [Baseline widely available](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/mask-mode) (all major engines since December 2023; Safari 15.4+, Chrome/Edge 120+, Firefox 53+). On older engines the property is ignored, the mask image reads as fully opaque, and the cutout simply doesn't appear — content and overlay render normally, just without the gap.
+The composite mask needs `mask-composite` — [Baseline widely available](https://developer.mozilla.org/en-US/docs/Web/CSS/mask-composite) (Safari 15.4+, Chrome/Edge 120+, Firefox 53+). On older engines the layers combine into an all-opaque mask and the cutout simply doesn't appear: content and overlay render normally, just without the gap.
 
-Luminance masking isn't an implementation detail here, it's the design: WebKit rasterizes mask images that contain internal `<mask>` elements at CSS-pixel resolution (~1px soft edges on high-DPI displays), and the same structure is implicated in Safari's intermittent mask-rendering glitches. The classic alpha knockout _requires_ exactly that structure — punching a transparent hole into an opaque canvas takes an internal `<mask>` — while a luminance mask encodes the hole as color, no indirection needed. Isolated empirically: alpha + internal mask → soft; luminance + internal mask → soft; luminance + simple SVG → crisp, at device resolution, on every engine tested (WebKit, Chromium, Firefox).
-
-For the record, verified no-ops against the alpha-structure softness: oversampling the mask SVG's intrinsic size, every viewBox/width/height spelling, compositing-layer tricks (`translateZ(0)`, `will-change`, `isolation`), `-webkit-mask-box-image`. SVG reference masks (`mask: url(#id)`) are not soft but _absent_ — WebKit ignores them on HTML elements entirely. See [`examples/lab/`](./examples/lab/index.html) for the comparison bench.
-
-One known WebKit limitation: masks silently drop when the rasterized mask layer exceeds an internal buffer cap. On desktop WebKit this measures as ~2048 **device** pixels per dimension of the masked element (~4096 for the alpha structure); on iOS the threshold and granularity differ — deep pinch-zoom drops _all_ masks on the page regardless of element size, and they return on zoom-out. No CSS on the element changes this — it's a WebKit resource cap. Chromium and Firefox render the same content fine at any zoom.
+Why the mask is built this way — and why five simpler constructions were eliminated (soft edges from internal SVG `<mask>` elements, luminance masks silently dying on iOS via [WebKit bug 282530](https://bugs.webkit.org/show_bug.cgi?id=282530), tile seams under pinch zoom) — is documented in [docs/webkit-masking.md](./docs/webkit-masking.md). The playwright suite in [`e2e/`](./e2e) pins each of those failure modes.
 
 ## Future plans
 
 - **CSS transform support** — read the overlay's computed transform matrix and transplant it into the generated mask, so rotated/scaled overlays stay in sync without the in-SVG `<g transform>` workaround. Stays vector and synchronous.
 - **Raster silhouettes** — a canvas-backed shape mode that cuts out whatever the overlay actually paints (`<img>` badges, emoji), plus soft/feathered halos. Additive to the SVG path, not a replacement: SVG masks stay resolution-independent and synchronous, which raster can't match for glyph overlays.
+
+## Why not a background-colored ring?
+
+The workaround most UIs ship is a fake gap: give the badge a `border`, `box-shadow` spread, or `outline` in the page's background color. It looks right exactly until the background stops being one flat color — over a gradient, an image, a hover state, glassmorphism, or a themed surface, the "gap" is revealed as an opaque painted ring that doesn't match what's behind it. It also has to be maintained in lockstep with every background it ever sits on (light/dark themes ×2 minimum).
+
+A mask doesn't paint the gap — it _removes_ content pixels, so whatever is actually behind the component shows through, automatically, on any backdrop. That's what the checkerboard in the [live examples](https://ohgree.github.io/dom-cutout/) demonstrates: the gap is genuine transparency, not paint.
 
 ## Prior art
 

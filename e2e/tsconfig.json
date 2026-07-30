@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "types": ["node"],
+    // Mirror the vite alias so the editor and specs resolve the live
+    // library source, not the (possibly stale) built dist types that
+    // package self-reference would pick via package.json exports.
+    "paths": {
+      "dom-cutout": ["../src/index.ts"]
+    }
+  },
+  "include": ["."]
+}
