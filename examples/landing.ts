@@ -8,9 +8,15 @@ const star = document.getElementById("hero-star")!;
 
 const instance = createCutout(content, overlay, { gap: 4 });
 
-// FOUC guard: static markup paints before this module runs; reveal the dot
-// only once the first mask is applied.
+// The page title is a cutout too — through text glyphs, which mask-image
+// handles like any other painted output.
+const titleOverlay = document.getElementById("title-overlay")!;
+createCutout(document.getElementById("title-content")!, titleOverlay, { gap: 3 });
+
+// FOUC guard: static markup paints before this module runs; reveal overlays
+// only once their first masks are applied.
 overlay.style.visibility = "";
+titleOverlay.style.visibility = "";
 
 let starShown = true;
 document.getElementById("hero-toggle")!.addEventListener("click", () => {
