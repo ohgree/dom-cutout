@@ -13,10 +13,15 @@
          gap must straddle several cells to read as transparency in the
          recorded gif (a thin ring inside one 16px white cell reads as a
          painted border). -->
+    <!-- Absolute padding: .demo-card's rem padding doubles under ?scale=2
+         and pads the recording with dead space. -->
     <div
       id="scene"
       class="demo-card m-5 inline-flex"
-      style="background: repeating-conic-gradient(#dde2e9 0% 25%, #ffffff 0% 50%) 0 0 / 8px 8px"
+      style="
+        background: repeating-conic-gradient(#dde2e9 0% 25%, #ffffff 0% 50%) 0 0 / 8px 8px;
+        padding: 28px 32px 24px;
+      "
     >
       <figure class="m-0 text-center">
         <div class="inline-grid *:[grid-area:1/1]">
