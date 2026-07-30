@@ -23,7 +23,17 @@
         padding: 40px 20px;
       }
       p.lead {
-        color: #555;
+        color: #64748b;
+      }
+      .back {
+        font-size: 13px;
+        color: #64748b;
+        text-decoration: none;
+      }
+      h1 {
+        margin: 8px 0 4px;
+        font-size: 24px;
+        color: #1e293b;
       }
       .card {
         display: flex;
@@ -104,11 +114,12 @@
   </head>
   <body>
     <main>
+      <a class="back" href="/">&larr; examples</a>
       <h1>createCutout() — vanilla DOM</h1>
       <p class="lead">
-        The zero-dependency core operating on hand-written markup: an inline-grid stack, a content
-        layer, an overlay layer, and one createCutout() call. View source of /vanilla/main.ts for
-        the wiring.
+        The zero-dependency core on hand-written markup: an inline-grid stack, a content layer, an
+        overlay layer, one createCutout() call. The checkerboard shows through wherever a silhouette
+        is cut out. View /vanilla/main.ts for the wiring.
       </p>
       <div class="card">
         <div class="stack">

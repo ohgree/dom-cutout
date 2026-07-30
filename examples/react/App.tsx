@@ -242,10 +242,16 @@ const ShapeComparisonDemo = () => {
 
 export const App = () => (
   <main style={{ maxWidth: 640, margin: "0 auto", padding: "40px 20px" }}>
-    <h1 style={{ fontSize: 24, marginBottom: 4, color: palette.text }}>dom-cutout</h1>
+    <a href="/" style={{ fontSize: 13, color: palette.textMuted, textDecoration: "none" }}>
+      &larr; examples
+    </a>
+    <h1 style={{ fontSize: 24, margin: "8px 0 4px", color: palette.text }}>
+      &lt;Cutout /&gt; &mdash; React
+    </h1>
     <p style={{ color: palette.textMuted, marginBottom: 32 }}>
-      Live examples running against the package source. The striped backdrop shows through wherever
-      the overlay's silhouette is cut out.
+      The React adapter over the zero-dependency core: overlay and children as props, the mask kept
+      in sync before every paint. The checkerboard shows through wherever a silhouette is cut out.
+      View /react/App.tsx for the wiring.
     </p>
 
     <Section
