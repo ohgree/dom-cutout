@@ -16,19 +16,24 @@
             <span id="title-content">dom-cutout</span>
             <span id="title-overlay" class="relative" style="visibility: hidden">
               <!-- Scissors mid-cut through the wordmark. Stroke-only glyph:
-                   the blade lines carve channels through the letterforms. -->
+                   the blade lines carve channels through the letterforms.
+                   Rotation lives INSIDE the svg (<g transform>) so the mask
+                   copy rotates with the pixels — a CSS transform on the
+                   element would leave the mask axis-aligned. -->
               <svg
                 viewBox="0 0 24 24"
-                class="absolute -top-3 -right-4 h-6 w-6 fill-none stroke-slate-700"
+                class="absolute -top-3 -right-4 h-6 w-6 overflow-visible fill-none stroke-slate-700"
                 stroke-width="1.75"
                 stroke-linecap="round"
                 stroke-linejoin="round"
               >
-                <circle cx="6" cy="6" r="3" />
-                <path d="M8.12 8.12 12 12" />
-                <path d="M20 4 8.12 15.88" />
-                <circle cx="6" cy="18" r="3" />
-                <path d="M14.8 14.8 20 20" />
+                <g transform="rotate(30 12 12)">
+                  <circle cx="6" cy="6" r="3" />
+                  <path d="M8.12 8.12 12 12" />
+                  <path d="M20 4 8.12 15.88" />
+                  <circle cx="6" cy="18" r="3" />
+                  <path d="M14.8 14.8 20 20" />
+                </g>
               </svg>
             </span>
           </span>
