@@ -13,7 +13,7 @@
 
 </div>
 
-Cut the silhouette of one DOM element out of another — badge cutouts, notification dots, status halos — with a runtime-generated SVG mask that follows the overlay's contours.
+Cut the silhouette of one DOM element out of another — because a background-colored border is a promise your gradient will break.
 
 **[Live examples →](https://ohgree.github.io/dom-cutout/)**
 
