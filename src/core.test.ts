@@ -47,6 +47,49 @@ describe("computeMaskUrl", () => {
     expect(computeMaskUrl(content, overlay, { shape: "contour" })).toBeNull();
   });
 
+  describe("stroke-width compensation", () => {
+    // jsdom rects are all zeros, so pin the geometry: 24-unit viewBox
+    // rendered at 24px → scale 1, making dilation = 2 × gap in both units.
+    const setupMeasured = (svgHtml: string) => {
+      const { content, overlay } = setup(svgHtml);
+      const svg = overlay.querySelector("svg")!;
+      const rect = (width: number, height: number) =>
+        ({ left: 0, top: 0, width, height }) as DOMRect;
+      content.getBoundingClientRect = () => rect(100, 100);
+      Object.defineProperty(svg, "getBoundingClientRect", { value: () => rect(24, 24) });
+      return { content, overlay };
+    };
+
+    const decoded = (url: string | null) => decodeURIComponent(url ?? "");
+
+    it("adds the svg root's stroke-width to the mask stroke", () => {
+      const { content, overlay } = setupMeasured(
+        '<svg viewBox="0 0 24 24" stroke-width="2"><path d="M4 4h16" /></svg>',
+      );
+
+      // gap 3 → dilation 6, plus root stroke-width 2 → 8.
+      expect(decoded(computeMaskUrl(content, overlay, { gap: 3 }))).toContain('stroke-width="8"');
+    });
+
+    it("keeps plain dilation for artwork without strokes", () => {
+      const { content, overlay } = setupMeasured(
+        '<svg viewBox="0 0 24 24"><path d="M4 4h16" /></svg>',
+      );
+
+      expect(decoded(computeMaskUrl(content, overlay, { gap: 3 }))).toContain('stroke-width="6"');
+    });
+
+    it("dilates per-element stroke-widths instead of letting them override the halo", () => {
+      const { content, overlay } = setupMeasured(
+        '<svg viewBox="0 0 24 24"><path d="M4 4h16" stroke-width="4" /></svg>',
+      );
+
+      // The element's own 4 would have replaced the halo entirely; it must
+      // come out as 4 + dilation 6 = 10.
+      expect(decoded(computeMaskUrl(content, overlay, { gap: 3 }))).toContain('stroke-width="10"');
+    });
+  });
+
   it('uses the box branch for shape "box" even with an svg overlay', () => {
     const { content, overlay } = setup('<svg viewBox="0 0 10 10"></svg>');
 

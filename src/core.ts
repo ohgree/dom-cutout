@@ -73,14 +73,34 @@ export const computeMaskUrl = (
         ? `${vb.x} ${vb.y} ${vb.width} ${vb.height}`
         : `0 0 ${svgRect.width} ${svgRect.height}`;
 
-    // Convert gap from rendered pixels to viewBox units.
+    // Convert gap from rendered pixels to viewBox units. The mask stroke
+    // dilates the artwork by `dilation / 2` on each side of the path.
     const scale = Math.max(vbW / svgRect.width, vbH / svgRect.height);
-    const strokeWidth = gap * 2 * scale;
+    const dilation = gap * 2 * scale;
+
+    // Stroked artwork (lucide/feather-style icons) has its visible edge
+    // `strokeWidth / 2` outside the path centerline, so the mask stroke
+    // must add the artwork's own stroke-width on top of the dilation —
+    // otherwise the visible gap shrinks by that half-stroke.
+    // Two compensation sites:
+    // - the svg root's stroke-width (inherited by the artwork but dropped
+    //   by the innerHTML copy) is folded into the wrapping <g>;
+    // - per-element stroke-width attributes (which would override the <g>
+    //   and collapse that element's halo entirely) are rewritten on a clone
+    //   to their own value + dilation.
+    // Not compensated: stroke-widths set via CSS classes or inline styles
+    // (they don't survive the copy; documented caveat).
+    const rootStrokeWidth = parseFloat(svg.getAttribute("stroke-width") ?? "") || 0;
+    const clone = svg.cloneNode(true) as SVGSVGElement;
+    for (const el of clone.querySelectorAll("[stroke-width]")) {
+      const own = parseFloat(el.getAttribute("stroke-width") ?? "") || 0;
+      el.setAttribute("stroke-width", String(own + dilation));
+    }
 
     shapeMarkup = [
       `<svg x="${x}" y="${y}" width="${svgRect.width}" height="${svgRect.height}" viewBox="${viewBox}" overflow="visible">`,
-      `<g fill="black" stroke="black" stroke-width="${strokeWidth}" stroke-linejoin="round" stroke-linecap="round">`,
-      svg.innerHTML,
+      `<g fill="black" stroke="black" stroke-width="${dilation + rootStrokeWidth}" stroke-linejoin="round" stroke-linecap="round">`,
+      clone.innerHTML,
       `</g>`,
       `</svg>`,
     ].join("");

@@ -64,7 +64,7 @@ While a mask is applied, the content element carries a `data-cutout` attribute �
 
 ## Shapes
 
-- **`contour`** — traces the outline of the overlay's first `<svg>` by re-rendering its markup with a stroke of `2 × gap`, so the cutout follows the glyph itself. Rounded joins/caps.
+- **`contour`** — traces the outline of the overlay's first `<svg>` by re-rendering its markup with a stroke of `2 × gap` plus the artwork's own stroke-width, so the visible gap stays `gap` even for stroke-based icons (lucide, feather, tabler). Rounded joins/caps.
 - **`box`** — the overlay's bounding box (its first element child, falling back to the overlay itself), expanded by `gap`, respecting the target's computed `border-radius`. Works for dots, pills, counters.
 - **`auto`** (default) — `contour` when the overlay contains an `<svg>`, else `box`.
 
@@ -77,6 +77,7 @@ On each update, `dom-cutout` measures the content and overlay rects, builds a sm
 - Measurement uses `getBoundingClientRect`, so ancestors with CSS `transform: scale(...)` will skew the mask geometry.
 - The first paint after mount is unmasked for one frame (the mask needs a layout pass to measure).
 - `box` shape with a text-only overlay measures the overlay wrapper itself — wrap text in an element for accurate geometry.
+- Stroke-width compensation reads SVG attributes (`stroke-width` on the root or per element); stroke-widths set via CSS classes or inline styles don't survive the markup copy and aren't compensated.
 
 ## Prior art
 
