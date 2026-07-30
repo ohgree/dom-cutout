@@ -253,7 +253,9 @@ const ShapeComparisonDemo = () => {
           color: palette.text,
         }}
       >
-        <span style={{ minWidth: 52, fontVariantNumeric: "tabular-nums" }}>gap: {gap}px</span>
+        <span style={{ minWidth: 52, whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>
+          gap: {gap}px
+        </span>
         <input
           type="range"
           min={0}
