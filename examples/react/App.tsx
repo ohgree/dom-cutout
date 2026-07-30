@@ -28,14 +28,16 @@ const CodeBlock = ({ code }: { code: string }) => {
 
   if (html === null) {
     return (
-      <pre className="shiki">
-        <code>{code}</code>
-      </pre>
+      <div className="mt-3">
+        <pre className="shiki">
+          <code>{code}</code>
+        </pre>
+      </div>
     );
   }
   // Safe: the HTML is shiki's rendering of our own literal snippets.
   // eslint-disable-next-line react/no-danger
-  return <div dangerouslySetInnerHTML={{ __html: html }} />;
+  return <div className="mt-3" dangerouslySetInnerHTML={{ __html: html }} />;
 };
 
 const Section = ({

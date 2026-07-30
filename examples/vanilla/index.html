@@ -47,9 +47,11 @@
           </button>
         </div>
       </div>
-      <pre class="code shiki"><code>const instance = createCutout(content, overlay, { gap: 4 });
+      <div class="mt-3">
+        <pre class="code shiki"><code>const instance = createCutout(content, overlay, { gap: 4 });
 instance.update(); // after changes ResizeObserver can't see
 instance.destroy(); // removes mask + observers</code></pre>
+      </div>
     </main>
     <script type="module" src="/vanilla/main.ts"></script>
   </body>
