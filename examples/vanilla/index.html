@@ -71,6 +71,25 @@
         flex-direction: column;
         gap: 8px;
       }
+      /* Fixed width + left alignment: labels change length on click
+         ("shown"/"hidden", "destroyed (reload to reset)") and resizing
+         buttons would shift the card layout. */
+      .controls button {
+        font: inherit;
+        font-size: 13px;
+        width: 200px;
+        text-align: left;
+        padding: 6px 12px;
+        border-radius: 8px;
+        border: 1px solid #cbd5e1;
+        background: white;
+        color: #1e293b;
+        cursor: pointer;
+      }
+      .controls button:disabled {
+        color: #94a3b8;
+        cursor: default;
+      }
     </style>
   </head>
   <body>

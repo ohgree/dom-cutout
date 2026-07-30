@@ -30,9 +30,14 @@ const cardStyle: CSSProperties = {
   background: `repeating-conic-gradient(${palette.checker} 0% 25%, #ffffff 0% 50%) 0 0 / 16px 16px`,
 };
 
+// Fixed width + left alignment: state labels change length ("online" /
+// "away", "3px" / "0 (plain overlap)"), and resizing buttons shift the
+// whole card on every click.
 const buttonStyle: CSSProperties = {
   font: "inherit",
   fontSize: 13,
+  width: 184,
+  textAlign: "left",
   padding: "6px 12px",
   borderRadius: 8,
   border: "1px solid #cbd5e1",
@@ -186,7 +191,7 @@ const ShapeComparisonDemo = () => {
         </figure>
       ))}
       <label style={{ fontSize: 13, display: "flex", gap: 8, color: palette.text }}>
-        gap: {gap}px
+        <span style={{ minWidth: 52, fontVariantNumeric: "tabular-nums" }}>gap: {gap}px</span>
         <input
           type="range"
           min={0}
