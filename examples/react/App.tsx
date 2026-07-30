@@ -46,19 +46,37 @@ const buttonStyle: CSSProperties = {
   cursor: "pointer",
 };
 
+const codeStyle: CSSProperties = {
+  margin: "12px 0 0",
+  padding: "12px 16px",
+  borderRadius: 10,
+  background: "#0f172a",
+  color: "#e2e8f0",
+  fontSize: 13,
+  lineHeight: 1.6,
+  overflowX: "auto",
+};
+
 const Section = ({
   title,
   description,
+  code,
   children,
 }: {
   title: string;
   description: string;
+  code?: string;
   children: ReactNode;
 }) => (
   <section style={{ marginBottom: 40 }}>
     <h2 style={{ margin: "0 0 4px", fontSize: 18, color: palette.text }}>{title}</h2>
     <p style={{ margin: "0 0 16px", color: palette.textMuted, fontSize: 14 }}>{description}</p>
     <div style={cardStyle}>{children}</div>
+    {code && (
+      <pre style={codeStyle}>
+        <code>{code}</code>
+      </pre>
+    )}
   </section>
 );
 
@@ -154,6 +172,41 @@ const BadgeDemo = () => {
   );
 };
 
+// TEMPORARY fill picker — delete once a badge treatment is chosen.
+// Same bell + triangle cutout, five fill/stroke candidates side by side.
+const badgeFillCandidates = [
+  { label: "white chip", fill: "#ffffff", stroke: "#92400e" },
+  { label: "solid amber", fill: "#fbbf24", stroke: "#92400e" },
+  { label: "road sign", fill: "#facc15", stroke: "#0f172a" },
+  { label: "rose alert", fill: "#f43f5e", stroke: "#ffffff" },
+  { label: "indigo chip", fill: "#eef2ff", stroke: "#4338ca" },
+];
+
+const BadgeFillPicker = () => (
+  <>
+    {badgeFillCandidates.map(({ label, fill, stroke }) => (
+      <figure key={label} style={{ margin: 0, textAlign: "center" }}>
+        <Cutout
+          overlay={
+            <TriangleAlert
+              size={30}
+              fill={fill}
+              stroke={stroke}
+              strokeWidth={1.75}
+              style={{ position: "absolute", top: -3, right: 1 }}
+            />
+          }
+        >
+          <Bell size={64} stroke={palette.icon} strokeWidth={1.5} />
+        </Cutout>
+        <figcaption style={{ fontSize: 12, marginTop: 8, color: palette.textMuted }}>
+          {label}
+        </figcaption>
+      </figure>
+    ))}
+  </>
+);
+
 const StarOverlay = () => (
   <Star
     size={30}
@@ -215,6 +268,9 @@ export const App = () => (
     <Section
       title="Avatar status dot"
       description="The classic: a status dot punching through the avatar. Toggling the dot off clears the mask (nullish overlay renders children unmasked)."
+      code={`<Cutout gap={4} overlay={showDot && <StatusDot />}>
+  <Avatar />
+</Cutout>`}
     >
       <AvatarStatusDemo />
     </Section>
@@ -222,13 +278,26 @@ export const App = () => (
     <Section
       title="Warning badge on an icon"
       description="A lucide TriangleAlert cut out of a Bell, contour-for-contour. shape='auto' picks contour tracing because the overlay contains an svg."
+      code={`<Cutout overlay={hasWarning && <TriangleAlert fill="#fff" />}>
+  <Bell />
+</Cutout>`}
     >
       <BadgeDemo />
     </Section>
 
     <Section
+      title="Badge fill candidates (temporary)"
+      description="Pick a treatment; this strip gets deleted afterwards."
+    >
+      <BadgeFillPicker />
+    </Section>
+
+    <Section
       title="contour vs box"
       description="The same star overlay traced two ways. contour follows the glyph outline via stroke expansion; box uses the expanded bounding box with border-radius."
+      code={`<Cutout shape="contour" gap={gap} overlay={<Star fill="gold" />}>
+  <PhotoTile />
+</Cutout>`}
     >
       <ShapeComparisonDemo />
     </Section>

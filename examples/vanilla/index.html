@@ -90,6 +90,16 @@
         color: #94a3b8;
         cursor: default;
       }
+      .code {
+        margin: 12px 0 0;
+        padding: 12px 16px;
+        border-radius: 10px;
+        background: #0f172a;
+        color: #e2e8f0;
+        font-size: 13px;
+        line-height: 1.6;
+        overflow-x: auto;
+      }
     </style>
   </head>
   <body>
@@ -111,6 +121,9 @@
           <button id="destroy" type="button">destroy()</button>
         </div>
       </div>
+      <pre class="code"><code>const instance = createCutout(content, overlay, { gap: 4 });
+instance.update(); // after changes ResizeObserver can't see
+instance.destroy(); // removes mask + observers</code></pre>
     </main>
     <script type="module" src="/vanilla/main.ts"></script>
   </body>
