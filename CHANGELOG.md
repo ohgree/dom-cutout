@@ -16,6 +16,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - The overlay layer no longer swallows pointer events aimed at `children` (it now has `pointer-events: none`; interactive overlay content can re-enable itself with its own `pointer-events: auto`).
 
+### Known limitations
+
+- WebKit silently drops masks when the masked element's rasterized layer exceeds ~2048 device pixels in a dimension — e.g. deep pinch-zoom on iOS. The cutout reappears once back under the limit. (The previous alpha structure had a ~4096 limit; the trade-off buys crisp edges and immunity to WebKit's intermittent internal-`<mask>` glitches.)
+
 ## [0.1.1] - 2026-07-30
 
 ### Changed
