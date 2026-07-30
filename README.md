@@ -1,8 +1,17 @@
-# dom-cutout
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./docs/assets/logo-dark.png" />
+    <img src="./docs/assets/logo.png" alt="dom-cutout" width="460" />
+  </picture>
+</p>
+
+<div align="center">
 
 [![npm version](https://img.shields.io/npm/v/dom-cutout)](https://www.npmjs.com/package/dom-cutout)
 [![minzipped size](https://img.shields.io/bundlejs/size/dom-cutout)](https://bundlejs.com/?q=dom-cutout)
 [![license](https://img.shields.io/npm/l/dom-cutout)](./LICENSE)
+
+</div>
 
 Cut the silhouette of one DOM element out of another — badge cutouts, notification dots, status halos — with a runtime-generated SVG mask that follows the overlay's contours.
 
