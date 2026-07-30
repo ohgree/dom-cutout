@@ -13,7 +13,7 @@
     "svg-mask"
   ],
   "license": "MIT",
-  "author": "MJ Shin (https://github.com/ohgree)",
+  "author": "MJ Shin <ohgree.dev@gmail.com> (https://github.com/ohgree)",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ohgree/dom-cutout.git"
