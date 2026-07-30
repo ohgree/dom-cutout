@@ -2,6 +2,8 @@
 
 Cut the silhouette of one DOM element out of another — badge cutouts, notification dots, status halos — with a runtime-generated SVG mask that follows the overlay's contours.
 
+**[Live examples →](https://ohgree.github.io/dom-cutout/)**
+
 The pattern you've seen on avatar status dots (Discord, Messenger): the badge doesn't just sit on top of the avatar, it _punches through_ it, leaving a crisp gap. Most implementations pre-bake a fixed mask per shape and position. `dom-cutout` measures the live DOM instead, so any overlay shape, any position, any size — including SVG glyphs, whose outline is traced contour-for-contour.
 
 - **Zero-dependency core** — plain DOM, works with any framework or none

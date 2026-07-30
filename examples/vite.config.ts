@@ -6,6 +6,8 @@ import { defineConfig } from "vite";
 // Examples run against the live package source, not dist — edits to ../src
 // hot-reload here, which is also how the README GIFs get recorded.
 export default defineConfig({
+  // GitHub Pages serves project sites under /<repo>/; CI sets BASE_PATH.
+  base: process.env.BASE_PATH ?? "/",
   plugins: [react()],
   build: {
     rollupOptions: {

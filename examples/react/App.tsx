@@ -270,7 +270,7 @@ const ShapeComparisonDemo = () => {
 
 export const App = () => (
   <main style={{ maxWidth: 640, margin: "0 auto", padding: "40px 20px" }}>
-    <a href="/" style={{ fontSize: 13, color: palette.textMuted, textDecoration: "none" }}>
+    <a href="../" style={{ fontSize: 13, color: palette.textMuted, textDecoration: "none" }}>
       &larr; examples
     </a>
     <h1 style={{ fontSize: 24, margin: "8px 0 4px", color: palette.text }}>
