@@ -27,7 +27,7 @@ import { Cutout } from "dom-cutout/react";
 </Cutout>;
 ```
 
-The overlay renders on top of the children; its silhouette (expanded by `gap` pixels) is cut out of them. A nullish/`false` overlay renders the children unmasked — conditional badges just work:
+The overlay renders on top of the children; its silhouette (expanded by `gap` pixels) is cut out of them. An overlay that renders nothing — nullish/`false`, or hidden via `display: none` — clears the mask, so conditional badges just work:
 
 ```tsx
 <Cutout overlay={hasUnread && <NotificationDot />}>
@@ -41,8 +41,9 @@ The overlay renders on top of the children; its silhouette (expanded by `gap` pi
 | ---------- | ------------------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------- |
 | `overlay`  | `ReactNode`                    | —        | Content whose silhouette is cut out of `children`. Position it within the overlay layer (e.g. `position: 'absolute'`). |
 | `children` | `ReactNode`                    | —        | Content the cutout is carved out of.                                                                                   |
-| `gap`      | `number`                       | `4`      | Gap width in rendered pixels between the overlay's silhouette and the content.                                         |
+| `gap`      | `number`                       | `4`      | Gap width in rendered pixels between the overlay's silhouette and the content. Default exported as `DEFAULT_GAP`.      |
 | `shape`    | `'auto' \| 'contour' \| 'box'` | `'auto'` | How the silhouette is traced (see below).                                                                              |
+| `ref`      | `Ref<HTMLDivElement>`          | —        | Ref to the wrapper element stacking the two layers.                                                                    |
 
 Plus any `div` props — the wrapper is an `inline-grid` stacking the two layers.
 
@@ -60,7 +61,7 @@ instance.update();
 instance.destroy();
 ```
 
-While a mask is applied, the content element carries a `data-cutout` attribute — a hook for CSS or tests.
+While a mask is applied, the content element carries a `data-cutout` attribute (exported as `MASKED_ATTRIBUTE`) — a hook for CSS or tests. An overlay that renders nothing — empty, whitespace/comments only, or zero-area (e.g. `display: none`) — clears the mask.
 
 `computeMaskUrl(content, overlay, options)` is also exported if you only want the generated `mask-image` value and full control over applying it.
 

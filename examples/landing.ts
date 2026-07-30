@@ -36,11 +36,9 @@ const highlightWithin = (root: HTMLElement, lang: "ts" | "sh") => {
     const source = pre.textContent;
     if (!source) continue;
     import("shiki").then(({ codeToHtml }) =>
-      codeToHtml(source, { lang, theme: "github-light-default" }).then(
-        (html) => {
-          pre.outerHTML = html;
-        },
-      ),
+      codeToHtml(source, { lang, theme: "github-light-default" }).then((html) => {
+        pre.outerHTML = html;
+      }),
     );
   }
 };
@@ -49,9 +47,7 @@ highlightWithin(document.getElementById("install-blocks")!, "sh");
 
 // Package-manager tabs for the install command.
 const pmTabs = document.querySelectorAll<HTMLButtonElement>("#pm-tabs button");
-const pmBlocks = document.querySelectorAll<HTMLElement>(
-  "#install-blocks > div",
-);
+const pmBlocks = document.querySelectorAll<HTMLElement>("#install-blocks > div");
 for (const tab of pmTabs) {
   tab.addEventListener("click", () => {
     for (const t of pmTabs) t.classList.toggle("tab-active", t === tab);
