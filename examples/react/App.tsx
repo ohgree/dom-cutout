@@ -173,7 +173,7 @@ const ShapeComparisonDemo = () => {
 };
 
 export const App = () => (
-  <main className="mx-auto max-w-2xl px-5 py-6 sm:py-10">
+  <main className="mx-auto max-w-2xl px-5 py-6">
     <a href="../" className="text-[13px] text-slate-500 no-underline hover:text-slate-900">
       &larr; examples
     </a>
