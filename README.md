@@ -20,7 +20,7 @@ npm install dom-cutout
 ```tsx
 import { Cutout } from "dom-cutout/react";
 
-<Cutout gap={3} overlay={<StatusDot style={{ position: "absolute", bottom: 0, right: 0 }} />}>
+<Cutout gap={6} overlay={<StatusDot style={{ position: "absolute", bottom: 0, right: 0 }} />}>
   <Avatar />
 </Cutout>;
 ```
@@ -39,7 +39,7 @@ The overlay renders on top of the children; its silhouette (expanded by `gap` pi
 | ---------- | ------------------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------- |
 | `overlay`  | `ReactNode`                    | —        | Content whose silhouette is cut out of `children`. Position it within the overlay layer (e.g. `position: 'absolute'`). |
 | `children` | `ReactNode`                    | —        | Content the cutout is carved out of.                                                                                   |
-| `gap`      | `number`                       | `2`      | Gap width in rendered pixels between the overlay's silhouette and the content.                                         |
+| `gap`      | `number`                       | `4`      | Gap width in rendered pixels between the overlay's silhouette and the content.                                         |
 | `shape`    | `'auto' \| 'contour' \| 'box'` | `'auto'` | How the silhouette is traced (see below).                                                                              |
 
 Plus any `div` props — the wrapper is an `inline-grid` stacking the two layers.
@@ -49,7 +49,7 @@ Plus any `div` props — the wrapper is an `inline-grid` stacking the two layers
 ```ts
 import { createCutout } from "dom-cutout";
 
-const instance = createCutout(contentEl, overlayEl, { gap: 3 });
+const instance = createCutout(contentEl, overlayEl, { gap: 6 });
 
 // after DOM changes ResizeObserver can't see (same-size content swaps):
 instance.update();

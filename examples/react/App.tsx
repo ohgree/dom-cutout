@@ -31,7 +31,7 @@ const cardStyle: CSSProperties = {
 };
 
 // Fixed width + left alignment: state labels change length ("online" /
-// "away", "3px" / "0 (plain overlap)"), and resizing buttons shift the
+// "away", "4px" / "0 (plain overlap)"), and resizing buttons shift the
 // whole card on every click.
 const buttonStyle: CSSProperties = {
   font: "inherit",
@@ -106,7 +106,7 @@ const AvatarStatusDemo = () => {
 
   return (
     <>
-      <Cutout gap={withGap ? 3 : 0} overlay={showDot && <StatusDot online={online} />}>
+      <Cutout gap={withGap ? 4 : 0} overlay={showDot && <StatusDot online={online} />}>
         <Avatar />
       </Cutout>
       <Controls>
@@ -117,7 +117,7 @@ const AvatarStatusDemo = () => {
           Dot: {showDot ? "shown" : "hidden"}
         </button>
         <button style={buttonStyle} type="button" onClick={() => setWithGap((v) => !v)}>
-          Gap: {withGap ? "3px" : "0 (plain overlap)"}
+          Gap: {withGap ? "4px" : "0 (plain overlap)"}
         </button>
       </Controls>
     </>
@@ -144,7 +144,7 @@ const BadgeDemo = () => {
 
   return (
     <>
-      <Cutout gap={3} overlay={hasWarning && <WarningBadge />}>
+      <Cutout overlay={hasWarning && <WarningBadge />}>
         <Bell size={64} stroke={palette.icon} strokeWidth={1.5} />
       </Cutout>
       <button style={buttonStyle} type="button" onClick={() => setHasWarning((v) => !v)}>
@@ -176,7 +176,7 @@ const PhotoTile = () => (
 );
 
 const ShapeComparisonDemo = () => {
-  const [gap, setGap] = useState(3);
+  const [gap, setGap] = useState(4);
 
   return (
     <>

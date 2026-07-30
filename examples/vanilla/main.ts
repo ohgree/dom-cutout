@@ -4,7 +4,7 @@ const content = document.getElementById("content")!;
 const overlay = document.getElementById("overlay")!;
 const dot = overlay.querySelector<HTMLElement>(".dot")!;
 
-let gap = 3;
+let gap = 4;
 let dotShown = true;
 let instance: CutoutInstance | null = createCutout(content, overlay, { gap });
 
@@ -26,7 +26,7 @@ dotButton.addEventListener("click", () => {
 
 const gapButton = document.getElementById("toggle-gap")!;
 gapButton.addEventListener("click", () => {
-  gap = gap === 3 ? 6 : 3;
+  gap = gap === 4 ? 8 : 4;
   gapButton.textContent = `Gap: ${gap}px`;
   recreate();
 });

@@ -1,10 +1,13 @@
 export type CutoutShape = "auto" | "contour" | "box";
 
+/** Default gap width in rendered pixels — the single source of the default. */
+export const DEFAULT_GAP = 4;
+
 export interface CutoutOptions {
   /**
    * Gap width in rendered pixels between the overlay's silhouette and the
    * content behind it.
-   * @default 2
+   * @default 4
    */
   gap?: number;
   /**
@@ -42,7 +45,7 @@ export const MASKED_ATTRIBUTE = "data-cutout";
 export const computeMaskUrl = (
   content: Element,
   overlay: Element,
-  { gap = 2, shape = "auto" }: CutoutOptions = {},
+  { gap = DEFAULT_GAP, shape = "auto" }: CutoutOptions = {},
 ): string | null => {
   // An empty overlay means "no cutout". Without this, the box branch would
   // measure the overlay element itself — often stretched to the content's

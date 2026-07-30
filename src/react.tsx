@@ -21,7 +21,7 @@ export interface CutoutProps extends HTMLAttributes<HTMLDivElement> {
   /**
    * Gap width in rendered pixels between the overlay's silhouette and
    * `children`.
-   * @default 2
+   * @default 4 (DEFAULT_GAP)
    */
   gap?: number;
   /**
@@ -36,7 +36,9 @@ export interface CutoutProps extends HTMLAttributes<HTMLDivElement> {
 const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 export const Cutout = forwardRef<HTMLDivElement, CutoutProps>(
-  ({ overlay, children, gap = 2, shape = "auto", style, ...divProps }, ref) => {
+  // No local defaults for gap/shape: they pass through undefined so the
+  // core's defaults are the single source of truth.
+  ({ overlay, children, gap, shape, style, ...divProps }, ref) => {
     const contentRef = useRef<HTMLDivElement>(null);
     const overlayRef = useRef<HTMLDivElement>(null);
     const instanceRef = useRef<CutoutInstance | null>(null);
