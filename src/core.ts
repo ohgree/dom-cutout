@@ -78,18 +78,14 @@ export const computeMaskUrl = (
     const scale = Math.max(vbW / svgRect.width, vbH / svgRect.height);
     const dilation = gap * 2 * scale;
 
-    // Stroked artwork (lucide/feather-style icons) has its visible edge
-    // `strokeWidth / 2` outside the path centerline, so the mask stroke
-    // must add the artwork's own stroke-width on top of the dilation —
-    // otherwise the visible gap shrinks by that half-stroke.
-    // Two compensation sites:
-    // - the svg root's stroke-width (inherited by the artwork but dropped
-    //   by the innerHTML copy) is folded into the wrapping <g>;
-    // - per-element stroke-width attributes (which would override the <g>
-    //   and collapse that element's halo entirely) are rewritten on a clone
-    //   to their own value + dilation.
-    // Not compensated: stroke-widths set via CSS classes or inline styles
-    // (they don't survive the copy; documented caveat).
+    // Stroked artwork renders its visible edge `strokeWidth / 2` outside
+    // the path centerline, so the artwork's own stroke-widths must be added
+    // on top of the dilation to keep the visible gap at `gap`: the root
+    // attribute (dropped by the innerHTML copy) folds into the wrapping
+    // <g>, and per-element attributes (which would override the <g> and
+    // collapse that element's halo) are rewritten on a clone. CSS-driven
+    // stroke-widths don't survive the copy and aren't compensated (README
+    // caveat).
     const rootStrokeWidth = parseFloat(svg.getAttribute("stroke-width") ?? "") || 0;
     const clone = svg.cloneNode(true) as SVGSVGElement;
     for (const el of clone.querySelectorAll("[stroke-width]")) {

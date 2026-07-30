@@ -32,9 +32,8 @@ const cardStyle: CSSProperties = {
   background: `repeating-conic-gradient(${palette.checker} 0% 25%, #ffffff 0% 50%) 0 0 / 16px 16px`,
 };
 
-// Fixed width + left alignment: state labels change length ("online" /
-// "away", "4px" / "0 (plain overlap)"), and resizing buttons shift the
-// whole card on every click.
+// Fixed width + left alignment: state labels change length on click, and
+// resizing buttons would shift the card layout.
 const buttonStyle: CSSProperties = {
   font: "inherit",
   fontSize: 13,
@@ -162,13 +161,10 @@ const AvatarStatusDemo = () => {
   );
 };
 
-// Lucide icons are stroke-based; the contour tracer both fills and strokes
-// the overlay's paths, so give badge glyphs an explicit fill for a solid
-// silhouette (and a readable resting look). Lucide glyphs also carry ~15%
-// viewBox padding, so the badge sits further inward than the box suggests —
-// these offsets center it on the bell's top-right shoulder.
-// Road-sign colorway: yellow body, near-black outline and marks — the
-// canonical warning-triangle treatment.
+// Badge glyphs need an explicit fill: the mask removes content behind the
+// whole silhouette, so a hollow (stroke-only) badge would show the backdrop
+// through its interior. The offsets account for lucide's ~15% viewBox
+// padding — naive negative offsets land in empty space.
 const WarningBadge = () => (
   <TriangleAlert
     size={30}
