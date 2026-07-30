@@ -1,7 +1,9 @@
 import {
   forwardRef,
+  type FunctionComponent,
   type HTMLAttributes,
   type ReactNode,
+  type Ref,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -10,6 +12,8 @@ import {
 import { createCutout, type CutoutInstance, type CutoutShape } from "./core";
 
 export interface CutoutProps extends HTMLAttributes<HTMLDivElement> {
+  /** Ref to the wrapper element stacking the two layers. */
+  ref?: Ref<HTMLDivElement>;
   /**
    * Overlay content whose silhouette is cut out of `children`. Rendered on
    * top of `children`; position it within the overlay layer (e.g.
@@ -35,7 +39,12 @@ export interface CutoutProps extends HTMLAttributes<HTMLDivElement> {
 // happen in a browser anyway, so fall back to useEffect there.
 const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
-export const Cutout = forwardRef<HTMLDivElement, CutoutProps>(
+// forwardRef is the runtime mechanism (required while React 18 is
+// supported), but it pollutes the public signature with
+// ForwardRefExoticComponent/RefAttributes noise — so `ref` is declared as a
+// plain prop in CutoutProps and the export is typed as an ordinary function
+// component. In React 19, ref-as-prop is the native behavior anyway.
+const CutoutImpl = forwardRef<HTMLDivElement, CutoutProps>(
   // No local defaults for gap/shape: they pass through undefined so the
   // core's defaults are the single source of truth.
   ({ overlay, children, gap, shape, style, ...divProps }, ref) => {
@@ -80,4 +89,6 @@ export const Cutout = forwardRef<HTMLDivElement, CutoutProps>(
   },
 );
 
-Cutout.displayName = "Cutout";
+CutoutImpl.displayName = "Cutout";
+
+export const Cutout = CutoutImpl as FunctionComponent<CutoutProps>;
