@@ -132,7 +132,7 @@ const AvatarStatusDemo = () => {
 const WarningBadge = () => (
   <TriangleAlert
     size={30}
-    fill={palette.warningFill}
+    fill="#ffffff"
     stroke={palette.warningStroke}
     strokeWidth={1.75}
     style={{ position: "absolute", top: -3, right: 1 }}
