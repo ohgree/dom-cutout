@@ -16,6 +16,10 @@ export default defineConfig({
         index: path.resolve(import.meta.dirname, "index.html"),
         react: path.resolve(import.meta.dirname, "react/index.html"),
         vanilla: path.resolve(import.meta.dirname, "vanilla/index.html"),
+        // Diagnostic page for the iOS pinch-zoom mask drop — deployed (it
+        // only means anything on a real touch device) but not linked from
+        // the landing page.
+        pinch: path.resolve(import.meta.dirname, "pinch/index.html"),
         // lab/ is a dev-only bench (mask-approach comparison) — served by
         // `pnpm dev` but deliberately not built/deployed.
       },

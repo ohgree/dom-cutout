@@ -97,7 +97,7 @@ Luminance masking isn't an implementation detail here, it's the design: WebKit r
 
 For the record, verified no-ops against the alpha-structure softness: oversampling the mask SVG's intrinsic size, every viewBox/width/height spelling, compositing-layer tricks (`translateZ(0)`, `will-change`, `isolation`), `-webkit-mask-box-image`. SVG reference masks (`mask: url(#id)`) are not soft but _absent_ — WebKit ignores them on HTML elements entirely. See [`examples/lab/`](./examples/lab/index.html) for the comparison bench.
 
-One known WebKit limitation: masks silently drop when the masked element's rasterized layer exceeds ~2048 **device** pixels in a dimension (measured empirically; the alpha structure had a ~4096 limit). In practice: on an iPhone (DPR 3), pinch-zooming a masked element beyond `2048 / (3 × its CSS width)` makes the cutout vanish until you zoom back out; very large masked elements can hit it without zooming. This is a WebKit buffer cap — no CSS on the element changes it. Chromium and Firefox render the same content fine.
+One known WebKit limitation: masks silently drop when the rasterized mask layer exceeds an internal buffer cap. On desktop WebKit this measures as ~2048 **device** pixels per dimension of the masked element (~4096 for the alpha structure); on iOS the threshold and granularity differ — deep pinch-zoom drops _all_ masks on the page regardless of element size, and they return on zoom-out. No CSS on the element changes this — it's a WebKit resource cap. Chromium and Firefox render the same content fine at any zoom.
 
 ## Future plans
 

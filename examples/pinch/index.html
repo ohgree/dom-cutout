@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="../styles.css" />
+    <title>dom-cutout — pinch test</title>
+  </head>
+  <body class="bg-slate-100 font-sans text-slate-800 antialiased">
+    <main class="mx-auto max-w-2xl px-5 py-6">
+      <a class="text-[13px] text-slate-500 no-underline hover:text-slate-900" href="../"
+        >&larr; examples</a
+      >
+      <h1 class="mt-2 mb-1 text-2xl font-semibold text-slate-900">Pinch-zoom test</h1>
+      <p class="mb-6 text-slate-500">
+        Four hand-rolled masks (no library code). Pinch in slowly and note, per square: at roughly
+        what zoom the hole vanishes, and whether it returns on zoom-out. Luminance = what the
+        library generates; alpha = the old internal-<code class="font-mono text-[13px]">mask</code>
+        structure.
+      </p>
+      <div id="grid" class="grid grid-cols-2 gap-6"></div>
+    </main>
+    <script type="module">
+      const hole = (s) => `<circle cx="${s / 2}" cy="${s / 2}" r="${s / 4}" fill="black"/>`;
+      const lum = (s) =>
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}">` +
+        `<rect width="100%" height="100%" fill="white"/>${hole(s)}</svg>`;
+      const alpha = (s) =>
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}"><defs>` +
+        `<mask id="m"><rect width="100%" height="100%" fill="white"/>${hole(s)}</mask>` +
+        `</defs><rect width="100%" height="100%" fill="white" mask="url(#m)"/></svg>`;
+
+      const grid = document.getElementById("grid");
+      for (const [label, make, mode] of [
+        ["luminance", lum, "luminance"],
+        ["alpha", alpha, "alpha"],
+      ]) {
+        for (const size of [96, 200]) {
+          const cell = document.createElement("figure");
+          cell.className = "m-0 text-center";
+          const box = document.createElement("div");
+          box.style.cssText = `width:${size}px;height:${size}px;margin:0 auto;background:linear-gradient(135deg,#6366f1,#7c3aed)`;
+          const url = `url("data:image/svg+xml,${encodeURIComponent(make(size))}")`;
+          box.style.setProperty("mask-image", url);
+          box.style.setProperty("mask-size", "100% 100%");
+          box.style.setProperty("mask-mode", mode);
+          const cap = document.createElement("figcaption");
+          cap.className = "chip mx-auto mt-2 block w-fit text-slate-500";
+          cap.textContent = `${label} ${size}px`;
+          cell.append(box, cap);
+          grid.append(cell);
+        }
+      }
+    </script>
+  </body>
+</html>

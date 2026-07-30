@@ -18,7 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Known limitations
 
-- WebKit silently drops masks when the masked element's rasterized layer exceeds ~2048 device pixels in a dimension — e.g. deep pinch-zoom on iOS. The cutout reappears once back under the limit. (The previous alpha structure had a ~4096 limit; the trade-off buys crisp edges and immunity to WebKit's intermittent internal-`<mask>` glitches.)
+- WebKit silently drops masks past an internal rasterization-buffer cap: ~2048 device px per dimension of the masked element on desktop (~4096 for the old alpha structure); on iOS, deep pinch-zoom drops all masks on the page regardless of element size. Cutouts reappear once back under the limit.
 
 ## [0.1.1] - 2026-07-30
 
