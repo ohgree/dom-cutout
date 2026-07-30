@@ -9,7 +9,7 @@ import {
   useRef,
 } from "react";
 
-import { createCutout, type CutoutInstance, type CutoutMode, type CutoutShape } from "./core";
+import { createCutout, type CutoutInstance, type CutoutShape } from "./core";
 
 export interface CutoutProps extends HTMLAttributes<HTMLDivElement> {
   /** Ref to the wrapper element stacking the two layers. */
@@ -33,11 +33,6 @@ export interface CutoutProps extends HTMLAttributes<HTMLDivElement> {
    * @default 'auto'
    */
   shape?: CutoutShape;
-  /**
-   * How the mask knocks the silhouette out — see `CutoutOptions['mode']`.
-   * @default 'auto'
-   */
-  mode?: CutoutMode;
 }
 
 // useLayoutEffect warns when rendered on the server; measurement can only
@@ -52,7 +47,7 @@ const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffec
 const CutoutImpl = forwardRef<HTMLDivElement, CutoutProps>(
   // No local defaults for gap/shape: they pass through undefined so the
   // core's defaults are the single source of truth.
-  ({ overlay, children, gap, shape, mode, style, ...divProps }, ref) => {
+  ({ overlay, children, gap, shape, style, ...divProps }, ref) => {
     const contentRef = useRef<HTMLDivElement>(null);
     const overlayRef = useRef<HTMLDivElement>(null);
     const instanceRef = useRef<CutoutInstance | null>(null);
@@ -62,13 +57,13 @@ const CutoutImpl = forwardRef<HTMLDivElement, CutoutProps>(
       const overlayEl = overlayRef.current;
       if (!content || !overlayEl) return undefined;
 
-      const instance = createCutout(content, overlayEl, { gap, shape, mode });
+      const instance = createCutout(content, overlayEl, { gap, shape });
       instanceRef.current = instance;
       return () => {
         instanceRef.current = null;
         instance.destroy();
       };
-    }, [gap, shape, mode]);
+    }, [gap, shape]);
 
     // Recompute before every paint — catches `overlay`/`children` DOM changes
     // without needing them (new references each render) as dependencies. The

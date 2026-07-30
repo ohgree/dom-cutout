@@ -86,17 +86,14 @@ describe("computeMaskUrl", () => {
     expect(decoded(url)).not.toContain("<g ");
   });
 
-  describe("mode", () => {
-    it('emits the internal-<mask> knockout structure for mode "alpha"', () => {
+  describe("luminance structure", () => {
+    // WebKit rasterizes mask images containing internal <mask> elements at
+    // CSS-pixel resolution — the generated markup must stay a simple
+    // white-canvas + black-shape SVG with no <mask> indirection.
+    it("emits a simple SVG without an internal <mask>", () => {
       const { content, overlay } = setup('<svg viewBox="0 0 24 24"></svg>');
 
-      expect(decoded(computeMaskUrl(content, overlay, { mode: "alpha" }))).toContain("<mask");
-    });
-
-    it('emits a simple SVG without an internal <mask> for mode "luminance"', () => {
-      const { content, overlay } = setup('<svg viewBox="0 0 24 24"></svg>');
-
-      const markup = decoded(computeMaskUrl(content, overlay, { mode: "luminance" }));
+      const markup = decoded(computeMaskUrl(content, overlay));
 
       expect(markup).not.toContain("<mask");
       expect(markup).toContain('fill="white"');
@@ -107,7 +104,7 @@ describe("computeMaskUrl", () => {
         '<svg viewBox="0 0 24 24"><path d="M4 4h16" fill="#facc15" stroke="none" /></svg>',
       );
 
-      const markup = decoded(computeMaskUrl(content, overlay, { mode: "luminance" }));
+      const markup = decoded(computeMaskUrl(content, overlay));
 
       expect(markup).toContain('fill="black"');
       expect(markup).not.toContain("#facc15");

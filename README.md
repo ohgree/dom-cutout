@@ -14,6 +14,7 @@ The pattern you've seen on avatar status dots (Discord, Messenger): the badge do
 - **React adapter** at `dom-cutout/react`
 - **Contour-following** — SVG overlays are traced via stroke expansion, so the gap reads as a halo around the actual glyph, not a box
 - Keeps itself in sync via `ResizeObserver`; SSR-safe
+- Requires `mask-mode` ([Baseline widely available](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/mask-mode)) — degrades to no cutout on older engines
 
 ## Install
 
@@ -42,14 +43,13 @@ The overlay renders on top of the children; its silhouette (expanded by `gap` pi
 
 ### Props
 
-| Prop       | Type                               | Default  |                                                                                                                                                            |
-| ---------- | ---------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `overlay`  | `ReactNode`                        | —        | Content whose silhouette is cut out of `children`. Position it within the overlay layer (e.g. `position: 'absolute'`).                                     |
-| `children` | `ReactNode`                        | —        | Content the cutout is carved out of.                                                                                                                       |
-| `gap`      | `number`                           | `4`      | Gap width in rendered pixels between the overlay's silhouette and the content. Default exported as `DEFAULT_GAP`.                                          |
-| `shape`    | `'auto' \| 'contour' \| 'box'`     | `'auto'` | How the silhouette is traced (see below).                                                                                                                  |
-| `mode`     | `'auto' \| 'luminance' \| 'alpha'` | `'auto'` | How the mask knocks the silhouette out (see [Safari / WebKit](#safari--webkit)). `'auto'` picks the crisp luminance path wherever the browser supports it. |
-| `ref`      | `Ref<HTMLDivElement>`              | —        | Ref to the wrapper element stacking the two layers.                                                                                                        |
+| Prop       | Type                           | Default  |                                                                                                                        |
+| ---------- | ------------------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `overlay`  | `ReactNode`                    | —        | Content whose silhouette is cut out of `children`. Position it within the overlay layer (e.g. `position: 'absolute'`). |
+| `children` | `ReactNode`                    | —        | Content the cutout is carved out of.                                                                                   |
+| `gap`      | `number`                       | `4`      | Gap width in rendered pixels between the overlay's silhouette and the content. Default exported as `DEFAULT_GAP`.      |
+| `shape`    | `'auto' \| 'contour' \| 'box'` | `'auto'` | How the silhouette is traced (see below).                                                                              |
+| `ref`      | `Ref<HTMLDivElement>`          | —        | Ref to the wrapper element stacking the two layers.                                                                    |
 
 Plus any `div` props — the wrapper is an `inline-grid` stacking the two layers. The overlay layer carries `pointer-events: none` so `children` stay interactive; interactive overlay content re-enables itself with its own `pointer-events: auto`.
 
@@ -79,7 +79,7 @@ While a mask is applied, the content element carries a `data-cutout` attribute (
 
 ## How it works
 
-On each update, `dom-cutout` measures the content and overlay rects, builds a small self-contained SVG (`white` canvas + the overlay's shape in `black`), and sets it as the content element's `mask-image` as a `data:` URI — applied with `mask-mode: luminance` (black = hidden) where supported, or as an alpha-knockout structure elsewhere (see [Safari / WebKit](#safari--webkit)). No shared `<defs>`, no extra DOM, no stacking-context tricks. `ResizeObserver` re-runs measurement on size changes; the React adapter additionally recomputes before every paint, deduped by comparing the generated URL.
+On each update, `dom-cutout` measures the content and overlay rects, builds a small self-contained SVG (`white` canvas + the overlay's shape in `black`), and sets it as the content element's `mask-image` as a `data:` URI, applied with `mask-mode: luminance` (black = hidden). No shared `<defs>`, no extra DOM, no stacking-context tricks. `ResizeObserver` re-runs measurement on size changes; the React adapter additionally recomputes before every paint, deduped by comparing the generated URL.
 
 ## Caveats
 
@@ -89,15 +89,13 @@ On each update, `dom-cutout` measures the content and overlay rects, builds a sm
 - Stroke-width compensation reads SVG attributes (`stroke-width` on the root or per element); stroke-widths set via CSS classes or inline styles don't survive the markup copy and aren't compensated.
 - The overlay artwork's paint colors are normalized to black in the mask copy (`fill="none"`/`stroke="none"` are respected) — only the silhouette matters, but paints applied via CSS classes don't survive the copy, same as stroke-widths.
 
-## Safari / WebKit
+## Browser support & the WebKit story
 
-Cutout edges render crisp at device resolution on every engine tested (WebKit, Chromium, Firefox): wherever the browser supports `mask-mode` — Safari 15.4+, Chrome 120+, Firefox 53+ — `dom-cutout` generates a **luminance** mask, a simple white-canvas-plus-black-shape SVG applied with `mask-mode: luminance`.
+`dom-cutout` requires `mask-mode` — [Baseline widely available](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/mask-mode) (all major engines since December 2023; Safari 15.4+, Chrome/Edge 120+, Firefox 53+). On older engines the property is ignored, the mask image reads as fully opaque, and the cutout simply doesn't appear — content and overlay render normally, just without the gap.
 
-That choice exists because of a WebKit quirk this library designs around: WebKit rasterizes mask images that contain internal `<mask>` elements at CSS-pixel resolution (~1px soft edges on high-DPI displays), and the same structure is implicated in Safari's intermittent mask-rendering glitches. The classic alpha knockout _requires_ exactly that structure — punching a transparent hole into an opaque canvas takes an internal `<mask>` — while a luminance mask encodes the hole as color, no indirection needed. Isolated empirically: alpha + internal mask → soft; luminance + internal mask → soft; luminance + simple SVG → crisp.
+Luminance masking isn't an implementation detail here, it's the design: WebKit rasterizes mask images that contain internal `<mask>` elements at CSS-pixel resolution (~1px soft edges on high-DPI displays), and the same structure is implicated in Safari's intermittent mask-rendering glitches. The classic alpha knockout _requires_ exactly that structure — punching a transparent hole into an opaque canvas takes an internal `<mask>` — while a luminance mask encodes the hole as color, no indirection needed. Isolated empirically: alpha + internal mask → soft; luminance + internal mask → soft; luminance + simple SVG → crisp, at device resolution, on every engine tested (WebKit, Chromium, Firefox).
 
-On browsers without `mask-mode`, the library falls back to the alpha structure automatically — feature detection (`CSS.supports`), no UA sniffing. The cutout renders everywhere `mask-image` works; it's just ~1px softer on high-DPI WebKit there. `mode: 'luminance' | 'alpha'` forces either path.
-
-For the record, verified no-ops against the alpha-path softness: oversampling the mask SVG's intrinsic size, every viewBox/width/height spelling, compositing-layer tricks (`translateZ(0)`, `will-change`, `isolation`), `-webkit-mask-box-image`. SVG reference masks (`mask: url(#id)`) are not soft but _absent_ — WebKit ignores them on HTML elements entirely. See [`examples/lab/`](./examples/lab/index.html) for the comparison bench.
+For the record, verified no-ops against the alpha-structure softness: oversampling the mask SVG's intrinsic size, every viewBox/width/height spelling, compositing-layer tricks (`translateZ(0)`, `will-change`, `isolation`), `-webkit-mask-box-image`. SVG reference masks (`mask: url(#id)`) are not soft but _absent_ — WebKit ignores them on HTML elements entirely. See [`examples/lab/`](./examples/lab/index.html) for the comparison bench.
 
 ## Future plans
 

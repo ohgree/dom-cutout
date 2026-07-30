@@ -143,10 +143,10 @@
         <code class="font-mono text-[13px]">&lt;mask&gt;</code> elements at CSS-pixel resolution
         (~1px soft on high-DPI). The classic alpha knockout needs exactly that structure; a
         luminance mask (<code class="font-mono text-[13px]">mask-mode: luminance</code>, white
-        canvas + black shape, no indirection) doesn't — so the library emits luminance masks
-        wherever <code class="font-mono text-[13px]">mask-mode</code> is supported and falls back to
-        the alpha structure elsewhere. The foreignObject exhibit is kept as the route that was crisp
-        even against the internal-mask quirk.
+        canvas + black shape, no indirection) doesn't — so the library emits luminance masks, full
+        stop; <code class="font-mono text-[13px]">mask-mode</code> is Baseline widely available. The
+        foreignObject exhibit is kept as the route that was crisp even against the internal-mask
+        quirk.
       </p>
 
       <h2 class="mt-8 mb-2 text-lg font-semibold text-slate-900">Tried against the softness</h2>
