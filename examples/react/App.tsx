@@ -1,9 +1,25 @@
+import { Bell, Star, TriangleAlert } from "lucide-react";
 import { type CSSProperties, type ReactNode, useState } from "react";
 
 import { Cutout } from "dom-cutout/react";
 
-// Striped card background: the cutout gap reveals whatever is behind the
-// content, so the backdrop must be busy enough for the gap to read clearly.
+// Palette: indigo/violet core, emerald for status, amber for warnings.
+// The backdrop stripes stay in one hue so the cutout gap reads clearly
+// against both stripe tones without competing with the demos.
+const palette = {
+  stripeA: "#e0e7ff", // indigo-100
+  stripeB: "#c7d2fe", // indigo-200
+  avatarFrom: "#6366f1", // indigo-500
+  avatarTo: "#7c3aed", // violet-600
+  online: "#10b981", // emerald-500
+  away: "#94a3b8", // slate-400
+  icon: "#334155", // slate-700
+  warningFill: "#fbbf24", // amber-400
+  warningStroke: "#92400e", // amber-800
+  text: "#1e293b", // slate-800
+  textMuted: "#64748b", // slate-500
+};
+
 const cardStyle: CSSProperties = {
   display: "flex",
   alignItems: "center",
@@ -11,7 +27,18 @@ const cardStyle: CSSProperties = {
   gap: 48,
   padding: "40px 32px",
   borderRadius: 12,
-  background: "repeating-linear-gradient(45deg, #dcd6f7 0 12px, #c9e4de 12px 24px)",
+  background: `repeating-linear-gradient(45deg, ${palette.stripeA} 0 12px, ${palette.stripeB} 12px 24px)`,
+};
+
+const buttonStyle: CSSProperties = {
+  font: "inherit",
+  fontSize: 13,
+  padding: "6px 12px",
+  borderRadius: 8,
+  border: "1px solid #cbd5e1",
+  background: "white",
+  color: palette.text,
+  cursor: "pointer",
 };
 
 const Section = ({
@@ -24,10 +51,14 @@ const Section = ({
   children: ReactNode;
 }) => (
   <section style={{ marginBottom: 40 }}>
-    <h2 style={{ margin: "0 0 4px", fontSize: 18 }}>{title}</h2>
-    <p style={{ margin: "0 0 16px", color: "#555", fontSize: 14 }}>{description}</p>
+    <h2 style={{ margin: "0 0 4px", fontSize: 18, color: palette.text }}>{title}</h2>
+    <p style={{ margin: "0 0 16px", color: palette.textMuted, fontSize: 14 }}>{description}</p>
     <div style={cardStyle}>{children}</div>
   </section>
+);
+
+const Controls = ({ children }: { children: ReactNode }) => (
+  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>{children}</div>
 );
 
 const Avatar = () => (
@@ -36,7 +67,7 @@ const Avatar = () => (
       width: 72,
       height: 72,
       borderRadius: "50%",
-      background: "linear-gradient(135deg, #5b6ee1, #8850c8)",
+      background: `linear-gradient(135deg, ${palette.avatarFrom}, ${palette.avatarTo})`,
       color: "white",
       display: "flex",
       alignItems: "center",
@@ -58,7 +89,7 @@ const StatusDot = ({ online }: { online: boolean }) => (
       width: 16,
       height: 16,
       borderRadius: "50%",
-      background: online ? "#3ba55c" : "#b0b4bc",
+      background: online ? palette.online : palette.away,
     }}
   />
 );
@@ -73,37 +104,32 @@ const AvatarStatusDemo = () => {
       <Cutout gap={withGap ? 3 : 0} overlay={showDot && <StatusDot online={online} />}>
         <Avatar />
       </Cutout>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <button type="button" onClick={() => setOnline((v) => !v)}>
+      <Controls>
+        <button style={buttonStyle} type="button" onClick={() => setOnline((v) => !v)}>
           Status: {online ? "online" : "away"}
         </button>
-        <button type="button" onClick={() => setShowDot((v) => !v)}>
+        <button style={buttonStyle} type="button" onClick={() => setShowDot((v) => !v)}>
           Dot: {showDot ? "shown" : "hidden"}
         </button>
-        <button type="button" onClick={() => setWithGap((v) => !v)}>
+        <button style={buttonStyle} type="button" onClick={() => setWithGap((v) => !v)}>
           Gap: {withGap ? "3px" : "0 (plain overlap)"}
         </button>
-      </div>
+      </Controls>
     </>
   );
 };
 
-const BellIcon = () => (
-  <svg viewBox="0 0 24 24" width={64} height={64} fill="#33415c">
-    <path d="M12 2a7 7 0 0 0-7 7v3.3l-1.7 3.4a1 1 0 0 0 .9 1.4h15.6a1 1 0 0 0 .9-1.4L19 12.3V9a7 7 0 0 0-7-7Zm-2.5 16a2.5 2.5 0 0 0 5 0h-5Z" />
-  </svg>
-);
-
-const ExclamationBadge = () => (
-  <svg
-    viewBox="0 0 24 24"
-    width={28}
-    height={28}
-    style={{ position: "absolute", top: -6, right: -8 }}
-    fill="#e0a100"
-  >
-    <path d="M12 3a2 2 0 0 1 2 2l-.6 8a1.4 1.4 0 0 1-2.8 0L10 5a2 2 0 0 1 2-2Zm0 14.5a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z" />
-  </svg>
+// Lucide icons are stroke-based; the contour tracer both fills and strokes
+// the overlay's paths, so give badge glyphs an explicit fill for a solid
+// silhouette (and a readable resting look).
+const WarningBadge = () => (
+  <TriangleAlert
+    size={30}
+    fill={palette.warningFill}
+    stroke={palette.warningStroke}
+    strokeWidth={1.75}
+    style={{ position: "absolute", top: -8, right: -10 }}
+  />
 );
 
 const BadgeDemo = () => {
@@ -111,10 +137,10 @@ const BadgeDemo = () => {
 
   return (
     <>
-      <Cutout gap={3} overlay={hasWarning && <ExclamationBadge />}>
-        <BellIcon />
+      <Cutout gap={3} overlay={hasWarning && <WarningBadge />}>
+        <Bell size={64} stroke={palette.icon} strokeWidth={1.5} />
       </Cutout>
-      <button type="button" onClick={() => setHasWarning((v) => !v)}>
+      <button style={buttonStyle} type="button" onClick={() => setHasWarning((v) => !v)}>
         Warning: {hasWarning ? "on" : "off"}
       </button>
     </>
@@ -122,15 +148,13 @@ const BadgeDemo = () => {
 };
 
 const StarOverlay = () => (
-  <svg
-    viewBox="0 0 24 24"
-    width={30}
-    height={30}
-    style={{ position: "absolute", bottom: -6, right: -6 }}
-    fill="#d4a017"
-  >
-    <path d="m12 2 2.9 6.3 6.9.7-5.2 4.6 1.5 6.8L12 16.9l-6.1 3.5 1.5-6.8L2.2 9l6.9-.7L12 2Z" />
-  </svg>
+  <Star
+    size={30}
+    fill={palette.warningFill}
+    stroke={palette.warningStroke}
+    strokeWidth={1.5}
+    style={{ position: "absolute", bottom: -8, right: -8 }}
+  />
 );
 
 const PhotoTile = () => (
@@ -139,7 +163,7 @@ const PhotoTile = () => (
       width: 80,
       height: 80,
       borderRadius: 14,
-      background: "linear-gradient(160deg, #ff9a76, #d4506e 60%, #7c3f8c)",
+      background: "linear-gradient(160deg, #fb7185, #c026d3 55%, #4f46e5)",
     }}
   />
 );
@@ -154,12 +178,12 @@ const ShapeComparisonDemo = () => {
           <Cutout gap={gap} shape={shape} overlay={<StarOverlay />}>
             <PhotoTile />
           </Cutout>
-          <figcaption style={{ fontSize: 13, marginTop: 8, color: "#555" }}>
+          <figcaption style={{ fontSize: 13, marginTop: 8, color: palette.textMuted }}>
             shape=&quot;{shape}&quot;
           </figcaption>
         </figure>
       ))}
-      <label style={{ fontSize: 13, display: "flex", gap: 8 }}>
+      <label style={{ fontSize: 13, display: "flex", gap: 8, color: palette.text }}>
         gap: {gap}px
         <input
           type="range"
@@ -175,8 +199,8 @@ const ShapeComparisonDemo = () => {
 
 export const App = () => (
   <main style={{ maxWidth: 640, margin: "0 auto", padding: "40px 20px" }}>
-    <h1 style={{ fontSize: 24, marginBottom: 4 }}>dom-cutout</h1>
-    <p style={{ color: "#555", marginBottom: 32 }}>
+    <h1 style={{ fontSize: 24, marginBottom: 4, color: palette.text }}>dom-cutout</h1>
+    <p style={{ color: palette.textMuted, marginBottom: 32 }}>
       Live examples running against the package source. The striped backdrop shows through wherever
       the overlay's silhouette is cut out.
     </p>
@@ -190,7 +214,7 @@ export const App = () => (
 
     <Section
       title="Warning badge on an icon"
-      description="An SVG exclamation badge cut out of an SVG bell, contour-for-contour. shape='auto' picks contour tracing because the overlay contains an svg."
+      description="A lucide TriangleAlert cut out of a Bell, contour-for-contour. shape='auto' picks contour tracing because the overlay contains an svg."
     >
       <BadgeDemo />
     </Section>
