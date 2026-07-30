@@ -1,8 +1,8 @@
-import { type CutoutShape, createCutout } from "dom-cutout";
+import { createCutout } from "dom-cutout";
 
 // Capture scene for the README gif — driven by scripts/record-demo.mjs via
 // window.runDemo(). A concave star traced contour-for-contour: overlay
-// toggling (conditional mask), a gap sweep, and a contour/box comparison.
+// toggling (conditional mask) and a gap sweep.
 
 const el = (id: string) => document.getElementById(id)!;
 
@@ -17,12 +17,12 @@ el("tile-caption").style.fontSize = `${13 * scale}px`;
 
 let instance = createCutout(el("tile-content"), el("tile-overlay"), { gap: 6 * scale });
 const caption = (text: string) => {
-  el("tile-caption").innerHTML = text;
+  el("tile-caption").textContent = text;
 };
-const setTile = (gap: number, shape: CutoutShape) => {
+const setGap = (gap: number) => {
   instance.destroy();
-  instance = createCutout(el("tile-content"), el("tile-overlay"), { gap: gap * scale, shape });
-  caption(`shape=${shape}&ensp;gap: ${gap}px`);
+  instance = createCutout(el("tile-content"), el("tile-overlay"), { gap: gap * scale });
+  caption(`gap: ${gap}px`);
 };
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -36,24 +36,17 @@ const runDemo = async () => {
   instance.update();
   await sleep(1100);
   el("tile-star").style.display = "";
-  caption("shape=contour&ensp;gap: 6px");
+  caption("gap: 6px");
   instance.update();
   await sleep(1200);
 
-  // 2. Gap sweep — the halo hugs the concave glyph outline.
-  for (const gap of [5, 4, 3, 2, 1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
-    setTile(gap, "contour");
+  // 2. Gap sweep — the halo hugs the concave glyph outline. Down to 0, up
+  // to 10, and gradually back to the resting 6 so the loop has no snap.
+  for (const gap of [5, 4, 3, 2, 1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 9, 8, 7, 6]) {
+    setGap(gap);
     await sleep(130);
   }
-  await sleep(700);
-  setTile(6, "contour");
-  await sleep(900);
-
-  // 3. contour vs box on the same overlay.
-  setTile(6, "box");
-  await sleep(1200);
-  setTile(6, "contour");
-  await sleep(900);
+  await sleep(1000);
 };
 
 declare global {
