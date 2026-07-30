@@ -86,13 +86,13 @@ On each update, `dom-cutout` measures the content and overlay rects, builds a sm
 - The first paint after mount is unmasked for one frame (the mask needs a layout pass to measure). With server-rendered/static markup the window lasts until your script runs — if it matters, hide the overlay initially (e.g. `visibility: hidden` inline) and reveal it after `createCutout`, or key CSS off the `data-cutout` attribute.
 - `box` shape with a text-only overlay measures the overlay wrapper itself — wrap text in an element for accurate geometry.
 - Stroke-width compensation reads SVG attributes (`stroke-width` on the root or per element); stroke-widths set via CSS classes or inline styles don't survive the markup copy and aren't compensated.
-- Safari renders cutout edges ~1px softer than Chrome on high-DPI displays: WebKit rasterizes image masks at CSS-pixel resolution. This is a WebKit limitation with no current workaround — the generated mask is binary vector, oversampling its intrinsic size changes nothing, and the vector alternative (SVG reference masks on HTML elements) is not supported by WebKit at all (both verified empirically).
+- Safari renders cutout edges ~1px softer than Chrome on high-DPI displays: WebKit rasterizes image masks at CSS-pixel resolution. No drop-in fix exists — the generated mask is binary vector, oversampling its intrinsic size changes nothing, compositing-layer tricks are byte-identical no-ops, and WebKit ignores SVG reference masks on HTML elements (all verified empirically). The one working alternative (wrapping content in `svg > foreignObject` and masking in SVG context) renders vector-crisp in WebKit but requires restructuring the content DOM — see Future plans.
 
 ## Future plans
 
 - **CSS transform support** — read the overlay's computed transform matrix and transplant it into the generated mask, so rotated/scaled overlays stay in sync without the in-SVG `<g transform>` workaround. Stays vector and synchronous.
 - **Raster silhouettes** — a canvas-backed shape mode that cuts out whatever the overlay actually paints (`<img>` badges, emoji), plus soft/feathered halos. Additive to the SVG path, not a replacement: SVG masks stay resolution-independent and synchronous, which raster can't match for glyph overlays.
-- **SVG reference masks** — apply the mask via an inline `<mask>` element reference (`mask: url(#id)`), keeping it vector through the compositor. Tested: works in Chromium, but WebKit ignores reference masks on HTML elements entirely — so this can't fix Safari's soft edges today. Revisit if WebKit ships support.
+- **SVG-context masking (opt-in)** — wrapping content in `svg > foreignObject` and applying the mask as an SVG attribute renders vector-crisp in WebKit (verified: 1 blend px vs 3 for image masks at 2×). A possible opt-in mode for consumers who need pixel-perfect Safari edges and can accept the DOM restructuring plus Safari's foreignObject quirks. Plain reference masks (`mask: url(#id)`) are not a path: WebKit ignores them on HTML elements entirely.
 
 ## Prior art
 
