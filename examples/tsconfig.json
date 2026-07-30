@@ -14,5 +14,5 @@
       "dom-cutout": ["../src/index.ts"]
     }
   },
-  "include": ["react", "vanilla", "vite.config.ts"]
+  "include": ["react", "vanilla", "landing.ts", "vite.config.ts"]
 }

@@ -3,59 +3,106 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>dom-cutout examples</title>
-    <style>
-      body {
-        margin: 0;
-        font-family:
-          system-ui,
-          -apple-system,
-          sans-serif;
-        color: #1a1a2e;
-        background: #f4f4f8;
-      }
-      main {
-        max-width: 640px;
-        margin: 0 auto;
-        padding: 40px 20px;
-      }
-      a {
-        display: block;
-        padding: 16px 20px;
-        margin-bottom: 12px;
-        border-radius: 10px;
-        background: white;
-        text-decoration: none;
-        color: inherit;
-        border: 1px solid #ddd;
-      }
-      a:hover {
-        border-color: #5b6ee1;
-      }
-      small {
-        color: #64748b;
-      }
-      .lead {
-        color: #64748b;
-        margin: 4px 0 20px;
-      }
-    </style>
+    <title>dom-cutout</title>
   </head>
-  <body>
-    <main>
-      <h1>dom-cutout</h1>
-      <p class="lead">Cut the silhouette of one DOM element out of another.</p>
-      <a href="vanilla/">
-        <strong>Vanilla DOM</strong><br />
-        <small>createCutout() from the zero-dependency core — no framework</small>
-      </a>
-      <a href="react/">
-        <strong>React</strong><br />
-        <small
-          >&lt;Cutout&gt; from dom-cutout/react — avatar status dot, warning badge, contour vs
-          box</small
+  <body class="bg-slate-100 font-sans text-slate-800 antialiased">
+    <main class="mx-auto max-w-2xl px-5 py-12">
+      <!-- Hero -->
+      <header class="flex items-baseline justify-between">
+        <h1 class="text-3xl font-semibold tracking-tight text-slate-900">dom-cutout</h1>
+        <nav class="flex gap-4 text-sm">
+          <a class="text-slate-500 hover:text-slate-900" href="https://github.com/ohgree/dom-cutout"
+            >GitHub</a
+          >
+          <a
+            class="text-slate-500 hover:text-slate-900"
+            href="https://www.npmjs.com/package/dom-cutout"
+            >npm</a
+          >
+        </nav>
+      </header>
+      <p class="mt-2 text-lg text-slate-600">
+        Cut the silhouette of one DOM element out of another — badge cutouts, notification dots,
+        status halos — with a runtime-generated SVG mask that follows the overlay's contours.
+      </p>
+
+      <!-- Live hero demo: the package demoing itself. The checkerboard shows
+           through wherever the overlay's silhouette is cut out. -->
+      <div class="demo-card mt-8">
+        <div class="inline-grid *:[grid-area:1/1]">
+          <div id="hero-content">
+            <div
+              class="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-3xl font-semibold text-white"
+            >
+              MJ
+            </div>
+          </div>
+          <div id="hero-overlay" class="relative" style="visibility: hidden">
+            <div
+              id="hero-dot"
+              class="absolute right-1 bottom-1 h-5 w-5 rounded-full bg-emerald-500"
+            ></div>
+          </div>
+        </div>
+        <div class="flex flex-col gap-2 text-sm text-slate-600">
+          <p>One call, live geometry:</p>
+          <code class="chip font-mono">createCutout(avatar, dot, { gap: 4 })</code>
+          <button id="hero-toggle" type="button" class="chip w-fit cursor-pointer">
+            Toggle the dot
+          </button>
+        </div>
+      </div>
+
+      <!-- Install -->
+      <div class="mt-6 flex items-center gap-3">
+        <code class="chip grow font-mono">npm install dom-cutout</code>
+      </div>
+
+      <!-- Features -->
+      <ul class="mt-6 grid gap-3 text-sm text-slate-600 sm:grid-cols-3">
+        <li class="rounded-xl border border-slate-200 bg-white p-4">
+          <strong class="mb-1 block text-slate-900">Zero-dependency core</strong>
+          Plain DOM. Works with any framework or none.
+        </li>
+        <li class="rounded-xl border border-slate-200 bg-white p-4">
+          <strong class="mb-1 block text-slate-900">Contour-following</strong>
+          SVG overlays are traced glyph-for-glyph, stroke widths compensated.
+        </li>
+        <li class="rounded-xl border border-slate-200 bg-white p-4">
+          <strong class="mb-1 block text-slate-900">React adapter</strong>
+          <code class="font-mono text-[13px]">&lt;Cutout&gt;</code> at
+          <code class="font-mono text-[13px]">dom-cutout/react</code>, ref-friendly.
+        </li>
+      </ul>
+
+      <!-- Example pages -->
+      <h2 class="mt-10 mb-3 text-lg font-semibold text-slate-900">Examples</h2>
+      <div class="grid gap-3">
+        <a
+          class="block rounded-xl border border-slate-200 bg-white p-4 no-underline hover:border-indigo-500"
+          href="vanilla/"
         >
-      </a>
+          <strong class="text-slate-900">Vanilla DOM</strong><br />
+          <small class="text-slate-500"
+            >createCutout() from the zero-dependency core — no framework</small
+          >
+        </a>
+        <a
+          class="block rounded-xl border border-slate-200 bg-white p-4 no-underline hover:border-indigo-500"
+          href="react/"
+        >
+          <strong class="text-slate-900">React</strong><br />
+          <small class="text-slate-500"
+            >&lt;Cutout&gt; from dom-cutout/react — avatar status dot, warning badge, contour vs
+            box</small
+          >
+        </a>
+      </div>
+
+      <footer class="mt-12 text-sm text-slate-400">
+        MIT · this page is masked by the package it documents
+      </footer>
     </main>
+    <script type="module" src="/landing.ts"></script>
   </body>
 </html>

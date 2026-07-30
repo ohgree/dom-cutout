@@ -1,55 +1,13 @@
 import { Bell, Star, TriangleAlert } from "lucide-react";
-import { type CSSProperties, type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 
 import { Cutout } from "dom-cutout/react";
 
-// Palette: indigo/violet core, emerald for status, amber for warnings.
-// The backdrop is the design-tool transparency checkerboard — the universal
-// "see-through here" texture, which is exactly what the cutout gap is.
-const palette = {
-  checker: "#e5e7eb", // gray-200 squares on white
-  avatarFrom: "#6366f1", // indigo-500
-  avatarTo: "#7c3aed", // violet-600
-  online: "#10b981", // emerald-500
-  away: "#94a3b8", // slate-400
-  icon: "#334155", // slate-700
-  warningFill: "#fbbf24", // amber-400 (gold star)
-  warningStroke: "#92400e", // amber-800
-  signYellow: "#facc15", // yellow-400 (road-sign badge)
-  signBlack: "#0f172a", // slate-900
-  text: "#1e293b", // slate-800
-  textMuted: "#64748b", // slate-500
-};
-
-const cardStyle: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: 48,
-  padding: "40px 32px",
-  borderRadius: 12,
-  border: "1px solid #e2e8f0",
-  background: `repeating-conic-gradient(${palette.checker} 0% 25%, #ffffff 0% 50%) 0 0 / 16px 16px`,
-};
-
-// Fixed width + left alignment: state labels change length on click, and
-// resizing buttons would shift the card layout.
-const buttonStyle: CSSProperties = {
-  font: "inherit",
-  fontSize: 13,
-  width: 184,
-  textAlign: "left",
-  padding: "6px 12px",
-  borderRadius: 8,
-  border: "1px solid #cbd5e1",
-  background: "white",
-  color: palette.text,
-  cursor: "pointer",
-};
+// Colors reference Tailwind's default palette directly; shared surface
+// styles (.chip, .demo-card, .bg-checker, .shiki) live in ../styles.css.
 
 // Shiki-highlighted snippet in the page's light theme. Falls back to a
-// plain block until (or if) highlighting resolves; styling for `.shiki`
-// lives in index.html so the theme's own background wins.
+// plain block until (or if) highlighting resolves.
 const CodeBlock = ({ code }: { code: string }) => {
   const [html, setHtml] = useState<string | null>(null);
 
@@ -91,48 +49,31 @@ const Section = ({
   code?: string;
   children: ReactNode;
 }) => (
-  <section style={{ marginBottom: 40 }}>
-    <h2 style={{ margin: "0 0 4px", fontSize: 18, color: palette.text }}>{title}</h2>
-    <p style={{ margin: "0 0 16px", color: palette.textMuted, fontSize: 14 }}>{description}</p>
-    <div style={cardStyle}>{children}</div>
+  <section className="mb-10">
+    <h2 className="mb-1 text-lg font-semibold text-slate-900">{title}</h2>
+    <p className="mb-4 text-sm text-slate-500">{description}</p>
+    <div className="demo-card">{children}</div>
     {code && <CodeBlock code={code} />}
   </section>
 );
 
 const Controls = ({ children }: { children: ReactNode }) => (
-  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>{children}</div>
+  <div className="flex flex-col gap-2">{children}</div>
 );
 
+// Fixed width + left alignment: state labels change length on click, and
+// resizing buttons would shift the card layout.
+const demoButtonClass = "chip w-46 cursor-pointer text-left";
+
 const Avatar = () => (
-  <div
-    style={{
-      width: 72,
-      height: 72,
-      borderRadius: "50%",
-      background: `linear-gradient(135deg, ${palette.avatarFrom}, ${palette.avatarTo})`,
-      color: "white",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontSize: 24,
-      fontWeight: 600,
-    }}
-  >
+  <div className="flex h-18 w-18 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-2xl font-semibold text-white">
     MJ
   </div>
 );
 
 const StatusDot = ({ online }: { online: boolean }) => (
   <div
-    style={{
-      position: "absolute",
-      bottom: 2,
-      right: 2,
-      width: 16,
-      height: 16,
-      borderRadius: "50%",
-      background: online ? palette.online : palette.away,
-    }}
+    className={`absolute right-0.5 bottom-0.5 h-4 w-4 rounded-full ${online ? "bg-emerald-500" : "bg-slate-400"}`}
   />
 );
 
@@ -147,13 +88,13 @@ const AvatarStatusDemo = () => {
         <Avatar />
       </Cutout>
       <Controls>
-        <button style={buttonStyle} type="button" onClick={() => setOnline((v) => !v)}>
+        <button className={demoButtonClass} type="button" onClick={() => setOnline((v) => !v)}>
           Status: {online ? "online" : "away"}
         </button>
-        <button style={buttonStyle} type="button" onClick={() => setShowDot((v) => !v)}>
+        <button className={demoButtonClass} type="button" onClick={() => setShowDot((v) => !v)}>
           Dot: {showDot ? "shown" : "hidden"}
         </button>
-        <button style={buttonStyle} type="button" onClick={() => setWithGap((v) => !v)}>
+        <button className={demoButtonClass} type="button" onClick={() => setWithGap((v) => !v)}>
           Gap: {withGap ? "4px" : "0 (plain overlap)"}
         </button>
       </Controls>
@@ -168,10 +109,8 @@ const AvatarStatusDemo = () => {
 const WarningBadge = () => (
   <TriangleAlert
     size={30}
-    fill={palette.signYellow}
-    stroke={palette.signBlack}
+    className="absolute -top-[3px] right-[1px] fill-yellow-400 stroke-slate-900"
     strokeWidth={1.75}
-    style={{ position: "absolute", top: -3, right: 1 }}
   />
 );
 
@@ -181,9 +120,9 @@ const BadgeDemo = () => {
   return (
     <>
       <Cutout overlay={hasWarning && <WarningBadge />}>
-        <Bell size={64} stroke={palette.icon} strokeWidth={1.5} />
+        <Bell size={64} className="stroke-slate-700" strokeWidth={1.5} />
       </Cutout>
-      <button style={buttonStyle} type="button" onClick={() => setHasWarning((v) => !v)}>
+      <button className={demoButtonClass} type="button" onClick={() => setHasWarning((v) => !v)}>
         Warning: {hasWarning ? "on" : "off"}
       </button>
     </>
@@ -193,32 +132,14 @@ const BadgeDemo = () => {
 const StarOverlay = () => (
   <Star
     size={30}
-    fill={palette.warningFill}
-    stroke={palette.warningStroke}
+    className="absolute -right-2 -bottom-2 fill-amber-400 stroke-amber-800"
     strokeWidth={1.5}
-    style={{ position: "absolute", bottom: -8, right: -8 }}
   />
 );
 
 const PhotoTile = () => (
-  <div
-    style={{
-      width: 80,
-      height: 80,
-      borderRadius: 14,
-      background: "linear-gradient(160deg, #fb7185, #c026d3 55%, #4f46e5)",
-    }}
-  />
+  <div className="h-20 w-20 rounded-[14px] bg-gradient-to-br from-rose-400 via-fuchsia-600 to-indigo-600" />
 );
-
-// Solid chip behind bare text sitting on the checkerboard — small grey
-// labels are illegible directly on the pattern.
-const labelChipStyle: CSSProperties = {
-  background: "white",
-  border: "1px solid #e2e8f0",
-  borderRadius: 8,
-  padding: "4px 10px",
-};
 
 const ShapeComparisonDemo = () => {
   const [gap, setGap] = useState(4);
@@ -226,36 +147,17 @@ const ShapeComparisonDemo = () => {
   return (
     <>
       {(["contour", "box"] as const).map((shape) => (
-        <figure key={shape} style={{ margin: 0, textAlign: "center" }}>
+        <figure key={shape} className="m-0 text-center">
           <Cutout gap={gap} shape={shape} overlay={<StarOverlay />}>
             <PhotoTile />
           </Cutout>
-          <figcaption
-            style={{
-              ...labelChipStyle,
-              display: "inline-block",
-              fontSize: 13,
-              marginTop: 10,
-              color: palette.textMuted,
-            }}
-          >
+          <figcaption className="chip mt-2.5 inline-block text-slate-500">
             shape=&quot;{shape}&quot;
           </figcaption>
         </figure>
       ))}
-      <label
-        style={{
-          ...labelChipStyle,
-          fontSize: 13,
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          color: palette.text,
-        }}
-      >
-        <span style={{ minWidth: 52, whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>
-          gap: {gap}px
-        </span>
+      <label className="chip flex items-center gap-2">
+        <span className="min-w-13 tabular-nums whitespace-nowrap">gap: {gap}px</span>
         <input
           type="range"
           min={0}
@@ -269,14 +171,14 @@ const ShapeComparisonDemo = () => {
 };
 
 export const App = () => (
-  <main style={{ maxWidth: 640, margin: "0 auto", padding: "40px 20px" }}>
-    <a href="../" style={{ fontSize: 13, color: palette.textMuted, textDecoration: "none" }}>
+  <main className="mx-auto max-w-2xl px-5 py-10">
+    <a href="../" className="text-[13px] text-slate-500 no-underline hover:text-slate-900">
       &larr; examples
     </a>
-    <h1 style={{ fontSize: 24, margin: "8px 0 4px", color: palette.text }}>
+    <h1 className="mt-2 mb-1 text-2xl font-semibold text-slate-900">
       &lt;Cutout /&gt; &mdash; React
     </h1>
-    <p style={{ color: palette.textMuted, marginBottom: 32 }}>
+    <p className="mb-8 text-slate-500">
       The React adapter over the zero-dependency core: overlay and children as props, the mask kept
       in sync before every paint. The checkerboard shows through wherever a silhouette is cut out.
       View /react/App.tsx for the wiring.

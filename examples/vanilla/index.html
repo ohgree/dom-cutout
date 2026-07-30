@@ -3,139 +3,51 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>dom-cutout — vanilla DOM example</title>
-    <style>
-      * {
-        box-sizing: border-box;
-      }
-      body {
-        margin: 0;
-        font-family:
-          system-ui,
-          -apple-system,
-          sans-serif;
-        color: #1a1a2e;
-        background: #f4f4f8;
-      }
-      main {
-        max-width: 640px;
-        margin: 0 auto;
-        padding: 40px 20px;
-      }
-      p.lead {
-        color: #64748b;
-      }
-      .back {
-        font-size: 13px;
-        color: #64748b;
-        text-decoration: none;
-      }
-      h1 {
-        margin: 8px 0 4px;
-        font-size: 24px;
-        color: #1e293b;
-      }
-      .card {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 48px;
-        padding: 40px 32px;
-        border-radius: 12px;
-        border: 1px solid #e2e8f0;
-        /* design-tool transparency checkerboard: the gap reads as "see-through" */
-        background: repeating-conic-gradient(#e5e7eb 0% 25%, #ffffff 0% 50%) 0 0 / 16px 16px;
-      }
-      .stack {
-        display: inline-grid;
-      }
-      .stack > * {
-        grid-area: 1 / 1;
-      }
-      .avatar {
-        width: 72px;
-        height: 72px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #5b6ee1, #8850c8);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        font-weight: 600;
-      }
-      .overlay {
-        position: relative;
-      }
-      .dot {
-        position: absolute;
-        bottom: 2px;
-        right: 2px;
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        background: #3ba55c;
-      }
-      .controls {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-      /* Fixed width + left alignment: labels change length on click, and
-         resizing buttons would shift the card layout. */
-      .controls button {
-        font: inherit;
-        font-size: 13px;
-        width: 200px;
-        text-align: left;
-        padding: 6px 12px;
-        border-radius: 8px;
-        border: 1px solid #cbd5e1;
-        background: white;
-        color: #1e293b;
-        cursor: pointer;
-      }
-      .controls button:disabled {
-        color: #94a3b8;
-        cursor: default;
-      }
-      .code,
-      .shiki {
-        margin: 12px 0 0;
-        padding: 12px 16px;
-        border-radius: 10px;
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        font-size: 13px;
-        line-height: 1.6;
-        overflow-x: auto;
-      }
-    </style>
+    <title>dom-cutout — vanilla DOM</title>
   </head>
-  <body>
-    <main>
-      <a class="back" href="../">&larr; examples</a>
-      <h1>createCutout() — vanilla DOM</h1>
-      <p class="lead">
+  <body class="bg-slate-100 font-sans text-slate-800 antialiased">
+    <main class="mx-auto max-w-2xl px-5 py-10">
+      <a class="text-[13px] text-slate-500 no-underline hover:text-slate-900" href="../"
+        >&larr; examples</a
+      >
+      <h1 class="mt-2 mb-1 text-2xl font-semibold text-slate-900">createCutout() — vanilla DOM</h1>
+      <p class="mb-8 text-slate-500">
         The zero-dependency core on hand-written markup: an inline-grid stack, a content layer, an
         overlay layer, one createCutout() call. The checkerboard shows through wherever a silhouette
         is cut out. View /vanilla/main.ts for the wiring.
       </p>
-      <div class="card">
-        <div class="stack">
-          <div id="content"><div class="avatar">MJ</div></div>
+      <div class="demo-card">
+        <div class="inline-grid *:[grid-area:1/1]">
+          <div id="content">
+            <div
+              class="flex h-18 w-18 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-2xl font-semibold text-white"
+            >
+              MJ
+            </div>
+          </div>
           <!-- hidden until the first mask lands (see main.ts FOUC guard) -->
-          <div id="overlay" class="overlay" style="visibility: hidden">
-            <div class="dot"></div>
+          <div id="overlay" class="relative" style="visibility: hidden">
+            <div
+              id="dot"
+              class="absolute right-0.5 bottom-0.5 h-4 w-4 rounded-full bg-emerald-500"
+            ></div>
           </div>
         </div>
-        <div class="controls">
-          <button id="toggle-dot" type="button">Dot: shown</button>
-          <button id="toggle-gap" type="button">Gap: 4px</button>
-          <button id="destroy" type="button">destroy()</button>
+        <!-- Fixed width + left alignment: labels change length on click, and
+             resizing buttons would shift the card layout. -->
+        <div class="flex flex-col gap-2 *:w-50 *:cursor-pointer *:text-left">
+          <button id="toggle-dot" type="button" class="chip">Dot: shown</button>
+          <button id="toggle-gap" type="button" class="chip">Gap: 4px</button>
+          <button
+            id="destroy"
+            type="button"
+            class="chip disabled:cursor-default disabled:text-slate-400"
+          >
+            destroy()
+          </button>
         </div>
       </div>
-      <pre class="code"><code>const instance = createCutout(content, overlay, { gap: 4 });
+      <pre class="code shiki"><code>const instance = createCutout(content, overlay, { gap: 4 });
 instance.update(); // after changes ResizeObserver can't see
 instance.destroy(); // removes mask + observers</code></pre>
     </main>

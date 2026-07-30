@@ -1,8 +1,10 @@
+import "../styles.css";
+
 import { createCutout, type CutoutInstance } from "dom-cutout";
 
 const content = document.getElementById("content")!;
 const overlay = document.getElementById("overlay")!;
-const dot = overlay.querySelector<HTMLElement>(".dot")!;
+const dot = document.getElementById("dot")!;
 
 let gap = 4;
 let dotShown = true;
