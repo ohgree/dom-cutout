@@ -98,7 +98,7 @@ Verified no-ops (screenshot byte-comparison / edge measurement):
 - Compositing-layer tricks (`translateZ(0)`, `will-change`, `isolation`)
 - `mask-mode: alpha` (image masks are already alpha)
 - `-webkit-mask-box-image`
-- SVG reference masks (`mask: url(#id)`) — not soft but *absent*: WebKit ignores them on HTML elements entirely
+- SVG reference masks (`mask: url(#id)`) — not soft but _absent_: WebKit ignores them on HTML elements entirely
 
 **If pixel-perfect Safari edges matter, use SVG-context masking**: wrap the content in `svg > foreignObject` and apply the mask as an SVG attribute. This renders vector-crisp on every engine tested (WebKit, Chromium, Firefox), with no browser detection needed. The trade-offs: the `svg` wrapper needs explicit dimensions (foreignObject forfeits intrinsic sizing), and foreignObject constrains what the content can be (positioned descendants, form controls — quirkiest on Safari itself). A first-class opt-in mode is planned (see Future plans); until then, a hand-rolled reference lives in [`examples/lab/`](./examples/lab/index.html).
 
