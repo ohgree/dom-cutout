@@ -124,7 +124,7 @@ const AvatarStatusDemo = () => {
 const WarningBadge = () => (
   <svg
     viewBox="0 0 8 24"
-    className="absolute -top-1 right-1.5 h-7 w-2.5 fill-red-500"
+    className="absolute -top-0.5 right-3 h-7 w-2.5 fill-red-500"
     aria-hidden="true"
   >
     <rect x="1.5" y="1" width="5" height="15" rx="2.5" />
