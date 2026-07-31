@@ -181,10 +181,16 @@ export const computeMaskStyle = (
     ].join("");
   }
 
+  // Snap the layer geometry to the device-pixel grid: iOS rounds the
+  // element's rasterized position and a fractional mask-position
+  // differently, which reads as the whole cutout sitting ~1px off.
+  const dpr = typeof devicePixelRatio === "number" && devicePixelRatio > 0 ? devicePixelRatio : 1;
+  const snap = (value: number) => Math.round(value * dpr) / dpr;
+
   return {
     "mask-image": `linear-gradient(#000,#000),url("data:image/svg+xml,${encodeURIComponent(shapeSvg)}")`,
-    "mask-position": `0 0,${layer.x}px ${layer.y}px`,
-    "mask-size": `100% 100%,${layer.w}px ${layer.h}px`,
+    "mask-position": `0 0,${snap(layer.x)}px ${snap(layer.y)}px`,
+    "mask-size": `100% 100%,${snap(layer.w)}px ${snap(layer.h)}px`,
     "mask-repeat": "no-repeat,no-repeat",
     "mask-composite": "subtract,add",
   };
@@ -231,21 +237,35 @@ export const createCutout = (
       clearMask(content);
       return;
     }
-    // Decode the shape-layer image BEFORE applying the mask. iOS WebKit
-    // races tile rasterization against the async decode of a mask data URI
-    // it hasn't seen before: tiles painted mid-decode composite with the
-    // shape layer missing, and those broken tiles then stick in the tile
-    // cache until something forces a re-raster (pinch zoom, reload). The
-    // previous mask stays applied while the new one decodes, so updates
-    // never show an unmasked flash — only the very first application moves
-    // ~a frame later.
+    // Apply synchronously: pre-paint on load, and no unmasked gap when a
+    // consumer destroys/recreates or slides options.
+    apply(style);
+
+    // iOS stuck-tile repair. iOS WebKit rasterizes content tiles while a
+    // freshly-seen mask data URI is still decoding; tiles painted mid-race
+    // composite with the shape layer missing and stick in the tile cache
+    // until something forces a re-raster (pinch zoom, reload). Decode the
+    // shape image in parallel — if it settles only AFTER a frame has
+    // painted (the only case where stuck tiles can exist), nudge the
+    // shape layer's mask-position by 0.01px (invisible) to invalidate the
+    // layer and re-raster it against the decoded image. Cached URIs decode
+    // before the first frame and skip the nudge entirely.
     const source = /url\("(data:[^"]*)"\)/.exec(style["mask-image"])?.[1];
-    if (source && typeof Image !== "undefined") {
+    if (source && typeof Image !== "undefined" && typeof requestAnimationFrame === "function") {
+      let painted = false;
+      requestAnimationFrame(() => {
+        painted = true;
+      });
       let settled = false;
       const done = () => {
         if (settled || token !== applyToken) return;
         settled = true;
-        apply(style);
+        if (!painted) return;
+        const nudged = style["mask-position"].replace(
+          /,(-?[\d.]+)px/,
+          (_, x) => `,${Number(x) + 0.01}px`,
+        );
+        content.style.setProperty("mask-position", nudged);
       };
       const image = new Image();
       image.src = source;
@@ -255,12 +275,8 @@ export const createCutout = (
         image.addEventListener("load", done, { once: true });
         image.addEventListener("error", done, { once: true });
       }
-      // A data-URI decode is near-instant; the cap keeps a stalled decoder
-      // (or an environment that never settles, e.g. jsdom) from stranding
-      // the mask.
-      setTimeout(done, 100);
-    } else {
-      apply(style);
+      // Cap so a stalled decoder still gets its repair pass.
+      setTimeout(done, 150);
     }
   };
 

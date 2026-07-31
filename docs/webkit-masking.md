@@ -172,10 +172,23 @@ reload fixed it (URI now in the memory cache).
 
 iOS WebKit rasterizes content tiles while a freshly-seen mask image is
 still decoding; those tiles composite with the shape layer missing and then
-stick in the tile cache. Mitigation, in `createCutout`: decode the shape
-image (`Image.decode()`) before applying the mask longhands. Updates keep
-the previous mask up until the new one is ready, so there is no unmasked
-flash; only the very first application moves about a frame later.
+stick in the tile cache. The first mitigation attempt — waiting for the
+decode before applying the mask — backfired instructively: it moved every
+application past first paint, which itself churns tiles visibly for up to a
+second on every load, and it opened an unmasked flash whenever a consumer
+destroys/recreates the instance (the documented way to change options).
+
+The shipped mitigation inverts it: apply synchronously (pre-paint on load,
+gapless on updates), decode the shape image in parallel, and only if the
+decode settles after a frame has painted — the sole case where stuck tiles
+can exist — nudge the shape layer's `mask-position` by an invisible 0.01px
+to invalidate the layer and re-raster it against the decoded image. Cached
+URIs decode before the first frame and skip the nudge entirely.
+
+A related iOS quirk: on fractionally-positioned elements (centered flex
+rows), the cutout could sit ~1px off — iOS rounds the element's rasterized
+position and a fractional `mask-position` differently. The shape layer's
+geometry is snapped to the device-pixel grid to keep the roundings aligned.
 
 ## Timeline of failure modes, for the record
 

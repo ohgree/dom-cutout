@@ -8,7 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
-- iOS WebKit: fragmented/stuck rendering on the first paint of a freshly-generated mask (new gap values, first load) — content tiles rasterized while the mask's shape image was still decoding, and the broken tiles stuck in the tile cache until a pinch-zoom or reload. `createCutout` now decodes the shape image before applying the mask; geometry updates keep the previous mask until the new one is ready.
+- iOS WebKit: fragmented/stuck rendering on the first paint of a freshly-generated mask (new gap values, first load) — content tiles rasterized while the mask's shape image was still decoding, and the broken tiles stuck in the tile cache until a pinch-zoom or reload. The mask still applies synchronously (pre-paint on load, no flicker on updates); the shape image is decoded in parallel, and if the decode settles only after a frame has painted, an invisible 0.01px mask-position nudge re-rasterizes the layer against the decoded image.
+- iOS WebKit: the cutout could sit ~1px off on fractionally-positioned elements — the shape layer's mask geometry is now snapped to the device-pixel grid.
 
 ## [0.2.1] - 2026-07-31
 
