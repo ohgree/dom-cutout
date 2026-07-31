@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-07-31
+
+### Documentation
+
+- Documentation-only release to refresh the npm README: logo header, new tagline, the before/after demo animation (lossless WebP with transparent background, GIF fallback), the background-colored-ring comparison, and the WebKit story. No runtime changes.
+
 ## [0.2.0] - 2026-07-31
 
 ### Changed
@@ -31,6 +37,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 Initial release: zero-dependency core (`createCutout`, `computeMaskUrl`, contour/box/auto shapes, stroke-width compensation, `ResizeObserver` syncing) and the React adapter at `dom-cutout/react`.
 
+[0.2.1]: https://github.com/ohgree/dom-cutout/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/ohgree/dom-cutout/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/ohgree/dom-cutout/releases/tag/v0.1.1
 [0.1.0]: https://www.npmjs.com/package/dom-cutout/v/0.1.0
