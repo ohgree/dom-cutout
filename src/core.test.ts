@@ -38,7 +38,7 @@ const shapeMarkup = (style: ReturnType<typeof computeMaskStyle>) => {
 
 // Mask application waits for the shape image decode (or its 100ms cap in
 // environments that never settle image loads, like jsdom).
-const settleMask = () => new Promise((resolve) => setTimeout(resolve, 150));
+const settleMask = () => new Promise((resolve) => setTimeout(resolve, 250));
 
 afterEach(() => {
   document.body.innerHTML = "";
@@ -217,7 +217,9 @@ describe("createCutout", () => {
 
     const instance = createCutout(content, overlay, { gap: 3 });
     await settleMask();
-    const before = content.style.getPropertyValue("mask-position");
+    // mask-size is the property guaranteed to change when the overlay
+    // doubles (mask-position can coincide across geometries).
+    const before = content.style.getPropertyValue("mask-size");
     expect(content.hasAttribute(MASKED_ATTRIBUTE)).toBe(true);
 
     measure(overlay.querySelector("svg")!, 48, 48);
@@ -226,10 +228,10 @@ describe("createCutout", () => {
     // Immediately after the update the OLD mask must still be applied —
     // Safari blinks children out if the new (undecoded) image lands early.
     expect(content.hasAttribute(MASKED_ATTRIBUTE)).toBe(true);
-    expect(content.style.getPropertyValue("mask-position")).toBe(before);
+    expect(content.style.getPropertyValue("mask-size")).toBe(before);
 
     await settleMask();
-    expect(content.style.getPropertyValue("mask-position")).not.toBe(before);
+    expect(content.style.getPropertyValue("mask-size")).not.toBe(before);
   });
 
   it("clears the mark on destroy()", async () => {
