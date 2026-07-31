@@ -213,23 +213,26 @@ const clearMask = (content: HTMLElement) => {
 };
 
 // Safari hides the masked element while ANY image in its mask list is
-// still loading — swapping in a mask whose data URI the CSS loader hasn't
-// seen blinks the children out, while previously-seen URIs swap cleanly.
-// Decoding a probe HTMLImageElement does NOT reliably populate the CSS
-// loader's cache, but using the URI as a CSS background-image on a hidden
-// warm element does: it goes through the same per-document CSS image
-// cache the mask machinery reads.
+// still loading — swapping in a mask the CSS engine hasn't seen blinks the
+// children out, while re-applying a previously-seen mask is clean. The
+// reuse is keyed on the property value TEXT (WebKit pools CSS values by
+// their full string), so warming must apply the IDENTICAL mask longhands
+// — same value strings, same property — to a hidden warm element; a
+// background-image warm or an HTMLImageElement probe primes the wrong
+// entry and changes nothing.
 let warmElement: HTMLElement | null = null;
-const warmMaskImage = (source: string) => {
+const warmMask = (style: CutoutMaskStyle) => {
   if (typeof document === "undefined" || !document.body) return;
   if (!warmElement || !warmElement.isConnected) {
     warmElement = document.createElement("div");
     warmElement.setAttribute("aria-hidden", "true");
     warmElement.style.cssText =
-      "position:fixed;left:-9999px;top:0;width:1px;height:1px;pointer-events:none;visibility:hidden";
+      "position:fixed;left:-9999px;top:0;width:1px;height:1px;pointer-events:none;visibility:hidden;background:#000";
     document.body.append(warmElement);
   }
-  warmElement.style.backgroundImage = `url("${source}")`;
+  for (const property of MASK_PROPERTIES) {
+    warmElement.style.setProperty(property, style[property]);
+  }
 };
 
 const nextFrame = (callback: () => void) => {
@@ -294,18 +297,14 @@ export const createCutout = (
       setTimeout(() => nudge(0.02), 250);
     };
 
-    const source = /url\("(data:[^"]*)"\)/.exec(style["mask-image"])?.[1];
-
-    if (content.hasAttribute(MASKED_ATTRIBUTE) && source !== undefined) {
+    if (content.hasAttribute(MASKED_ATTRIBUTE)) {
       // Swap (e.g. a gap change): Safari hides the masked element while ANY
-      // image in its mask list is still loading, so a mask whose data URI
-      // the CSS loader hasn't cached blinks the children out — while
-      // already-cached URIs swap cleanly. Convert every first use into the
-      // cached case: warm the URI through the CSS loader (background-image
-      // on a hidden element shares the same per-document image cache), let
-      // it settle for two frames, then swap. The old mask stays applied in
-      // the meantime.
-      warmMaskImage(source);
+      // image in its mask list is still loading, and only a mask value the
+      // engine has already resolved swaps cleanly. Convert every first use
+      // into that case: apply the IDENTICAL mask longhands to a hidden warm
+      // element (value-text-keyed reuse), let them settle for two frames,
+      // then swap. The old mask stays applied in the meantime.
+      warmMask(style);
       nextFrame(applyWithRepair);
       return;
     }

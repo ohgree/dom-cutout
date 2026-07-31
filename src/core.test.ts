@@ -228,9 +228,10 @@ describe("createCutout", () => {
     // warmed through the CSS cache first.
     expect(content.style.getPropertyValue("mask-size")).toContain("32px 32px");
     expect(content.hasAttribute(MASKED_ATTRIBUTE)).toBe(true);
-    // ...and the warm element carries the new URI.
+    // ...and the warm element carries the identical new mask value.
     const warm = document.querySelector('[aria-hidden="true"]') as HTMLElement;
-    expect(warm?.style.backgroundImage).toContain("data:image/svg+xml");
+    expect(warm?.style.getPropertyValue("mask-image")).toContain("data:image/svg+xml");
+    expect(warm?.style.getPropertyValue("mask-size")).toContain("56px 56px");
 
     await settleMask();
     // Applied: new shape alone.

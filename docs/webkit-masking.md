@@ -190,10 +190,12 @@ still-loading layer poisons the whole stack, old layer included.
 
 The shipped mitigation converts every first use into the cached case:
 fresh applications apply synchronously (pre-paint on load), and swaps
-first warm the new data URI through the CSS loader itself — set as
-`background-image` on a hidden warm element, which shares the same
-per-document image cache the mask machinery reads — then apply two frames
-later, the old mask staying applied meanwhile. Invisible sub-pixel
+first warm the new mask by applying the IDENTICAL mask longhands to a
+hidden warm element — the reuse is keyed on the property value text
+(WebKit pools CSS values by their full string), so a `background-image`
+warm with the same URI primes a different entry and fixes nothing — then
+apply to the real element two frames later, the old mask staying applied
+meanwhile. Invisible sub-pixel
 `mask-position` nudges after each application re-raster any tile painted
 against a stale image. Superseded updates cancel via a token.
 
