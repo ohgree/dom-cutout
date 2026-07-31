@@ -1,4 +1,4 @@
-import { Bell, Star, TriangleAlert } from "lucide-react";
+import { Bell, Star } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 
 import { Cutout } from "dom-cutout/react";
@@ -117,16 +117,19 @@ const AvatarStatusDemo = () => {
   );
 };
 
-// Badge glyphs need an explicit fill: the mask removes content behind the
-// whole silhouette, so a hollow (stroke-only) badge would show the backdrop
-// through its interior. The offsets account for lucide's ~15% viewBox
-// padding — naive negative offsets land in empty space.
+// A bare exclamation mark: two DISJOINT shapes (bar + dot), so the halo
+// visibly traces two separate contours — something a bounding box can't
+// fake. Badge glyphs need an explicit fill: the mask removes content
+// behind the whole silhouette.
 const WarningBadge = () => (
-  <TriangleAlert
-    size={30}
-    className="absolute -top-0.75 right-px fill-yellow-400 stroke-slate-900"
-    strokeWidth={1.75}
-  />
+  <svg
+    viewBox="0 0 8 24"
+    className="absolute -top-1 right-1.5 h-7 w-2.5 fill-red-500"
+    aria-hidden="true"
+  >
+    <rect x="1.5" y="1" width="5" height="15" rx="2.5" />
+    <circle cx="4" cy="21.5" r="2.5" />
+  </svg>
 );
 
 const BadgeDemo = () => {
@@ -209,9 +212,9 @@ export const App = () => (
 
     <Section
       title="Warning badge on an icon"
-      description="A lucide TriangleAlert cut out of a Bell, contour-for-contour. shape='auto' picks contour tracing because the overlay contains an svg."
+      description="An exclamation mark cut out of a Bell, contour-for-contour — two disjoint shapes, two traced halos. shape='auto' picks contour tracing because the overlay contains an svg."
       code={dedent`
-        <Cutout overlay={hasWarning && <TriangleAlert fill="#facc15" />}>
+        <Cutout overlay={hasWarning && <ExclamationMark />}>
           <Bell />
         </Cutout>
       `}
