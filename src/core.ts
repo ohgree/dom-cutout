@@ -86,6 +86,16 @@ export const computeMaskStyle = (
 
   // The shape layer: a small standalone SVG image covering just the dilated
   // silhouette, placed over the content via mask-position/mask-size.
+  //
+  // The layer's geometry is snapped to the device-pixel grid, and the SAME
+  // snapped values feed the SVG's intrinsic width/height and the mask-size:
+  // any mismatch stretches the image by a sub-pixel factor, which reads as
+  // a hairline ring at gap 0 (Chromium) or a subtle shift of the whole
+  // cutout (Safari, which rounds the stretch the other way). Snapping the
+  // position also keeps iOS from rounding the element raster and the mask
+  // placement in different directions.
+  const dpr = typeof devicePixelRatio === "number" && devicePixelRatio > 0 ? devicePixelRatio : 1;
+  const snap = (value: number) => Math.round(value * dpr) / dpr;
   let shapeSvg: string;
   let layer: { x: number; y: number; w: number; h: number };
 
@@ -137,17 +147,20 @@ export const computeMaskStyle = (
 
     // The layer image clips at its bounds, so pad it by the widest possible
     // stroke spill: gap (the dilation, in px) plus half the largest artwork
-    // stroke, plus 1px slack for antialiasing.
+    // stroke, plus 1px slack for antialiasing. The artwork is re-centered
+    // in the snapped canvas so snapping never skews the halo.
     const pad = gap + Math.max(rootStrokeWidth, maxOwnStrokeWidth) / (2 * scale) + 1;
+    const w = snap(svgRect.width + 2 * pad);
+    const h = snap(svgRect.height + 2 * pad);
     layer = {
-      x: svgRect.left - contentRect.left - pad,
-      y: svgRect.top - contentRect.top - pad,
-      w: svgRect.width + 2 * pad,
-      h: svgRect.height + 2 * pad,
+      x: snap(svgRect.left - contentRect.left + svgRect.width / 2 - w / 2),
+      y: snap(svgRect.top - contentRect.top + svgRect.height / 2 - h / 2),
+      w,
+      h,
     };
     shapeSvg = [
-      `<svg xmlns="http://www.w3.org/2000/svg" width="${layer.w}" height="${layer.h}">`,
-      `<svg x="${pad}" y="${pad}" width="${svgRect.width}" height="${svgRect.height}" viewBox="${viewBox}" overflow="visible">`,
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">`,
+      `<svg x="${(w - svgRect.width) / 2}" y="${(h - svgRect.height) / 2}" width="${svgRect.width}" height="${svgRect.height}" viewBox="${viewBox}" overflow="visible">`,
       `<g fill="black" stroke="black" stroke-width="${dilation + rootStrokeWidth}" stroke-linejoin="round" stroke-linecap="round">`,
       clone.innerHTML,
       `</g>`,
@@ -168,29 +181,25 @@ export const computeMaskStyle = (
     const rx =
       (br.includes("%") ? (parseFloat(br) / 100) * targetRect.width : parseFloat(br) || 0) + gap;
 
+    const w = snap(targetRect.width + gap * 2);
+    const h = snap(targetRect.height + gap * 2);
     layer = {
-      x: targetRect.left - contentRect.left - gap,
-      y: targetRect.top - contentRect.top - gap,
-      w: targetRect.width + gap * 2,
-      h: targetRect.height + gap * 2,
+      x: snap(targetRect.left - contentRect.left + targetRect.width / 2 - w / 2),
+      y: snap(targetRect.top - contentRect.top + targetRect.height / 2 - h / 2),
+      w,
+      h,
     };
     shapeSvg = [
-      `<svg xmlns="http://www.w3.org/2000/svg" width="${layer.w}" height="${layer.h}">`,
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">`,
       `<rect width="100%" height="100%" rx="${rx}" fill="black"/>`,
       `</svg>`,
     ].join("");
   }
 
-  // Snap the layer geometry to the device-pixel grid: iOS rounds the
-  // element's rasterized position and a fractional mask-position
-  // differently, which reads as the whole cutout sitting ~1px off.
-  const dpr = typeof devicePixelRatio === "number" && devicePixelRatio > 0 ? devicePixelRatio : 1;
-  const snap = (value: number) => Math.round(value * dpr) / dpr;
-
   return {
     "mask-image": `linear-gradient(#000,#000),url("data:image/svg+xml,${encodeURIComponent(shapeSvg)}")`,
-    "mask-position": `0 0,${snap(layer.x)}px ${snap(layer.y)}px`,
-    "mask-size": `100% 100%,${snap(layer.w)}px ${snap(layer.h)}px`,
+    "mask-position": `0 0,${layer.x}px ${layer.y}px`,
+    "mask-size": `100% 100%,${layer.w}px ${layer.h}px`,
     "mask-repeat": "no-repeat,no-repeat",
     "mask-composite": "subtract,add",
   };

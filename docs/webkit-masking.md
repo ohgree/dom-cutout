@@ -185,10 +185,17 @@ can exist — nudge the shape layer's `mask-position` by an invisible 0.01px
 to invalidate the layer and re-raster it against the decoded image. Cached
 URIs decode before the first frame and skip the nudge entirely.
 
-A related iOS quirk: on fractionally-positioned elements (centered flex
-rows), the cutout could sit ~1px off — iOS rounds the element's rasterized
-position and a fractional `mask-position` differently. The shape layer's
-geometry is snapped to the device-pixel grid to keep the roundings aligned.
+A related precision lesson: the shape image's intrinsic size and the
+`mask-size` it is painted at must agree EXACTLY. A first snapping attempt
+rounded only the CSS values, leaving the intrinsic size fractional — the
+sub-pixel stretch read as a hairline ring at `gap: 0` on Chromium and as a
+subtle cutout shift on Safari (which rounds the stretch the other way).
+The layer geometry is snapped to the device-pixel grid once, the same
+values feed the SVG markup and both mask longhands, and the artwork is
+re-centered inside the snapped canvas. (Empirically, fractional element
+positions alone shift nothing on desktop engines — measured symmetric at
+every quarter-pixel offset — so the snap exists for geometry agreement and
+iOS raster alignment, not as a general fraction-phobia.)
 
 ## Timeline of failure modes, for the record
 
