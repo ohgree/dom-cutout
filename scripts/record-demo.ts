@@ -3,7 +3,8 @@
 //
 // Usage:
 //   pnpm --dir examples dev          # in one terminal
-//   node scripts/record-demo.mjs     # in another
+//   pnpm demo:record                 # in another
+// (runs via Node type-stripping: erasable TS syntax only in this file)
 //
 // The scene's choreography is discrete steps, so each state is captured as
 // a PNG with genuine 8-bit alpha (omitBackground) and the frames are
@@ -16,12 +17,19 @@
 // binary ($GIFSICLE_BIN / PATH / the gifsicle package) is used for the
 // gif's lossy size pass when available.
 import { execFileSync } from "node:child_process";
+
+declare global {
+  interface Window {
+    demoStepCount: number;
+    applyStep: (index: number) => number;
+  }
+}
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { chromium } from "@playwright/test";
 
-const resolveBinary = async (envVar, name, pkg) => {
+const resolveBinary = async (envVar: string, name: string, pkg: string): Promise<string | null> => {
   if (process.env[envVar]) return process.env[envVar];
   try {
     execFileSync(name, ["--version"], { stdio: "ignore" });
@@ -60,6 +68,7 @@ await page.evaluate(() => {
 await page.waitForTimeout(400);
 
 const scene = await page.locator("#scene").boundingBox();
+if (!scene) throw new Error("#scene not found — is the dev server serving examples/demo/?");
 const pad = 4;
 const clip = {
   x: Math.max(0, scene.x - pad),
@@ -84,7 +93,7 @@ const listFile = join(frameDir, "frames.txt");
 writeFileSync(listFile, concatLines.join("\n"));
 await browser.close();
 
-const encode = (args, out) =>
+const encode = (args: string[], out: string) =>
   execFileSync(ffmpeg, [
     "-y",
     "-loglevel",

@@ -54,6 +54,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "demo:record": "node --experimental-strip-types scripts/record-demo.ts",
     "type-check": "tsc --noEmit",
     "lint": "oxlint",
     "format": "oxfmt",

@@ -4,7 +4,7 @@ import { createCutout } from "dom-cutout";
 // background-colored outline → real cutout) while the card background
 // changes underneath, then a gap sweep on the real cutout.
 //
-// The choreography is a list of discrete steps so scripts/record-demo.mjs
+// The choreography is a list of discrete steps so scripts/record-demo.ts
 // can capture one alpha-true PNG per state (no video, no chroma keying —
 // keyed transparency bleeds dark fringes into edge pixels under lossy
 // encoding). window.runDemo() replays the same timeline in real time for
