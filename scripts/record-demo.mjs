@@ -52,6 +52,11 @@ const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1100, height: 600 } });
 await page.goto(`${BASE}/demo/?scale=${SCALE}`, { waitUntil: "load" });
 await page.waitForFunction(() => typeof window.applyStep === "function");
+// omitBackground only omits the browser's default background — the page's
+// own bg-slate-100 paint must be cleared too, or the margin captures opaque.
+await page.evaluate(() => {
+  document.body.style.background = "transparent";
+});
 await page.waitForTimeout(400);
 
 const scene = await page.locator("#scene").boundingBox();
