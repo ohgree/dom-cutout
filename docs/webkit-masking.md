@@ -178,12 +178,16 @@ application past first paint, which itself churns tiles visibly for up to a
 second on every load, and it opened an unmasked flash whenever a consumer
 destroys/recreates the instance (the documented way to change options).
 
-The shipped mitigation inverts it: apply synchronously (pre-paint on load,
-gapless on updates), decode the shape image in parallel, and only if the
-decode settles after a frame has painted — the sole case where stuck tiles
-can exist — nudge the shape layer's `mask-position` by an invisible 0.01px
-to invalidate the layer and re-raster it against the decoded image. Cached
-URIs decode before the first frame and skip the nudge entirely.
+The shipped mitigation inverts it: apply synchronously (pre-paint on load),
+swap post-decode when the element is already masked (Safari treats a
+still-decoding mask layer as fully transparent — an immediate swap blinks
+the children out), and after EVERY application schedule invisible
+sub-pixel `mask-position` nudges (two frames later and again at 250ms).
+The nudges exist because decoding a probe `Image` doesn't reliably cover
+the CSS mask loader's own copy of the data URI — there is no API to
+observe the CSS side, so the repair runs unconditionally: each nudge
+invalidates the layer and re-rasters it against the by-then-decoded
+image, and superseded updates cancel pending repairs.
 
 A related precision lesson: the shape image's intrinsic size and the
 `mask-size` it is painted at must agree EXACTLY. A first snapping attempt

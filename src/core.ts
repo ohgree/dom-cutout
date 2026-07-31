@@ -268,13 +268,39 @@ export const createCutout = (
       setTimeout(done, 150);
     };
 
+    // iOS stuck-tile repair. iOS WebKit can rasterize content tiles while
+    // the mask's data URI is still decoding on the CSS side — those tiles
+    // composite with the shape layer missing and stick in the tile cache
+    // until something forces a re-raster (pinch zoom, reload). Decoding a
+    // probe Image doesn't reliably cover the CSS loader's own copy, so
+    // after EVERY application schedule invisible sub-pixel mask-position
+    // nudges (two frames later and again at 250ms): each one invalidates
+    // the layer and re-rasters it against the by-then-decoded image.
+    // Superseded updates cancel pending repairs via the token.
+    const nudge = (delta: number) => {
+      if (token !== applyToken) return;
+      const nudged = style["mask-position"].replace(
+        /,(-?[\d.]+)px/,
+        (_, x) => `,${Number(x) + delta}px`,
+      );
+      content.style.setProperty("mask-position", nudged);
+    };
+    const scheduleRepair = () => {
+      if (typeof requestAnimationFrame === "function") {
+        requestAnimationFrame(() => requestAnimationFrame(() => nudge(0.01)));
+      }
+      setTimeout(() => nudge(0.02), 250);
+    };
+
     if (content.hasAttribute(MASKED_ATTRIBUTE) && decodable) {
       // Swap: the element is already masked (e.g. a gap change). Safari
       // treats a mask layer whose image is still decoding as fully
       // transparent — swapping immediately blinks the children out. Keep
       // the previous mask applied and swap once the new image is decoded.
       settle(() => {
-        if (token === applyToken) apply(style);
+        if (token !== applyToken) return;
+        apply(style);
+        scheduleRepair();
       });
       return;
     }
@@ -282,30 +308,7 @@ export const createCutout = (
     // Fresh application: apply synchronously — pre-paint on load, so clean
     // loads never churn tiles.
     apply(style);
-
-    // iOS stuck-tile repair. iOS WebKit rasterizes content tiles while a
-    // freshly-seen mask data URI is still decoding; tiles painted mid-race
-    // composite with the shape layer missing and stick in the tile cache
-    // until something forces a re-raster (pinch zoom, reload). Decode the
-    // shape image in parallel — if it settles only AFTER a frame has
-    // painted (the only case where stuck tiles can exist), nudge the
-    // shape layer's mask-position by 0.01px (invisible) to invalidate the
-    // layer and re-raster it against the decoded image. Cached URIs decode
-    // before the first frame and skip the nudge entirely.
-    if (decodable && typeof requestAnimationFrame === "function") {
-      let painted = false;
-      requestAnimationFrame(() => {
-        painted = true;
-      });
-      settle(() => {
-        if (token !== applyToken || !painted) return;
-        const nudged = style["mask-position"].replace(
-          /,(-?[\d.]+)px/,
-          (_, x) => `,${Number(x) + 0.01}px`,
-        );
-        content.style.setProperty("mask-position", nudged);
-      });
-    }
+    scheduleRepair();
   };
 
   const resizeObserver =
