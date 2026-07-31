@@ -235,6 +235,33 @@ export const createCutout = (
     content.setAttribute(MASKED_ATTRIBUTE, "");
   };
 
+  // Swap applications are coalesced to at most one per frame: during a fast
+  // slider drag, revisited gap values have cached (instantly-decoded) mask
+  // images, so several swaps can otherwise land within a single frame —
+  // interleaved layer invalidations mid-raster are a fragment factory in
+  // Safari's async compositor. Latest style wins.
+  let pendingSwap: { style: CutoutMaskStyle; token: number; repair: () => void } | null = null;
+  let flushScheduled = false;
+  const flushSwap = () => {
+    flushScheduled = false;
+    const swap = pendingSwap;
+    pendingSwap = null;
+    if (swap && swap.token === applyToken) {
+      apply(swap.style);
+      swap.repair();
+    }
+  };
+  const queueSwap = (entry: { style: CutoutMaskStyle; token: number; repair: () => void }) => {
+    pendingSwap = entry;
+    if (flushScheduled) return;
+    flushScheduled = true;
+    if (typeof requestAnimationFrame === "function") {
+      requestAnimationFrame(flushSwap);
+    } else {
+      setTimeout(flushSwap, 16);
+    }
+  };
+
   const update = () => {
     const style = computeMaskStyle(content, overlay, options);
     const key = style && JSON.stringify(style);
@@ -296,11 +323,11 @@ export const createCutout = (
       // Swap: the element is already masked (e.g. a gap change). Safari
       // treats a mask layer whose image is still decoding as fully
       // transparent — swapping immediately blinks the children out. Keep
-      // the previous mask applied and swap once the new image is decoded.
+      // the previous mask applied and swap once the new image is decoded,
+      // coalesced to one application per frame.
       settle(() => {
         if (token !== applyToken) return;
-        apply(style);
-        scheduleRepair();
+        queueSwap({ style, token, repair: scheduleRepair });
       });
       return;
     }
