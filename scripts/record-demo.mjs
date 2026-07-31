@@ -45,6 +45,12 @@ const context = await browser.newContext({ viewport: SIZE, recordVideo: { dir: "
 const page = await context.newPage();
 await page.goto(`${BASE}/demo/?scale=${SCALE}`, { waitUntil: "load" });
 await page.waitForFunction(() => typeof window.runDemo === "function");
+// Chroma-key backdrop: pure green never appears in the scene, so ffmpeg can
+// key it to transparency — the rounded card floats on the README background
+// instead of carrying a rectangle of page color.
+await page.evaluate(() => {
+  document.body.style.background = "#00ff00";
+});
 await page.waitForTimeout(700); // first mask paint settles on tape
 const scene = await page.locator("#scene").boundingBox();
 await page.evaluate(() => window.runDemo());
@@ -68,7 +74,7 @@ execFileSync(ffmpeg, [
   "-i",
   video,
   "-filter_complex",
-  `[0:v]crop=${w}:${h}:${x}:${y},fps=10,split[a][b];[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=none:diff_mode=rectangle`,
+  `[0:v]crop=${w}:${h}:${x}:${y},fps=10,colorkey=0x00FF00:0.3:0.1,despill=type=green,split[a][b];[a]palettegen=stats_mode=diff:reserve_transparent=1[p];[b][p]paletteuse=dither=none:diff_mode=rectangle:alpha_threshold=128`,
   OUT,
 ]);
 
