@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- iOS WebKit: fragmented/stuck rendering on the first paint of a freshly-generated mask (new gap values, first load) — content tiles rasterized while the mask's shape image was still decoding, and the broken tiles stuck in the tile cache until a pinch-zoom or reload. `createCutout` now decodes the shape image before applying the mask; geometry updates keep the previous mask until the new one is ready.
+
 ## [0.2.1] - 2026-07-31
 
 ### Documentation
@@ -37,6 +43,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 Initial release: zero-dependency core (`createCutout`, `computeMaskUrl`, contour/box/auto shapes, stroke-width compensation, `ResizeObserver` syncing) and the React adapter at `dom-cutout/react`.
 
+[unreleased]: https://github.com/ohgree/dom-cutout/compare/v0.2.1...HEAD
 [0.2.1]: https://github.com/ohgree/dom-cutout/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/ohgree/dom-cutout/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/ohgree/dom-cutout/releases/tag/v0.1.1

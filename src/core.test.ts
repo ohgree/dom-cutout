@@ -36,6 +36,10 @@ const shapeMarkup = (style: ReturnType<typeof computeMaskStyle>) => {
   return match ? decodeURIComponent(match[1]) : "";
 };
 
+// Mask application waits for the shape image decode (or its 100ms cap in
+// environments that never settle image loads, like jsdom).
+const settleMask = () => new Promise((resolve) => setTimeout(resolve, 150));
+
 afterEach(() => {
   document.body.innerHTML = "";
 });
@@ -163,26 +167,29 @@ describe("computeMaskStyle", () => {
 });
 
 describe("createCutout", () => {
-  it("marks the content element while masked", () => {
+  it("marks the content element while masked", async () => {
     const { content, overlay } = setup('<svg viewBox="0 0 24 24"></svg>');
 
     createCutout(content, overlay);
+    await settleMask();
 
     expect(content.hasAttribute(MASKED_ATTRIBUTE)).toBe(true);
   });
 
-  it("does not mark the content element for an empty overlay", () => {
+  it("does not mark the content element for an empty overlay", async () => {
     const { content, overlay } = setup("");
 
     createCutout(content, overlay);
+    await settleMask();
 
     expect(content.hasAttribute(MASKED_ATTRIBUTE)).toBe(false);
   });
 
-  it("clears the mark when the overlay empties on update()", () => {
+  it("clears the mark when the overlay empties on update()", async () => {
     const { content, overlay } = setup('<svg viewBox="0 0 24 24"></svg>');
 
     const instance = createCutout(content, overlay);
+    await settleMask();
     expect(content.hasAttribute(MASKED_ATTRIBUTE)).toBe(true);
 
     overlay.innerHTML = "";
@@ -191,10 +198,11 @@ describe("createCutout", () => {
     expect(content.hasAttribute(MASKED_ATTRIBUTE)).toBe(false);
   });
 
-  it("clears the mark when the overlay becomes zero-area on update()", () => {
+  it("clears the mark when the overlay becomes zero-area on update()", async () => {
     const { content, overlay } = setup('<svg viewBox="0 0 24 24"></svg>');
 
     const instance = createCutout(content, overlay);
+    await settleMask();
     expect(content.hasAttribute(MASKED_ATTRIBUTE)).toBe(true);
 
     // Simulate display:none — the element remains, its box collapses.
@@ -204,12 +212,14 @@ describe("createCutout", () => {
     expect(content.hasAttribute(MASKED_ATTRIBUTE)).toBe(false);
   });
 
-  it("clears the mark on destroy()", () => {
+  it("clears the mark on destroy()", async () => {
     const { content, overlay } = setup('<svg viewBox="0 0 24 24"></svg>');
 
     const instance = createCutout(content, overlay);
     instance.destroy();
+    await settleMask();
 
+    // The pending decode-then-apply must not resurrect the mask.
     expect(content.hasAttribute(MASKED_ATTRIBUTE)).toBe(false);
   });
 });

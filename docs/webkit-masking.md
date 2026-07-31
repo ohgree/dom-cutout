@@ -160,6 +160,23 @@ Support boundary: `mask-composite` (Safari 15.4+, Chrome/Edge 120+, Firefox
 without subtraction into an all-opaque mask: the cutout simply doesn't
 appear, content and overlay render normally.
 
+## 7. Epilogue: the tile/decode race
+
+One more iOS-only behavior surfaced after the composite shipped: on the
+first paint of a mask whose shape-layer data URI WebKit had never seen,
+content rendered with broken fragments — most of the element masked away.
+The signatures gave the mechanism away: previously-seen gap values (cached
+URIs) rendered fine, pinch-zooming in fixed it (re-raster after decode),
+zooming back out restored the broken tiles (per-scale tile caches), and
+reload fixed it (URI now in the memory cache).
+
+iOS WebKit rasterizes content tiles while a freshly-seen mask image is
+still decoding; those tiles composite with the shape layer missing and then
+stick in the tile cache. Mitigation, in `createCutout`: decode the shape
+image (`Image.decode()`) before applying the mask longhands. Updates keep
+the previous mask up until the new one is ready, so there is no unmasked
+flash; only the very first application moves about a frame later.
+
 ## Timeline of failure modes, for the record
 
 | approach                       | desktop WebKit | iOS WebKit                | verdict                             |

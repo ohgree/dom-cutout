@@ -211,21 +211,57 @@ export const createCutout = (
   options: CutoutOptions = {},
 ): CutoutInstance => {
   let lastKey: string | null | undefined;
+  let applyToken = 0;
+
+  const apply = (style: CutoutMaskStyle) => {
+    for (const property of MASK_PROPERTIES) {
+      content.style.setProperty(property, style[property]);
+    }
+    content.setAttribute(MASKED_ATTRIBUTE, "");
+  };
 
   const update = () => {
     const style = computeMaskStyle(content, overlay, options);
     const key = style && JSON.stringify(style);
     if (key === lastKey) return;
     lastKey = key;
+    const token = ++applyToken;
 
     if (style === null) {
       clearMask(content);
       return;
     }
-    for (const property of MASK_PROPERTIES) {
-      content.style.setProperty(property, style[property]);
+    // Decode the shape-layer image BEFORE applying the mask. iOS WebKit
+    // races tile rasterization against the async decode of a mask data URI
+    // it hasn't seen before: tiles painted mid-decode composite with the
+    // shape layer missing, and those broken tiles then stick in the tile
+    // cache until something forces a re-raster (pinch zoom, reload). The
+    // previous mask stays applied while the new one decodes, so updates
+    // never show an unmasked flash — only the very first application moves
+    // ~a frame later.
+    const source = /url\("(data:[^"]*)"\)/.exec(style["mask-image"])?.[1];
+    if (source && typeof Image !== "undefined") {
+      let settled = false;
+      const done = () => {
+        if (settled || token !== applyToken) return;
+        settled = true;
+        apply(style);
+      };
+      const image = new Image();
+      image.src = source;
+      if (typeof image.decode === "function") {
+        image.decode().then(done, done);
+      } else {
+        image.addEventListener("load", done, { once: true });
+        image.addEventListener("error", done, { once: true });
+      }
+      // A data-URI decode is near-instant; the cap keeps a stalled decoder
+      // (or an environment that never settles, e.g. jsdom) from stranding
+      // the mask.
+      setTimeout(done, 100);
+    } else {
+      apply(style);
     }
-    content.setAttribute(MASKED_ATTRIBUTE, "");
   };
 
   const resizeObserver =
@@ -239,6 +275,7 @@ export const createCutout = (
     update,
     destroy: () => {
       resizeObserver?.disconnect();
+      applyToken++;
       lastKey = undefined;
       clearMask(content);
     },

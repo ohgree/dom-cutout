@@ -94,6 +94,8 @@ test.describe("mask structure contract", () => {
   // the computed style so a refactor can't silently reintroduce them.
   test("no internal <mask>, no mask-mode, no repeated tiles", async ({ page }) => {
     await page.evaluate(() => window.mount({ size: 100, dot: 40 }));
+    // mask application waits for the shape-image decode
+    await expect(page.locator("#content")).toHaveAttribute("data-cutout", "");
     const style = await page.evaluate(() => {
       const el = document.getElementById("content")!;
       const cs = getComputedStyle(el);

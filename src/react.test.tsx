@@ -25,6 +25,10 @@ afterEach(() => {
 const contentEl = (container: HTMLElement) =>
   container.querySelector<HTMLElement>("[data-cutout-content]")!;
 
+// Mask application waits for the shape image decode (or its 100ms cap in
+// environments that never settle image loads, like jsdom).
+const settleMask = () => new Promise((resolve) => setTimeout(resolve, 150));
+
 const renderCutout = (overlay: ReactNode) =>
   render(
     <Cutout overlay={overlay}>
@@ -33,8 +37,9 @@ const renderCutout = (overlay: ReactNode) =>
   );
 
 describe("<Cutout />", () => {
-  it("masks children when an overlay is provided", () => {
+  it("masks children when an overlay is provided", async () => {
     const { container } = renderCutout(<svg viewBox="0 0 10 10" />);
+    await settleMask();
 
     expect(contentEl(container).hasAttribute(MASKED_ATTRIBUTE)).toBe(true);
   });
@@ -48,8 +53,9 @@ describe("<Cutout />", () => {
     },
   );
 
-  it("clears the mask when the overlay becomes nullish", () => {
+  it("clears the mask when the overlay becomes nullish", async () => {
     const { container, rerender } = renderCutout(<svg viewBox="0 0 10 10" />);
+    await settleMask();
     expect(contentEl(container).hasAttribute(MASKED_ATTRIBUTE)).toBe(true);
 
     rerender(
@@ -82,7 +88,7 @@ describe("<Cutout />", () => {
     expect(ref.current?.querySelector("[data-cutout-content]")).not.toBeNull();
   });
 
-  it("re-applies the mask when the overlay returns", () => {
+  it("re-applies the mask when the overlay returns", async () => {
     const { container, rerender } = renderCutout(null);
     expect(contentEl(container).hasAttribute(MASKED_ATTRIBUTE)).toBe(false);
 
@@ -91,6 +97,7 @@ describe("<Cutout />", () => {
         <div>content</div>
       </Cutout>,
     );
+    await settleMask();
 
     expect(contentEl(container).hasAttribute(MASKED_ATTRIBUTE)).toBe(true);
   });
