@@ -212,26 +212,31 @@ describe("createCutout", () => {
     expect(content.hasAttribute(MASKED_ATTRIBUTE)).toBe(false);
   });
 
-  it("keeps the previous mask applied while a new one decodes (swap path)", async () => {
+  it("double-buffers a swap: old shape retained until the new one settles", async () => {
     const { content, overlay } = setup('<svg viewBox="0 0 24 24"></svg>');
 
     const instance = createCutout(content, overlay, { gap: 3 });
     await settleMask();
-    // mask-size is the property guaranteed to change when the overlay
-    // doubles (mask-position can coincide across geometries).
-    const before = content.style.getPropertyValue("mask-size");
-    expect(content.hasAttribute(MASKED_ATTRIBUTE)).toBe(true);
+    // old shape layer: 32px; new after doubling the overlay: 56px
+    expect(content.style.getPropertyValue("mask-size")).toContain("32px 32px");
 
     measure(overlay.querySelector("svg")!, 48, 48);
     instance.update();
 
-    // Immediately after the update the OLD mask must still be applied —
-    // Safari blinks children out if the new (undecoded) image lands early.
-    expect(content.hasAttribute(MASKED_ATTRIBUTE)).toBe(true);
-    expect(content.style.getPropertyValue("mask-size")).toBe(before);
+    // Immediately: transition mask carries BOTH shapes — the old layer
+    // keeps masking while Safari decodes the new image (which it paints
+    // as fully transparent until then).
+    const transition = content.style.getPropertyValue("mask-size");
+    expect(transition).toContain("56px 56px");
+    expect(transition).toContain("32px 32px");
+    expect(content.style.getPropertyValue("mask-composite")).toBe("subtract,add,add");
 
     await settleMask();
-    expect(content.style.getPropertyValue("mask-size")).not.toBe(before);
+    // Finalized: new shape alone.
+    const final = content.style.getPropertyValue("mask-size");
+    expect(final).toContain("56px 56px");
+    expect(final).not.toContain("32px 32px");
+    expect(content.style.getPropertyValue("mask-composite")).toBe("subtract,add");
   });
 
   it("clears the mark on destroy()", async () => {

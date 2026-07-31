@@ -212,6 +212,38 @@ const clearMask = (content: HTMLElement) => {
   content.removeAttribute(MASKED_ATTRIBUTE);
 };
 
+interface ShapeLayer {
+  image: string;
+  position: string;
+  size: string;
+}
+
+const shapeOf = (style: CutoutMaskStyle): ShapeLayer => ({
+  image: style["mask-image"].slice(style["mask-image"].indexOf(",") + 1),
+  position: style["mask-position"].slice(style["mask-position"].indexOf(",") + 1),
+  size: style["mask-size"].slice(style["mask-size"].indexOf(",") + 1),
+});
+
+// Transition mask for a swap: gradient − (new ∪ old). Safari paints a
+// still-decoding mask layer as fully transparent, so while the new shape
+// image decodes it contributes nothing and the visible mask is exactly the
+// old one — no blink, no fragments.
+const transitionStyle = (style: CutoutMaskStyle, previous: ShapeLayer): CutoutMaskStyle => ({
+  "mask-image": `${style["mask-image"]},${previous.image}`,
+  "mask-position": `${style["mask-position"]},${previous.position}`,
+  "mask-size": `${style["mask-size"]},${previous.size}`,
+  "mask-repeat": "no-repeat,no-repeat,no-repeat",
+  "mask-composite": "subtract,add,add",
+});
+
+const nextFrame = (callback: () => void) => {
+  if (typeof requestAnimationFrame === "function") {
+    requestAnimationFrame(() => requestAnimationFrame(callback));
+  } else {
+    setTimeout(callback, 32);
+  }
+};
+
 /**
  * Cut the overlay's silhouette out of the content element and keep the mask
  * in sync with size changes via ResizeObserver.
@@ -235,32 +267,9 @@ export const createCutout = (
     content.setAttribute(MASKED_ATTRIBUTE, "");
   };
 
-  // Swap applications are coalesced to at most one per frame: during a fast
-  // slider drag, revisited gap values have cached (instantly-decoded) mask
-  // images, so several swaps can otherwise land within a single frame —
-  // interleaved layer invalidations mid-raster are a fragment factory in
-  // Safari's async compositor. Latest style wins.
-  let pendingSwap: { style: CutoutMaskStyle; token: number; repair: () => void } | null = null;
-  let flushScheduled = false;
-  const flushSwap = () => {
-    flushScheduled = false;
-    const swap = pendingSwap;
-    pendingSwap = null;
-    if (swap && swap.token === applyToken) {
-      apply(swap.style);
-      swap.repair();
-    }
-  };
-  const queueSwap = (entry: { style: CutoutMaskStyle; token: number; repair: () => void }) => {
-    pendingSwap = entry;
-    if (flushScheduled) return;
-    flushScheduled = true;
-    if (typeof requestAnimationFrame === "function") {
-      requestAnimationFrame(flushSwap);
-    } else {
-      setTimeout(flushSwap, 16);
-    }
-  };
+  // The shape layer of the last applied mask — kept so a swap can
+  // double-buffer (see transitionStyle).
+  let lastShape: ShapeLayer | null = null;
 
   const update = () => {
     const style = computeMaskStyle(content, overlay, options);
@@ -274,36 +283,12 @@ export const createCutout = (
       return;
     }
 
-    const source = /url\("(data:[^"]*)"\)/.exec(style["mask-image"])?.[1];
-    const decodable = source !== undefined && typeof Image !== "undefined";
-    const settle = (onSettled: () => void) => {
-      let settled = false;
-      const done = () => {
-        if (settled) return;
-        settled = true;
-        onSettled();
-      };
-      const image = new Image();
-      image.src = source!;
-      if (typeof image.decode === "function") {
-        image.decode().then(done, done);
-      } else {
-        image.addEventListener("load", done, { once: true });
-        image.addEventListener("error", done, { once: true });
-      }
-      // Cap so a stalled decoder can't strand the mask.
-      setTimeout(done, 150);
-    };
-
-    // iOS stuck-tile repair. iOS WebKit can rasterize content tiles while
-    // the mask's data URI is still decoding on the CSS side — those tiles
-    // composite with the shape layer missing and stick in the tile cache
-    // until something forces a re-raster (pinch zoom, reload). Decoding a
-    // probe Image doesn't reliably cover the CSS loader's own copy, so
-    // after EVERY application schedule invisible sub-pixel mask-position
-    // nudges (two frames later and again at 250ms): each one invalidates
-    // the layer and re-rasters it against the by-then-decoded image.
-    // Superseded updates cancel pending repairs via the token.
+    // iOS stuck-tile repair: WebKit can rasterize tiles while the mask's
+    // data URI is still decoding on the CSS side, and broken tiles stick
+    // until a re-raster. There is no API to observe the CSS-side decode,
+    // so after settling on the final style, invisible sub-pixel
+    // mask-position nudges force re-rasters. Superseded updates cancel via
+    // the token.
     const nudge = (delta: number) => {
       if (token !== applyToken) return;
       const nudged = style["mask-position"].replace(
@@ -312,30 +297,35 @@ export const createCutout = (
       );
       content.style.setProperty("mask-position", nudged);
     };
-    const scheduleRepair = () => {
-      if (typeof requestAnimationFrame === "function") {
-        requestAnimationFrame(() => requestAnimationFrame(() => nudge(0.01)));
-      }
+    const finalize = () => {
+      if (token !== applyToken) return;
+      apply(style);
+      lastShape = shapeOf(style);
+      nextFrame(() => nudge(0.01));
       setTimeout(() => nudge(0.02), 250);
     };
 
-    if (content.hasAttribute(MASKED_ATTRIBUTE) && decodable) {
-      // Swap: the element is already masked (e.g. a gap change). Safari
-      // treats a mask layer whose image is still decoding as fully
-      // transparent — swapping immediately blinks the children out. Keep
-      // the previous mask applied and swap once the new image is decoded,
-      // coalesced to one application per frame.
-      settle(() => {
-        if (token !== applyToken) return;
-        queueSwap({ style, token, repair: scheduleRepair });
-      });
+    if (content.hasAttribute(MASKED_ATTRIBUTE) && lastShape) {
+      // Swap (e.g. a gap change): Safari paints a still-decoding mask layer
+      // as fully transparent, so applying the new mask directly blinks the
+      // children out until its image decodes. Double-buffer instead: apply
+      // a transition mask that keeps the OLD shape as an extra layer —
+      // gradient − (new ∪ old). While the new image decodes it contributes
+      // nothing and the visible mask is exactly the old one; once decoded,
+      // the union shows for a beat (hole = max of both halos), then the
+      // finalize pass collapses to the new shape alone.
+      apply(transitionStyle(style, lastShape));
+      nextFrame(finalize);
       return;
     }
 
     // Fresh application: apply synchronously — pre-paint on load, so clean
-    // loads never churn tiles.
+    // loads never churn tiles — and let the repair nudges cover a decode
+    // that loses the race with the first paint.
     apply(style);
-    scheduleRepair();
+    lastShape = shapeOf(style);
+    nextFrame(() => nudge(0.01));
+    setTimeout(() => nudge(0.02), 250);
   };
 
   const resizeObserver =
@@ -351,6 +341,7 @@ export const createCutout = (
       resizeObserver?.disconnect();
       applyToken++;
       lastKey = undefined;
+      lastShape = null;
       clearMask(content);
     },
   };
