@@ -12,6 +12,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - iOS WebKit: fragmented/stuck rendering on the first paint of a freshly-generated mask (new gap values, first load) — content tiles rasterized while the mask's shape image was still decoding, and the broken tiles stuck in the tile cache until a pinch-zoom or reload. The mask still applies synchronously (pre-paint on load, no flicker on updates); the shape image is decoded in parallel, and if the decode settles only after a frame has painted, an invisible 0.01px mask-position nudge re-rasterizes the layer against the decoded image.
 - Sub-pixel geometry disagreement between the shape image's intrinsic size and `mask-size` stretched the mask by a hair — a hairline ring at `gap: 0` on Chromium, a subtle cutout shift on Safari. The layer geometry is now snapped to the device-pixel grid once and the same values feed the SVG markup, `mask-size`, and `mask-position`, with the artwork re-centered in the snapped canvas.
 
+### Known limitations
+
+- iOS can show a ≤1-device-px residual seam at `gap: 0` in some placements — iOS's internal raster alignment, not reachable from CSS; desktop engines are exact.
+
 ## [0.2.1] - 2026-07-31
 
 ### Documentation
