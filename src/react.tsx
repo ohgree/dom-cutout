@@ -9,7 +9,7 @@ import {
   useRef,
 } from "react";
 
-import { createCutout, type CutoutInstance, type CutoutShape } from "./core";
+import { createCutout, type CutoutInstance, type CutoutOptions, type CutoutShape } from "./core";
 
 export interface CutoutProps extends HTMLAttributes<HTMLDivElement> {
   /** Ref to the wrapper element stacking the two layers. */
@@ -51,23 +51,32 @@ const CutoutImpl = forwardRef<HTMLDivElement, CutoutProps>(
     const contentRef = useRef<HTMLDivElement>(null);
     const overlayRef = useRef<HTMLDivElement>(null);
     const instanceRef = useRef<CutoutInstance | null>(null);
+    // One instance for the element's lifetime: the core reads options live
+    // on every update, and swapping masks on an existing instance keeps the
+    // previous mask applied while the new image decodes (Safari otherwise
+    // blinks the children out on every option change). Recreating the
+    // instance would clear the mask in between.
+    const optionsRef = useRef<CutoutOptions>({});
+    optionsRef.current.gap = gap;
+    optionsRef.current.shape = shape;
 
     useIsomorphicLayoutEffect(() => {
       const content = contentRef.current;
       const overlayEl = overlayRef.current;
       if (!content || !overlayEl) return undefined;
 
-      const instance = createCutout(content, overlayEl, { gap, shape });
+      const instance = createCutout(content, overlayEl, optionsRef.current);
       instanceRef.current = instance;
       return () => {
         instanceRef.current = null;
         instance.destroy();
       };
-    }, [gap, shape]);
+    }, []);
 
-    // Recompute before every paint — catches `overlay`/`children` DOM changes
-    // without needing them (new references each render) as dependencies. The
-    // core's mask-url comparison makes unchanged geometry a no-op.
+    // Recompute before every paint — catches `overlay`/`children` DOM
+    // changes and `gap`/`shape` prop changes (read live from optionsRef)
+    // without needing dependencies. The core's style comparison makes
+    // unchanged geometry a no-op.
     useIsomorphicLayoutEffect(() => {
       instanceRef.current?.update();
     });

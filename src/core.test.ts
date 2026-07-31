@@ -212,6 +212,26 @@ describe("createCutout", () => {
     expect(content.hasAttribute(MASKED_ATTRIBUTE)).toBe(false);
   });
 
+  it("keeps the previous mask applied while a new one decodes (swap path)", async () => {
+    const { content, overlay } = setup('<svg viewBox="0 0 24 24"></svg>');
+
+    const instance = createCutout(content, overlay, { gap: 3 });
+    await settleMask();
+    const before = content.style.getPropertyValue("mask-position");
+    expect(content.hasAttribute(MASKED_ATTRIBUTE)).toBe(true);
+
+    measure(overlay.querySelector("svg")!, 48, 48);
+    instance.update();
+
+    // Immediately after the update the OLD mask must still be applied —
+    // Safari blinks children out if the new (undecoded) image lands early.
+    expect(content.hasAttribute(MASKED_ATTRIBUTE)).toBe(true);
+    expect(content.style.getPropertyValue("mask-position")).toBe(before);
+
+    await settleMask();
+    expect(content.style.getPropertyValue("mask-position")).not.toBe(before);
+  });
+
   it("clears the mark on destroy()", async () => {
     const { content, overlay } = setup('<svg viewBox="0 0 24 24"></svg>');
 

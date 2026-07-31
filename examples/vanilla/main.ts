@@ -4,20 +4,16 @@ const content = document.getElementById("content")!;
 const overlay = document.getElementById("overlay")!;
 const dot = document.getElementById("dot")!;
 
-let gap = 4;
 let dotShown = true;
-let instance: CutoutInstance | null = createCutout(content, overlay, { gap });
+// Options are read live on every update — mutate and call update() to
+// change them; recreating would clear the mask in between.
+const options = { gap: 4 };
+let instance: CutoutInstance | null = createCutout(content, overlay, options);
 
 // FOUC guard: the static markup paints before this module runs, which would
 // briefly show the dot without its gap. index.html hides the overlay
 // inline; reveal it only once the first mask is applied.
 overlay.style.visibility = "";
-
-// Options are read at creation time, so a gap change means re-create.
-const recreate = () => {
-  instance?.destroy();
-  instance = createCutout(content, overlay, { gap });
-};
 
 const dotButton = document.getElementById("toggle-dot")!;
 dotButton.addEventListener("click", () => {
@@ -31,9 +27,9 @@ dotButton.addEventListener("click", () => {
 
 const gapButton = document.getElementById("toggle-gap")!;
 gapButton.addEventListener("click", () => {
-  gap = gap === 4 ? 8 : 4;
-  gapButton.textContent = `Gap: ${gap}px`;
-  recreate();
+  options.gap = options.gap === 4 ? 8 : 4;
+  gapButton.textContent = `Gap: ${options.gap}px`;
+  instance?.update();
 });
 
 const destroyButton = document.getElementById("destroy")!;

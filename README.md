@@ -75,9 +75,15 @@ Plus any `div` props — the wrapper is an `inline-grid` stacking the two layers
 ```ts
 import { createCutout } from "dom-cutout";
 
-const instance = createCutout(contentEl, overlayEl, { gap: 6 });
+const options = { gap: 6 };
+const instance = createCutout(contentEl, overlayEl, options);
 
 // after DOM changes ResizeObserver can't see (same-size content swaps):
+instance.update();
+
+// options are read live — change them by mutating and updating (don't
+// recreate: the previous mask stays applied while the new one decodes):
+options.gap = 8;
 instance.update();
 
 // removes the mask and all observers:

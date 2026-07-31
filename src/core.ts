@@ -246,8 +246,41 @@ export const createCutout = (
       clearMask(content);
       return;
     }
-    // Apply synchronously: pre-paint on load, and no unmasked gap when a
-    // consumer destroys/recreates or slides options.
+
+    const source = /url\("(data:[^"]*)"\)/.exec(style["mask-image"])?.[1];
+    const decodable = source !== undefined && typeof Image !== "undefined";
+    const settle = (onSettled: () => void) => {
+      let settled = false;
+      const done = () => {
+        if (settled) return;
+        settled = true;
+        onSettled();
+      };
+      const image = new Image();
+      image.src = source!;
+      if (typeof image.decode === "function") {
+        image.decode().then(done, done);
+      } else {
+        image.addEventListener("load", done, { once: true });
+        image.addEventListener("error", done, { once: true });
+      }
+      // Cap so a stalled decoder can't strand the mask.
+      setTimeout(done, 150);
+    };
+
+    if (content.hasAttribute(MASKED_ATTRIBUTE) && decodable) {
+      // Swap: the element is already masked (e.g. a gap change). Safari
+      // treats a mask layer whose image is still decoding as fully
+      // transparent — swapping immediately blinks the children out. Keep
+      // the previous mask applied and swap once the new image is decoded.
+      settle(() => {
+        if (token === applyToken) apply(style);
+      });
+      return;
+    }
+
+    // Fresh application: apply synchronously — pre-paint on load, so clean
+    // loads never churn tiles.
     apply(style);
 
     // iOS stuck-tile repair. iOS WebKit rasterizes content tiles while a
@@ -259,33 +292,19 @@ export const createCutout = (
     // shape layer's mask-position by 0.01px (invisible) to invalidate the
     // layer and re-raster it against the decoded image. Cached URIs decode
     // before the first frame and skip the nudge entirely.
-    const source = /url\("(data:[^"]*)"\)/.exec(style["mask-image"])?.[1];
-    if (source && typeof Image !== "undefined" && typeof requestAnimationFrame === "function") {
+    if (decodable && typeof requestAnimationFrame === "function") {
       let painted = false;
       requestAnimationFrame(() => {
         painted = true;
       });
-      let settled = false;
-      const done = () => {
-        if (settled || token !== applyToken) return;
-        settled = true;
-        if (!painted) return;
+      settle(() => {
+        if (token !== applyToken || !painted) return;
         const nudged = style["mask-position"].replace(
           /,(-?[\d.]+)px/,
           (_, x) => `,${Number(x) + 0.01}px`,
         );
         content.style.setProperty("mask-position", nudged);
-      };
-      const image = new Image();
-      image.src = source;
-      if (typeof image.decode === "function") {
-        image.decode().then(done, done);
-      } else {
-        image.addEventListener("load", done, { once: true });
-        image.addEventListener("error", done, { once: true });
-      }
-      // Cap so a stalled decoder still gets its repair pass.
-      setTimeout(done, 150);
+      });
     }
   };
 

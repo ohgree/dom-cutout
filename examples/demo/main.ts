@@ -20,10 +20,12 @@ const el = (id: string) => document.getElementById(id)!;
 const scale = Number(new URLSearchParams(location.search).get("scale") ?? "1") || 1;
 document.documentElement.style.fontSize = `${16 * scale}px`;
 
-let instance = createCutout(el("cut-content"), el("cut-overlay"), { gap: 4 * scale });
+// Options are read live on every update — mutate and call update().
+const options = { gap: 4 * scale };
+const instance = createCutout(el("cut-content"), el("cut-overlay"), options);
 const setGap = (gap: number) => {
-  instance.destroy();
-  instance = createCutout(el("cut-content"), el("cut-overlay"), { gap: gap * scale });
+  options.gap = gap * scale;
+  instance.update();
 };
 
 // Fixed-px backgrounds (deliberately not rem: pattern size is tuned for the
