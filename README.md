@@ -19,7 +19,7 @@ Cut the silhouette of one DOM element out of another — because a background-co
 
 <p align="center">
   <img
-    src="./docs/assets/demo.gif"
+    src="./docs/assets/demo.webp"
     alt="The same badge twice: a painted background-colored outline exposed by gradient and checkerboard backgrounds, versus a dom-cutout hole showing every background through — then the gap sweeps live"
     width="480"
   />

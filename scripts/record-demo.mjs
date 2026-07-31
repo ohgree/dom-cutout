@@ -84,4 +84,32 @@ if (gifsicle) {
 } else {
   console.warn("gifsicle not found — skipping the lossy size pass");
 }
-console.log(`wrote ${OUT} (crop ${w}x${h}+${x}+${y}, source ${video})`);
+
+// Animated WebP alongside the GIF: 24-bit color (no palette posterization)
+// and 8-bit alpha, so the keyed card edge stays smoothly antialiased
+// instead of hard-thresholded. The README embeds this one; the GIF stays
+// as the anything-else fallback.
+const WEBP = OUT.replace(/\.gif$/, ".webp");
+execFileSync(ffmpeg, [
+  "-y",
+  "-loglevel",
+  "error",
+  "-ss",
+  "0.4",
+  "-i",
+  video,
+  "-filter_complex",
+  `[0:v]crop=${w}:${h}:${x}:${y},fps=10,colorkey=0x00FF00:0.3:0.1,despill=type=green,format=yuva420p`,
+  "-c:v",
+  "libwebp_anim",
+  "-loop",
+  "0",
+  "-lossless",
+  "0",
+  "-q:v",
+  "80",
+  "-compression_level",
+  "6",
+  WEBP,
+]);
+console.log(`wrote ${OUT} + ${WEBP} (crop ${w}x${h}+${x}+${y}, source ${video})`);
