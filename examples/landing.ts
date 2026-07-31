@@ -13,10 +13,27 @@ createCutout(document.getElementById("title-content")!, titleOverlay, {
   gap: 2,
 });
 
+// Logo demo card: the wordmark at display size, gap on a slider. Options
+// are read live — mutate and update(), no recreate.
+const logoOverlay = document.getElementById("logo-overlay")!;
+const logoOptions = { gap: 4 };
+const logoInstance = createCutout(
+  document.getElementById("logo-content")!,
+  logoOverlay,
+  logoOptions,
+);
+const logoGapValue = document.getElementById("logo-gap-value")!;
+document.getElementById("logo-gap")!.addEventListener("input", (event) => {
+  logoOptions.gap = Number((event.target as HTMLInputElement).value);
+  logoGapValue.textContent = String(logoOptions.gap);
+  logoInstance.update();
+});
+
 // FOUC guard: static markup paints before this module runs; reveal overlays
 // only once their first masks are applied.
 overlay.style.visibility = "";
 titleOverlay.style.visibility = "";
+logoOverlay.style.visibility = "";
 
 let starShown = true;
 document.getElementById("hero-toggle")!.addEventListener("click", () => {
