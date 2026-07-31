@@ -25,6 +25,23 @@ document.getElementById("hero-toggle")!.addEventListener("click", () => {
   instance.update();
 });
 
+// Cycle the hero card's background — the cutout gap shows every one of
+// them through, which no background-colored border could. `""` restores
+// the .demo-card checkerboard.
+const heroCard = document.getElementById("hero-card")!;
+const backgrounds = [
+  "",
+  "#ddd6fe",
+  "#1e293b",
+  "linear-gradient(295deg, #4f46e5, #db2777 55%, #f59e0b)",
+  "#ffffff",
+];
+let backgroundIndex = 0;
+document.getElementById("hero-bg")!.addEventListener("click", () => {
+  backgroundIndex = (backgroundIndex + 1) % backgrounds.length;
+  heroCard.style.background = backgrounds[backgroundIndex];
+});
+
 // Progressive enhancement: syntax-highlight the static snippets. Dynamic
 // import keeps the highlighter off the demo's critical path; plain blocks
 // stay if it fails. Shiki's replacement drops attributes on the <pre>

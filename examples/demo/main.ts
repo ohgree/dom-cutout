@@ -1,9 +1,14 @@
 import { createCutout } from "dom-cutout";
 
-// Capture scene for the README gif — driven by scripts/record-demo.mjs via
-// window.runDemo(). Same hero twice (fake white outline → real cutout);
-// the background swaps from the one the workaround was built for to the
-// ones that expose it, then the gap sweeps on the real cutout.
+// Capture scene for the README animation — same hero twice (fake
+// background-colored outline → real cutout) while the card background
+// changes underneath, then a gap sweep on the real cutout.
+//
+// The choreography is a list of discrete steps so scripts/record-demo.mjs
+// can capture one alpha-true PNG per state (no video, no chroma keying —
+// keyed transparency bleeds dark fringes into edge pixels under lossy
+// encoding). window.runDemo() replays the same timeline in real time for
+// eyeballing in a browser.
 
 const el = (id: string) => document.getElementById(id)!;
 
@@ -22,8 +27,8 @@ const setGap = (gap: number) => {
 };
 
 // Fixed-px backgrounds (deliberately not rem: pattern size is tuned for the
-// recording). The white outline on the left hero never changes — it was
-// "built" for the white background, which is the point.
+// recording). The left hero's outline is painted in the purple opener's
+// color — perfect on frame one, exposed by everything after.
 const BG = {
   purple: "#ddd6fe",
   white: "#ffffff",
@@ -33,38 +38,49 @@ const BG = {
   gradient: "linear-gradient(295deg, #4f46e5, #db2777 55%, #f59e0b)",
   checker: "repeating-conic-gradient(#dde2e9 0% 25%, #ffffff 0% 50%) 0 0 / 24px 24px",
 };
-const setBg = (bg: keyof typeof BG) => {
-  el("scene").style.background = BG[bg];
+
+interface Step {
+  bg?: keyof typeof BG;
+  gap?: number;
+  hold: number;
+}
+
+const TIMELINE: Step[] = [
+  { bg: "purple", hold: 1400 },
+  { bg: "white", hold: 1300 },
+  { bg: "dark", hold: 1400 },
+  { bg: "gradient", hold: 1400 },
+  { bg: "checker", hold: 1300 },
+  ...[3, 2, 1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 9, 8, 7, 6, 5].map((gap) => ({
+    gap,
+    hold: 130,
+  })),
+  { gap: 4, hold: 1100 },
+];
+
+/** Applies step `index` and returns how long it holds, in ms. */
+const applyStep = (index: number) => {
+  const step = TIMELINE[index];
+  if (step.bg) el("scene").style.background = BG[step.bg];
+  if (step.gap !== undefined) setGap(step.gap);
+  return step.hold;
 };
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const runDemo = async () => {
-  // The outline was painted for the purple opener — perfect there, exposed
-  // on everything after; the real cutout shows every background through.
-  setBg("purple");
-  await sleep(1400);
-  setBg("white");
-  await sleep(1300);
-  setBg("dark");
-  await sleep(1400);
-  setBg("gradient");
-  await sleep(1400);
-  setBg("checker");
-  await sleep(1300);
-
-  // 3. Gap sweep on the real cutout — live geometry, the outline can't
-  // follow. Ends back at the resting 6 so the loop has no snap.
-  for (const gap of [3, 2, 1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 9, 8, 7, 6, 5, 4]) {
-    setGap(gap);
-    await sleep(130);
+  for (let index = 0; index < TIMELINE.length; index++) {
+    await sleep(applyStep(index));
   }
-  await sleep(1100);
 };
 
 declare global {
   interface Window {
+    demoStepCount: number;
+    applyStep: typeof applyStep;
     runDemo: typeof runDemo;
   }
 }
+window.demoStepCount = TIMELINE.length;
+window.applyStep = applyStep;
 window.runDemo = runDemo;
