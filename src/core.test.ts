@@ -212,7 +212,7 @@ describe("createCutout", () => {
     expect(content.hasAttribute(MASKED_ATTRIBUTE)).toBe(false);
   });
 
-  it("double-buffers a swap: old shape retained until the new one settles", async () => {
+  it("keeps the old mask applied while a swap warms, then applies the new one", async () => {
     const { content, overlay } = setup('<svg viewBox="0 0 24 24"></svg>');
 
     const instance = createCutout(content, overlay, { gap: 3 });
@@ -223,20 +223,20 @@ describe("createCutout", () => {
     measure(overlay.querySelector("svg")!, 48, 48);
     instance.update();
 
-    // Immediately: transition mask carries BOTH shapes — the old layer
-    // keeps masking while Safari decodes the new image (which it paints
-    // as fully transparent until then).
-    const transition = content.style.getPropertyValue("mask-size");
-    expect(transition).toContain("56px 56px");
-    expect(transition).toContain("32px 32px");
-    expect(content.style.getPropertyValue("mask-composite")).toBe("subtract,add,add");
+    // Immediately: the OLD mask must remain untouched — Safari hides the
+    // element while any mask image is still loading, so the new URI is
+    // warmed through the CSS cache first.
+    expect(content.style.getPropertyValue("mask-size")).toContain("32px 32px");
+    expect(content.hasAttribute(MASKED_ATTRIBUTE)).toBe(true);
+    // ...and the warm element carries the new URI.
+    const warm = document.querySelector('[aria-hidden="true"]') as HTMLElement;
+    expect(warm?.style.backgroundImage).toContain("data:image/svg+xml");
 
     await settleMask();
-    // Finalized: new shape alone.
+    // Applied: new shape alone.
     const final = content.style.getPropertyValue("mask-size");
     expect(final).toContain("56px 56px");
     expect(final).not.toContain("32px 32px");
-    expect(content.style.getPropertyValue("mask-composite")).toBe("subtract,add");
   });
 
   it("clears the mark on destroy()", async () => {

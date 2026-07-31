@@ -212,29 +212,25 @@ const clearMask = (content: HTMLElement) => {
   content.removeAttribute(MASKED_ATTRIBUTE);
 };
 
-interface ShapeLayer {
-  image: string;
-  position: string;
-  size: string;
-}
-
-const shapeOf = (style: CutoutMaskStyle): ShapeLayer => ({
-  image: style["mask-image"].slice(style["mask-image"].indexOf(",") + 1),
-  position: style["mask-position"].slice(style["mask-position"].indexOf(",") + 1),
-  size: style["mask-size"].slice(style["mask-size"].indexOf(",") + 1),
-});
-
-// Transition mask for a swap: gradient − (new ∪ old). Safari paints a
-// still-decoding mask layer as fully transparent, so while the new shape
-// image decodes it contributes nothing and the visible mask is exactly the
-// old one — no blink, no fragments.
-const transitionStyle = (style: CutoutMaskStyle, previous: ShapeLayer): CutoutMaskStyle => ({
-  "mask-image": `${style["mask-image"]},${previous.image}`,
-  "mask-position": `${style["mask-position"]},${previous.position}`,
-  "mask-size": `${style["mask-size"]},${previous.size}`,
-  "mask-repeat": "no-repeat,no-repeat,no-repeat",
-  "mask-composite": "subtract,add,add",
-});
+// Safari hides the masked element while ANY image in its mask list is
+// still loading — swapping in a mask whose data URI the CSS loader hasn't
+// seen blinks the children out, while previously-seen URIs swap cleanly.
+// Decoding a probe HTMLImageElement does NOT reliably populate the CSS
+// loader's cache, but using the URI as a CSS background-image on a hidden
+// warm element does: it goes through the same per-document CSS image
+// cache the mask machinery reads.
+let warmElement: HTMLElement | null = null;
+const warmMaskImage = (source: string) => {
+  if (typeof document === "undefined" || !document.body) return;
+  if (!warmElement || !warmElement.isConnected) {
+    warmElement = document.createElement("div");
+    warmElement.setAttribute("aria-hidden", "true");
+    warmElement.style.cssText =
+      "position:fixed;left:-9999px;top:0;width:1px;height:1px;pointer-events:none;visibility:hidden";
+    document.body.append(warmElement);
+  }
+  warmElement.style.backgroundImage = `url("${source}")`;
+};
 
 const nextFrame = (callback: () => void) => {
   if (typeof requestAnimationFrame === "function") {
@@ -267,10 +263,6 @@ export const createCutout = (
     content.setAttribute(MASKED_ATTRIBUTE, "");
   };
 
-  // The shape layer of the last applied mask — kept so a swap can
-  // double-buffer (see transitionStyle).
-  let lastShape: ShapeLayer | null = null;
-
   const update = () => {
     const style = computeMaskStyle(content, overlay, options);
     const key = style && JSON.stringify(style);
@@ -285,10 +277,8 @@ export const createCutout = (
 
     // iOS stuck-tile repair: WebKit can rasterize tiles while the mask's
     // data URI is still decoding on the CSS side, and broken tiles stick
-    // until a re-raster. There is no API to observe the CSS-side decode,
-    // so after settling on the final style, invisible sub-pixel
-    // mask-position nudges force re-rasters. Superseded updates cancel via
-    // the token.
+    // until a re-raster. After applying, invisible sub-pixel mask-position
+    // nudges force re-rasters. Superseded updates cancel via the token.
     const nudge = (delta: number) => {
       if (token !== applyToken) return;
       const nudged = style["mask-position"].replace(
@@ -297,35 +287,33 @@ export const createCutout = (
       );
       content.style.setProperty("mask-position", nudged);
     };
-    const finalize = () => {
+    const applyWithRepair = () => {
       if (token !== applyToken) return;
       apply(style);
-      lastShape = shapeOf(style);
       nextFrame(() => nudge(0.01));
       setTimeout(() => nudge(0.02), 250);
     };
 
-    if (content.hasAttribute(MASKED_ATTRIBUTE) && lastShape) {
-      // Swap (e.g. a gap change): Safari paints a still-decoding mask layer
-      // as fully transparent, so applying the new mask directly blinks the
-      // children out until its image decodes. Double-buffer instead: apply
-      // a transition mask that keeps the OLD shape as an extra layer —
-      // gradient − (new ∪ old). While the new image decodes it contributes
-      // nothing and the visible mask is exactly the old one; once decoded,
-      // the union shows for a beat (hole = max of both halos), then the
-      // finalize pass collapses to the new shape alone.
-      apply(transitionStyle(style, lastShape));
-      nextFrame(finalize);
+    const source = /url\("(data:[^"]*)"\)/.exec(style["mask-image"])?.[1];
+
+    if (content.hasAttribute(MASKED_ATTRIBUTE) && source !== undefined) {
+      // Swap (e.g. a gap change): Safari hides the masked element while ANY
+      // image in its mask list is still loading, so a mask whose data URI
+      // the CSS loader hasn't cached blinks the children out — while
+      // already-cached URIs swap cleanly. Convert every first use into the
+      // cached case: warm the URI through the CSS loader (background-image
+      // on a hidden element shares the same per-document image cache), let
+      // it settle for two frames, then swap. The old mask stays applied in
+      // the meantime.
+      warmMaskImage(source);
+      nextFrame(applyWithRepair);
       return;
     }
 
     // Fresh application: apply synchronously — pre-paint on load, so clean
     // loads never churn tiles — and let the repair nudges cover a decode
     // that loses the race with the first paint.
-    apply(style);
-    lastShape = shapeOf(style);
-    nextFrame(() => nudge(0.01));
-    setTimeout(() => nudge(0.02), 250);
+    applyWithRepair();
   };
 
   const resizeObserver =
@@ -341,7 +329,6 @@ export const createCutout = (
       resizeObserver?.disconnect();
       applyToken++;
       lastKey = undefined;
-      lastShape = null;
       clearMask(content);
     },
   };
