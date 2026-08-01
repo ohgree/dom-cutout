@@ -1,8 +1,14 @@
 import { createCutout } from "dom-cutout";
 
+import { Box, createIcons, Monitor, Spline } from "lucide";
+
 import { wireThemeToggle } from "./theme";
 
 wireThemeToggle(document.getElementById("theme-toggle")!);
+
+// Feature-card icons come from lucide; render them before the cutouts
+// below measure the overlays.
+createIcons({ icons: { Box, Spline, Monitor } });
 
 const content = document.getElementById("hero-content")!;
 const overlay = document.getElementById("hero-overlay")!;
