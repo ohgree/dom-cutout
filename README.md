@@ -165,6 +165,7 @@ Why the mask is built this way — and why five simpler constructions were elimi
 - The first paint after mount is unmasked for one frame (the mask needs a layout pass to measure). With server-rendered/static markup the window lasts until your script runs — if it matters, hide the overlay initially (e.g. `visibility: hidden` inline) and reveal it after `createCutout`, or key CSS off the `data-cutout` attribute.
 - `box` shape with a text-only overlay measures the overlay wrapper itself — wrap text in an element for accurate geometry.
 - Stroke-width compensation reads SVG attributes (`stroke-width` on the root or per element); stroke-widths set via CSS classes or inline styles don't survive the markup copy and aren't compensated.
+- Masked elements with `border-radius` get a thin corner fringe from double antialiasing (the mask's clip follows the rounded box). The mask opts out via `mask-clip: no-clip`, which fixes Chromium and Firefox; WebKit ignores the value and keeps a ≤1px fringe — put the radius on an inner element if it matters there.
 - The overlay artwork's paint colors are normalized to black in the mask copy (`fill="none"`/`stroke="none"` are respected) — only the silhouette matters, but paints applied via CSS classes don't survive the copy, same as stroke-widths.
 
 ## Future plans

@@ -113,3 +113,41 @@ test.describe("mask structure contract", () => {
     expect(style.mode).not.toContain("luminance");
   });
 });
+
+test.describe("rounded corners under mask", () => {
+  test.use({ deviceScaleFactor: 2 });
+
+  // The default border-box mask clip follows the rounded corners, so corner
+  // antialiasing applies twice (paint α × mask α = f²) — a thin fringe rims
+  // every masked rounded element. mask-clip: no-clip removes the rounded
+  // clip; Chromium then renders masked corners identical to unmasked.
+  test("masking leaves rounded corners identical to unmasked", async ({ page, browserName }) => {
+    test.skip(
+      browserName === "webkit",
+      "WebKit parses mask-clip: no-clip but ignores it — the corner fringe there is a documented limitation (docs/webkit-masking.md)",
+    );
+    const shotFor = async (masked: boolean) => {
+      await page.evaluate(
+        (m) => window.mount({ size: 100, dot: 40, radius: 24, masked: m }),
+        masked,
+      );
+      return shoot(page);
+    };
+    const masked = await shotFor(true);
+    const bare = await shotFor(false);
+    // Compare the top-left corner region (device px), well clear of the
+    // centered hole (which starts at ~52 device px).
+    let diffs = 0;
+    for (let y = 0; y < 48; y++) {
+      for (let x = 0; x < 48; x++) {
+        const i = (y * masked.width + x) * 4;
+        const d =
+          Math.abs(masked.data[i] - bare.data[i]) +
+          Math.abs(masked.data[i + 1] - bare.data[i + 1]) +
+          Math.abs(masked.data[i + 2] - bare.data[i + 2]);
+        if (d > 12) diffs++;
+      }
+    }
+    expect(diffs).toBe(0);
+  });
+});

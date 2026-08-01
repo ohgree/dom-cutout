@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Rounded-corner fringe on masked elements: the mask's default border-box clip follows the element's rounded corners, double-applying their antialiasing (paint α × mask α) — a thin line of backdrop rimming the arc, most visible with gradient backgrounds on elements masked directly (the wrapperless React adapter's normal case). The mask now sets `mask-clip: no-clip`, rendering masked corners identical to unmasked on Chromium/Firefox; WebKit parses but ignores the value and keeps a ≤1-device-px fringe (documented in docs/webkit-masking.md §6).
 - Box-shape cutouts around pill-shaped overlays: an over-large `border-radius` (Tailwind's `rounded-full` `calc(infinity * 1px)`, or conventional `999px`-style values) produced elliptical corners instead of the element's actual pill silhouette — an SVG `<rect>` clamps `rx`/`ry` per axis, while CSS scales an over-large radius down uniformly. The radius is now resolved with CSS overlap semantics before the rect is emitted, `calc(infinity * 1px)` is recognized even where the engine hands it back unresolved, and percentage radii resolve per axis (elliptical corners preserved) with both `rx` and `ry` written to the mask.
 
 ## [0.2.2] - 2026-07-31

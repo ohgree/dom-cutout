@@ -43,6 +43,7 @@ export const MASK_PROPERTIES = [
   "mask-size",
   "mask-repeat",
   "mask-composite",
+  "mask-clip",
 ] as const;
 
 /** The CSS mask longhands that render a cutout, as a property → value map. */
@@ -218,6 +219,14 @@ export const computeMaskStyle = (
     "mask-size": `100% 100%,${layer.w}px ${layer.h}px`,
     "mask-repeat": "no-repeat,no-repeat",
     "mask-composite": "subtract,add",
+    // no-clip: the default border-box clip follows the element's ROUNDED
+    // border box, so corner antialiasing applies twice (paint α × mask α)
+    // and a thin under-covered fringe rims every masked rounded corner.
+    // Un-clipped, the rect layers cover the corner AA fully — the layer
+    // geometry above already bounds the mask to the element. WebKit parses
+    // no-clip but ignores it; its fringe is a documented limitation
+    // (docs/webkit-masking.md).
+    "mask-clip": "no-clip,no-clip",
   };
 };
 

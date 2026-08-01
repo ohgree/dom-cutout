@@ -224,3 +224,29 @@ iOS raster alignment, not as a general fraction-phobia.)
 
 The playwright suite in [`e2e/`](../e2e) guards each of these failure modes
 against regressions.
+
+## 6. Rounded corners: the double-antialiasing fringe
+
+Found via a masked-vs-unmasked screenshot differential (any pixel the mask
+changes outside the hole is an artifact): on every engine, applying the
+mask to an element with `border-radius` shifted ~170-200 device px along
+the corner arcs at 2×. The mask's default `mask-clip: border-box` follows
+the ROUNDED border box, so the corner antialiasing is applied twice — the
+paint's own coverage f multiplied by the mask's clipped coverage f gives
+f², an under-covered fringe rimming the arc. It reads as a thin line of
+the backdrop along the element's edge, most visible on gradient
+backgrounds against contrasting pages.
+
+This only bites when the masked element itself carries the radius. The
+old wrapper-based React adapter masked a sharp-cornered wrapper (radius
+lived on an inner element) and never showed it; the wrapperless adapter
+masks the user's rounded element directly, which is how it surfaced.
+
+Fix: `mask-clip: no-clip, no-clip`. Un-clipped, the rect-cornered mask
+layers cover the corner AA fully (coverage f × 1 = f), and the layer
+geometry already bounds the mask to the element, so nothing else changes.
+Chromium then renders masked corners byte-identical to unmasked
+(differential = 0). WebKit parses `no-clip` (it round-trips through
+computed style) but ignores it in rendering — its fringe measures the
+same either way and joins the known-limitations list next to the iOS
+gap-0 seam.

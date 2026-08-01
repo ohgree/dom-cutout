@@ -18,9 +18,13 @@ interface MountOptions {
   /** Optional scale on a wrapper ancestor (fractional-zoom simulation). */
   wrapperScale?: number;
   gap?: number;
+  /** Border-radius on the content square, css px. */
+  radius?: number;
+  /** Mount without applying the mask (double-AA differential baseline). */
+  masked?: boolean;
 }
 
-const mount = ({ size, dot, wrapperScale, gap }: MountOptions) => {
+const mount = ({ size, dot, wrapperScale, gap, radius, masked = true }: MountOptions) => {
   document.body.textContent = "";
   const wrap = document.createElement("div");
   if (wrapperScale) {
@@ -31,7 +35,7 @@ const mount = ({ size, dot, wrapperScale, gap }: MountOptions) => {
   stack.style.cssText = "display:inline-grid";
   const content = document.createElement("div");
   content.id = "content";
-  content.style.cssText = `grid-area:1/1;width:${size}px;height:${size}px;background:#f00`;
+  content.style.cssText = `grid-area:1/1;width:${size}px;height:${size}px;background:#f00;border-radius:${radius ?? 0}px`;
   const overlay = document.createElement("div");
   overlay.id = "overlay";
   overlay.style.cssText = "grid-area:1/1;position:relative;pointer-events:none";
@@ -42,7 +46,7 @@ const mount = ({ size, dot, wrapperScale, gap }: MountOptions) => {
   stack.append(content, overlay);
   wrap.append(stack);
   document.body.append(wrap);
-  createCutout(content, overlay, { gap });
+  if (masked) createCutout(content, overlay, { gap });
 };
 
 window.mount = mount;

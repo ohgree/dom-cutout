@@ -109,6 +109,16 @@ describe("computeMaskStyle", () => {
     expect(computeMaskStyle(content, overlay, { shape: "contour" })).toBeNull();
   });
 
+  it("un-clips the mask so rounded corners keep single antialiasing", () => {
+    const { content, overlay } = setup('<svg viewBox="0 0 24 24"></svg>');
+
+    const style = computeMaskStyle(content, overlay);
+
+    // border-box clipping follows rounded corners and double-applies their
+    // antialiasing; both layers opt out.
+    expect(style?.["mask-clip"]).toBe("no-clip,no-clip");
+  });
+
   it('uses the box branch for shape "box" even with an svg overlay', () => {
     const { content, overlay } = setup('<svg viewBox="0 0 24 24"></svg>');
 
