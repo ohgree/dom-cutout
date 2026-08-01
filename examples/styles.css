@@ -13,9 +13,8 @@
    texture, which is exactly what the cutout gap is. Built from base tokens
    so it adapts to the theme. */
 @utility bg-checker {
-  background:
-    repeating-conic-gradient(var(--color-base-300) 0% 25%, var(--color-base-100) 0% 50%) 0 0 /
-    16px 16px;
+  background: repeating-conic-gradient(var(--color-base-300) 0% 25%, var(--color-base-100) 0% 50%) 0
+    0 / 16px 16px;
 }
 
 /* On html, not just body: daisyUI paints :root base-100, so overscroll and
