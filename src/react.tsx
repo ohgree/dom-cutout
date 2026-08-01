@@ -33,6 +33,19 @@ export interface UseCutoutResult<
 /**
  * Headless `<Cutout>`: wire the refs to elements you own — the hook inserts
  * no DOM. Both refs must be attached during the first commit.
+ *
+ * @example
+ * ```tsx
+ * const { contentRef, overlayRef } = useCutout({ gap: 6 });
+ * return (
+ *   <div style={{ position: "relative" }}>
+ *     <Card ref={contentRef} />
+ *     <div ref={overlayRef} style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+ *       <Badge style={{ position: "absolute", top: 0, right: 0 }} />
+ *     </div>
+ *   </div>
+ * );
+ * ```
  */
 export const useCutout = <
   Content extends HTMLElement = HTMLElement,
@@ -142,6 +155,13 @@ let warnedNoAnchor = false;
  * component never affects how the child lays out. Without anchor support
  * the layer stretches the nearest positioned ancestor instead — see the
  * README for the polyfill.
+ *
+ * @example
+ * ```tsx
+ * <Cutout gap={6} overlay={<StatusDot style={{ position: "absolute", bottom: 0, right: 0 }} />}>
+ *   <Avatar />
+ * </Cutout>
+ * ```
  */
 export const Cutout: FunctionComponent<CutoutProps> = ({ overlay, children, gap, shape }) => {
   const child = Children.only(children);

@@ -66,6 +66,16 @@ export type CutoutMaskStyle = Record<(typeof MASK_PROPERTIES)[number], string>;
  *   image: full coverage, no tiles, no budget.
  *
  * Pure measurement + string building: applies nothing to the DOM.
+ *
+ * @example
+ * ```ts
+ * const style = computeMaskStyle(cardEl, badgeEl, { gap: 6 });
+ * if (style) {
+ *   for (const [property, value] of Object.entries(style)) {
+ *     cardEl.style.setProperty(property, value);
+ *   }
+ * }
+ * ```
  */
 export const computeMaskStyle = (
   content: Element,
@@ -264,6 +274,13 @@ const nextFrame = (callback: () => void) => {
  * The mask reflects current geometry at call time; call `update()` after
  * changes ResizeObserver can't observe. Returns an instance whose `destroy()`
  * removes the mask and all observers.
+ *
+ * @example
+ * ```ts
+ * const instance = createCutout(cardEl, badgeEl, { gap: 6 });
+ * instance.update(); // after DOM changes ResizeObserver can't see
+ * instance.destroy(); // on teardown
+ * ```
  */
 export const createCutout = (
   content: HTMLElement,
