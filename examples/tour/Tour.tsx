@@ -1,6 +1,6 @@
 import { Bell, Star, TriangleAlert, Zap } from "lucide-react";
 import { AnimatePresence, m, useMotionValueEvent, useReducedMotion, useScroll } from "motion/react";
-import { type ReactNode, type Ref, useEffect, useRef, useState } from "react";
+import { type ReactNode, type Ref, useRef, useState } from "react";
 
 import { Cutout } from "dom-cutout/react";
 
@@ -398,22 +398,9 @@ export const Tour = () => {
     offset: ["start start", "end end"],
   });
 
-  const sceneAt = (progress: number) =>
-    Math.min(SCENES.length - 1, Math.max(0, Math.floor(progress * SCENES.length)));
-
   useMotionValueEvent(scrollYProgress, "change", (progress) => {
-    setScene(sceneAt(progress));
+    setScene(Math.min(SCENES.length - 1, Math.max(0, Math.floor(progress * SCENES.length))));
   });
-
-  // Belt and braces for violent flings: if a frame update ever goes missing
-  // mid-momentum, re-derive the scene once scrolling settles. (No-op where
-  // scrollend is unsupported.)
-  useEffect(() => {
-    const sync = () => setScene(sceneAt(scrollYProgress.get()));
-    window.addEventListener("scrollend", sync);
-    return () => window.removeEventListener("scrollend", sync);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const active = SCENES[scene];
   const ActiveScene = active.component;
@@ -454,16 +441,11 @@ export const Tour = () => {
           />
         </AnimatePresence>
 
-        {/* Concurrent (no mode="wait"): an interrupted exit just crossfades
-            with the newcomer, so rapid scrubbing can never strand the wait
-            queue on a stale scene. The grid stacks both during overlap. */}
-        <div className="relative z-10 grid w-full max-w-2xl *:[grid-area:1/1]">
-          <AnimatePresence initial={false}>
-            <m.div key={scene} className="w-full px-6" {...motionProps}>
-              <ActiveScene />
-            </m.div>
-          </AnimatePresence>
-        </div>
+        <AnimatePresence mode="wait">
+          <m.div key={scene} className="relative w-full max-w-2xl px-6" {...motionProps}>
+            <ActiveScene />
+          </m.div>
+        </AnimatePresence>
 
         <div className="absolute top-1/2 right-4 flex -translate-y-1/2 flex-col gap-2 sm:right-6">
           {SCENES.map((_, i) => (
