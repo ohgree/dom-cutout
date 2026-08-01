@@ -100,7 +100,7 @@ const GapScene = () => {
             onChange={(e) => setGap(Number(e.target.value))}
           />
         </label>
-        <Code>{`<Cutout gap={${gap}}>`}</Code>
+        <Code>{`createCutout(avatar, badge, { gap: ${gap} })`}</Code>
       </div>
     </div>
   );
