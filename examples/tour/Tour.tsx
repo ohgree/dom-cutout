@@ -1,4 +1,4 @@
-import { Bell, Star, Zap } from "lucide-react";
+import { Bell, Star, TriangleAlert, Zap } from "lucide-react";
 import { AnimatePresence, m, useMotionValueEvent, useReducedMotion, useScroll } from "motion/react";
 import { type ReactNode, type Ref, useRef, useState } from "react";
 
@@ -108,17 +108,16 @@ const GapScene = () => {
 
 /* Scene 3 — contour tracing, mirrored split, glyph picker. */
 const GLYPHS = {
-  exclamation: {
-    label: "!",
+  // No bare exclamation glyph exists in lucide; the triangle alert is the
+  // stronger contour proof anyway — three disjoint paths, three halos.
+  alert: {
+    label: "alert",
     node: (
-      <svg
-        viewBox="0 0 8 24"
-        className="absolute -top-1 right-6 h-9 w-3 fill-red-500"
-        aria-hidden="true"
-      >
-        <rect x="1.5" y="1" width="5" height="15" rx="2.5" />
-        <circle cx="4" cy="21.5" r="2.5" />
-      </svg>
+      <TriangleAlert
+        size={42}
+        className="absolute -top-2 right-1 fill-none stroke-red-500"
+        strokeWidth={1.75}
+      />
     ),
   },
   star: {
@@ -144,7 +143,7 @@ const GLYPHS = {
 } as const;
 
 const ContourScene = () => {
-  const [glyph, setGlyph] = useState<keyof typeof GLYPHS>("exclamation");
+  const [glyph, setGlyph] = useState<keyof typeof GLYPHS>("alert");
   return (
     <div className="grid items-center gap-10 sm:grid-cols-[1fr_auto]">
       <div className="order-2 flex flex-col gap-4 sm:order-1">
