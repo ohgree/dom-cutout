@@ -1,4 +1,4 @@
-import { Bell, Star } from "lucide-react";
+import { Star } from "lucide-react";
 import { type ReactNode, type Ref, useEffect, useLayoutEffect, useState } from "react";
 
 import { Cutout, useCutout } from "dom-cutout/react";
@@ -129,36 +129,6 @@ const AvatarStatusDemo = () => {
   );
 };
 
-// A bare exclamation mark: two DISJOINT shapes (bar + dot), so the halo
-// visibly traces two separate contours — something a bounding box can't
-// fake. Badge glyphs need an explicit fill: the mask removes content
-// behind the whole silhouette.
-const WarningBadge = () => (
-  <svg
-    viewBox="0 0 8 24"
-    className="absolute -top-0.5 right-3 h-7 w-2.5 fill-red-500"
-    aria-hidden="true"
-  >
-    <rect x="1.5" y="1" width="5" height="15" rx="2.5" />
-    <circle cx="4" cy="21.5" r="2.5" />
-  </svg>
-);
-
-const BadgeDemo = () => {
-  const [hasWarning, setHasWarning] = useState(true);
-
-  return (
-    <>
-      <Cutout overlay={hasWarning && <WarningBadge />}>
-        <Bell size={64} className="stroke-base-content" strokeWidth={1.5} />
-      </Cutout>
-      <button className={demoButtonClass} type="button" onClick={() => setHasWarning((v) => !v)}>
-        Warning: {hasWarning ? "on" : "off"}
-      </button>
-    </>
-  );
-};
-
 const StarOverlay = () => (
   <Star
     size={30}
@@ -199,49 +169,6 @@ const ShapeComparisonDemo = () => {
           onChange={(e) => setGap(Number(e.target.value))}
         />
       </label>
-    </>
-  );
-};
-
-// Non-square on purpose: over-large radii only diverge from CSS on
-// rectangles (SVG clamps rx/ry per axis; CSS scales uniformly), so a pill
-// is the shape that proves the mask matches the badge.
-const RADII = [
-  { label: "rounded-full", value: "calc(infinity * 1px)" },
-  { label: "8px", value: "8px" },
-  { label: "50%", value: "50%" },
-  { label: "0", value: "0" },
-] as const;
-
-const VersionPill = ({ radius }: { radius: string }) => (
-  <div
-    className="absolute -top-2.5 right-4 bg-cyan-700 px-2.5 py-1 font-mono text-[11px] font-semibold text-white"
-    style={{ borderRadius: radius }}
-  >
-    v0.3.0
-  </div>
-);
-
-const ReleaseCard = ({ ref }: { ref?: Ref<HTMLDivElement> }) => (
-  <div ref={ref} className="h-20 w-44 rounded-[14px] bg-linear-to-br from-slate-600 to-slate-900" />
-);
-
-const PillRadiusDemo = () => {
-  const [index, setIndex] = useState(0);
-  const radius = RADII[index];
-
-  return (
-    <>
-      <Cutout overlay={<VersionPill radius={radius.value} />}>
-        <ReleaseCard />
-      </Cutout>
-      <button
-        className={demoButtonClass}
-        type="button"
-        onClick={() => setIndex((i) => (i + 1) % RADII.length)}
-      >
-        radius: {radius.label}
-      </button>
     </>
   );
 };
@@ -291,9 +218,12 @@ export const App = () => {
           &lt;Cutout /&gt; &mdash; React
         </a>
       </h1>
-      <p className="mb-8 text-base-content/60">
+      <p className="mb-1 text-base-content/60">
         How to use the React adapter — each pattern below is a copy-paste start.
       </p>
+      <div className="mb-10">
+        <CodeBlock code={'import { Cutout, useCutout } from "dom-cutout/react";'} />
+      </div>
 
       <Section
         title="Wrap the element, pass the overlay"
@@ -308,18 +238,6 @@ export const App = () => {
       </Section>
 
       <Section
-        title="SVG overlays trace their contours"
-        description="shape='auto' picks contour tracing whenever the overlay contains an svg — this exclamation mark is two disjoint shapes, and each gets its own halo."
-        code={dedent`
-        <Cutout overlay={hasWarning && <ExclamationMark />}>
-          <Bell />
-        </Cutout>
-      `}
-      >
-        <BadgeDemo />
-      </Section>
-
-      <Section
         title="Choosing a shape"
         description="The same star traced two ways: contour follows the glyph outline via stroke expansion, box uses the expanded bounding box. gap sets the halo width in pixels."
         code={dedent`
@@ -329,18 +247,6 @@ export const App = () => {
       `}
       >
         <ShapeComparisonDemo />
-      </Section>
-
-      <Section
-        title="Rounded overlays"
-        description="The box shape follows the overlay's computed border-radius — including Tailwind's rounded-full calc(infinity * 1px) and percentage radii, whose corners are legitimately elliptical."
-        code={dedent`
-        <Cutout overlay={<VersionPill className="rounded-full" />}>
-          <ReleaseCard />
-        </Cutout>
-      `}
-      >
-        <PillRadiusDemo />
       </Section>
 
       <Section
