@@ -13,8 +13,11 @@ const sun = `<svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current" s
 const moon = `<svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
 
 export const wireThemeToggle = (button: HTMLElement) => {
+  // "true", not "" — an empty string is falsy and the guard would never
+  // trip (React StrictMode invokes the ref twice; two listeners toggle
+  // twice per click, netting out to nothing).
   if (button.dataset.themeWired) return;
-  button.dataset.themeWired = "";
+  button.dataset.themeWired = "true";
   const render = () => {
     button.innerHTML = current() === "dark" ? sun : moon;
     button.setAttribute("aria-label", `Switch to ${current() === "dark" ? "light" : "dark"} theme`);
