@@ -4,6 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script>
+      // Apply the stored theme choice before first paint (theme.ts owns the toggle).
+      {
+        const theme = localStorage.getItem("dom-cutout-theme");
+        if (theme) document.documentElement.dataset.theme = theme;
+      }
+    </script>
     <link rel="stylesheet" href="./styles.css" />
     <title>dom-cutout</title>
     <meta
@@ -22,15 +29,15 @@
     <meta property="og:image:height" content="640" />
     <meta name="twitter:card" content="summary_large_image" />
   </head>
-  <body class="bg-slate-100 font-sans text-slate-800 antialiased">
+  <body class="bg-base-200 font-sans text-base-content antialiased">
     <main class="mx-auto max-w-2xl px-5 py-6">
       <!-- Hero -->
       <header
-        class="sticky top-0 z-20 -mx-5 flex items-center justify-between bg-slate-100/85 px-5 py-3 backdrop-blur"
+        class="sticky top-0 z-20 -mx-5 flex items-center justify-between bg-base-200/85 px-5 py-3 backdrop-blur"
       >
         <!-- The title itself is a live cutout — the first thing on the page
              is the library working (on text, no less). -->
-        <h1 class="text-3xl font-semibold tracking-tight text-slate-900">
+        <h1 class="text-3xl font-semibold tracking-tight text-base-content">
           <span class="inline-grid *:[grid-area:1/1]">
             <span id="title-content">dom-cutout</span>
             <span id="title-overlay" class="relative" style="visibility: hidden">
@@ -43,7 +50,7 @@
                    size (the social-preview capture renders it at 64px). -->
               <svg
                 viewBox="0 0 24 24"
-                class="absolute top-[0.067em] left-[31%] h-[0.8em] w-[0.8em] overflow-visible fill-none stroke-slate-700"
+                class="absolute top-[0.067em] left-[31%] h-[0.8em] w-[0.8em] overflow-visible fill-none stroke-base-content"
                 stroke-width="1.75"
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -59,9 +66,15 @@
             </span>
           </span>
         </h1>
-        <nav class="flex gap-4 text-sm">
+        <nav class="flex items-center gap-4 text-sm">
+          <button
+            id="theme-toggle"
+            type="button"
+            class="chip cursor-pointer px-2 py-1"
+            aria-label="Toggle theme"
+          ></button>
           <a
-            class="inline-flex items-center gap-1.5 text-slate-500 hover:text-slate-900"
+            class="inline-flex items-center gap-1.5 text-base-content/60 hover:text-base-content"
             href="https://github.com/ohgree/dom-cutout"
           >
             <svg viewBox="0 0 24 24" class="h-4 w-4 fill-current" aria-hidden="true">
@@ -72,7 +85,7 @@
             GitHub
           </a>
           <a
-            class="inline-flex items-center gap-1.5 text-slate-500 hover:text-slate-900"
+            class="inline-flex items-center gap-1.5 text-base-content/60 hover:text-base-content"
             href="https://www.npmjs.com/package/dom-cutout"
           >
             <svg viewBox="0 0 24 24" class="h-4 w-4 fill-current" aria-hidden="true">
@@ -84,7 +97,7 @@
           </a>
         </nav>
       </header>
-      <p class="mt-2 text-lg text-slate-600">
+      <p class="mt-2 text-lg text-base-content/70">
         Cut the silhouette of one DOM element out of another — because a background-colored border
         is a promise your gradient will break.
       </p>
@@ -116,7 +129,7 @@
             </svg>
           </div>
         </div>
-        <div class="flex min-w-0 flex-col gap-2 text-sm text-slate-600">
+        <div class="flex min-w-0 flex-col gap-2 text-sm text-base-content/70">
           <div id="hero-snippet">
             <pre class="shiki"><code>createCutout(avatar, star, { gap: 4 })</code></pre>
           </div>
@@ -136,13 +149,13 @@
       <div class="demo-card mt-4">
         <div class="flex flex-col items-center gap-4">
           <span
-            class="inline-grid text-5xl font-semibold tracking-tight text-slate-900 *:[grid-area:1/1]"
+            class="inline-grid text-5xl font-semibold tracking-tight text-base-content *:[grid-area:1/1]"
           >
             <span id="logo-content">dom-cutout</span>
             <span id="logo-overlay" class="relative" style="visibility: hidden">
               <svg
                 viewBox="0 0 24 24"
-                class="absolute -top-[0.01em] left-[31%] h-[0.8em] w-[0.8em] overflow-visible fill-none stroke-slate-700"
+                class="absolute -top-[0.01em] left-[31%] h-[0.8em] w-[0.8em] overflow-visible fill-none stroke-base-content"
                 stroke-width="1.75"
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -157,7 +170,7 @@
               </svg>
             </span>
           </span>
-          <label class="chip flex items-center gap-2 text-sm text-slate-600">
+          <label class="chip flex items-center gap-2 text-sm text-base-content/70">
             <span class="min-w-13 tabular-nums whitespace-nowrap"
               >gap: <span id="logo-gap-value">4</span>px</span
             >
@@ -169,16 +182,16 @@
       <!-- Features. Each card is itself a cutout: the icon overhanging the
            corner is carved out of the card surface, contour-for-contour, so
            the page background shows through the halo. -->
-      <ul class="mt-6 grid gap-3 text-sm text-slate-600 sm:grid-cols-3">
+      <ul class="mt-6 grid gap-3 text-sm text-base-content/70 sm:grid-cols-3">
         <li class="grid *:[grid-area:1/1]">
-          <div id="feat-core" class="rounded-xl border border-slate-200 bg-white p-4">
-            <strong class="mb-1 block text-slate-900">Zero-dependency core</strong>
+          <div id="feat-core" class="rounded-xl border border-base-content/10 bg-base-100 p-4">
+            <strong class="mb-1 block text-base-content">Zero-dependency core</strong>
             Plain DOM. Works with any framework or none.
           </div>
           <div id="feat-core-overlay" class="pointer-events-none relative" style="visibility: hidden">
             <svg
               viewBox="0 0 24 24"
-              class="absolute -top-2.5 -left-2.5 h-8 w-8 fill-none stroke-slate-700"
+              class="absolute -top-2.5 -left-2.5 h-8 w-8 fill-none stroke-base-content"
               stroke-width="1.75"
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -195,14 +208,14 @@
           </div>
         </li>
         <li class="grid *:[grid-area:1/1]">
-          <div id="feat-contour" class="rounded-xl border border-slate-200 bg-white p-4">
-            <strong class="mb-1 block text-slate-900">Contour-following</strong>
+          <div id="feat-contour" class="rounded-xl border border-base-content/10 bg-base-100 p-4">
+            <strong class="mb-1 block text-base-content">Contour-following</strong>
             SVG overlays are traced glyph-for-glyph, stroke widths compensated.
           </div>
           <div id="feat-contour-overlay" class="pointer-events-none relative" style="visibility: hidden">
             <svg
               viewBox="0 0 24 24"
-              class="absolute -bottom-2.5 -left-2.5 h-8 w-8 fill-none stroke-slate-700"
+              class="absolute -bottom-2.5 -left-2.5 h-8 w-8 fill-none stroke-base-content"
               stroke-width="1.75"
               stroke-linejoin="round"
               aria-hidden="true"
@@ -212,11 +225,11 @@
           </div>
         </li>
         <li class="grid *:[grid-area:1/1]">
-          <div id="feat-crisp" class="rounded-xl border border-slate-200 bg-white p-4">
-            <strong class="mb-1 block text-slate-900">Crisp on every engine</strong>
+          <div id="feat-crisp" class="rounded-xl border border-base-content/10 bg-base-100 p-4">
+            <strong class="mb-1 block text-base-content">Crisp on every engine</strong>
             Chosen by elimination against WebKit's rendering quirks —
             <a
-              class="text-slate-700 underline hover:text-slate-900"
+              class="text-base-content/80 underline hover:text-base-content"
               href="https://github.com/ohgree/dom-cutout/blob/main/docs/webkit-masking.md"
               >the full story</a
             >.
@@ -224,7 +237,7 @@
           <div id="feat-crisp-overlay" class="pointer-events-none relative" style="visibility: hidden">
             <svg
               viewBox="0 0 24 24"
-              class="absolute -right-2.5 -bottom-2.5 h-8 w-8 fill-none stroke-slate-700"
+              class="absolute -right-2.5 -bottom-2.5 h-8 w-8 fill-none stroke-base-content"
               stroke-width="1.75"
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -241,7 +254,7 @@
       </ul>
 
       <!-- Installation -->
-      <h2 class="mt-10 mb-3 text-lg font-semibold text-slate-900">Installation</h2>
+      <h2 class="mt-10 mb-3 text-lg font-semibold text-base-content">Installation</h2>
       <div id="pm-tabs" class="mb-2 flex gap-1" role="tablist">
         <button data-pm="npm" type="button" class="chip tab-active cursor-pointer">npm</button>
         <button data-pm="pnpm" type="button" class="chip cursor-pointer">pnpm</button>
@@ -260,17 +273,17 @@
       </div>
 
       <!-- Example pages -->
-      <h2 class="mt-10 mb-3 text-lg font-semibold text-slate-900">Examples</h2>
+      <h2 class="mt-10 mb-3 text-lg font-semibold text-base-content">Examples</h2>
       <div class="grid gap-3">
         <a
-          class="block rounded-xl border border-slate-200 bg-white p-4 no-underline hover:border-indigo-500"
+          class="block rounded-xl border border-base-content/10 bg-base-100 p-4 no-underline hover:border-primary"
           href="vanilla/"
         >
-          <strong class="flex items-center gap-2 text-slate-900">
+          <strong class="flex items-center gap-2 text-base-content">
             Vanilla DOM
             <svg
               viewBox="0 0 24 24"
-              class="h-4 w-4 fill-none stroke-slate-500"
+              class="h-4 w-4 fill-none stroke-base-content/60"
               stroke-width="2"
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -280,18 +293,18 @@
               <path d="m8 6-6 6 6 6" />
             </svg>
           </strong>
-          <small class="text-slate-500"
+          <small class="text-base-content/60"
             >createCutout() from the zero-dependency core — no framework</small
           >
         </a>
         <a
-          class="block rounded-xl border border-slate-200 bg-white p-4 no-underline hover:border-indigo-500"
+          class="block rounded-xl border border-base-content/10 bg-base-100 p-4 no-underline hover:border-primary"
           href="react/"
         >
-          <strong class="flex items-center gap-2 text-slate-900">
+          <strong class="flex items-center gap-2 text-base-content">
             React
-            <svg viewBox="-12 -12 24 24" class="h-4 w-4 stroke-slate-500" aria-hidden="true">
-              <circle r="2.1" class="fill-slate-500" stroke="none" />
+            <svg viewBox="-12 -12 24 24" class="h-4 w-4 stroke-base-content/60" aria-hidden="true">
+              <circle r="2.1" class="fill-base-content/60" stroke="none" />
               <g fill="none" stroke-width="1.2">
                 <ellipse rx="10.5" ry="4.2" />
                 <ellipse rx="10.5" ry="4.2" transform="rotate(60)" />
@@ -299,14 +312,14 @@
               </g>
             </svg>
           </strong>
-          <small class="text-slate-500"
+          <small class="text-base-content/60"
             >&lt;Cutout&gt; from dom-cutout/react — avatar status dot, warning badge, contour vs
             box</small
           >
         </a>
       </div>
 
-      <footer class="mt-12 text-sm text-slate-400">
+      <footer class="mt-12 text-sm text-base-content/50">
         MIT · this page is cut by the package it documents
       </footer>
     </main>

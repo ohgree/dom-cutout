@@ -1,0 +1,29 @@
+// Shared theme toggle for all three pages. daisyUI resolves the theme from
+// data-theme on <html>, falling back to prefers-color-scheme (see the
+// --prefersdark theme in styles.css). Each page's <head> applies the stored
+// choice inline before first paint; this module owns the toggle button.
+const KEY = "dom-cutout-theme";
+
+const current = (): "light" | "dark" =>
+  (document.documentElement.dataset.theme as "light" | "dark" | undefined) ??
+  (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+
+// Shows the theme the click switches TO.
+const sun = `<svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>`;
+const moon = `<svg viewBox="0 0 24 24" class="h-4 w-4 fill-none stroke-current" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+
+export const wireThemeToggle = (button: HTMLElement) => {
+  if (button.dataset.themeWired) return;
+  button.dataset.themeWired = "";
+  const render = () => {
+    button.innerHTML = current() === "dark" ? sun : moon;
+    button.setAttribute("aria-label", `Switch to ${current() === "dark" ? "light" : "dark"} theme`);
+  };
+  button.addEventListener("click", () => {
+    const next = current() === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    localStorage.setItem(KEY, next);
+    render();
+  });
+  render();
+};

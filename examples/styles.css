@@ -1,33 +1,70 @@
 @import "tailwindcss";
 
+/* daisyUI supplies the semantic token layer (base-*, primary, *-content);
+   the light/dark pair follows the system by default, and the theme toggle
+   (theme.ts) stamps data-theme to override it. */
+@plugin "daisyui" {
+  themes:
+    light --default,
+    dark --prefersdark;
+}
+
 /* Design-tool transparency checkerboard — the universal "see-through here"
-   texture, which is exactly what the cutout gap is. */
+   texture, which is exactly what the cutout gap is. Built from base tokens
+   so it adapts to the theme. */
 @utility bg-checker {
-  background: repeating-conic-gradient(#e5e7eb 0% 25%, #ffffff 0% 50%) 0 0 / 16px 16px;
+  background:
+    repeating-conic-gradient(var(--color-base-300) 0% 25%, var(--color-base-100) 0% 50%) 0 0 /
+    16px 16px;
+}
+
+/* On html, not just body: daisyUI paints :root base-100, so overscroll and
+   any viewport past the body would otherwise flash the wrong shade. */
+html {
+  @apply bg-base-200;
 }
 
 @layer components {
   /* Solid chip for controls and labels sitting on the checkerboard. */
   .chip {
-    @apply rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-[13px] text-slate-800;
+    @apply border-base-content/20 bg-base-100 text-base-content rounded-lg border px-3 py-1.5 text-[13px];
   }
 
   /* Demo card: the checkerboard stage the cutouts sit on. flex-wrap keeps
      artwork + controls usable on narrow viewports. */
   .demo-card {
-    @apply bg-checker flex flex-wrap items-center justify-center gap-x-12 gap-y-6 rounded-xl border border-slate-200 px-6 py-10 sm:px-8;
+    @apply bg-checker border-base-content/10 flex flex-wrap items-center justify-center gap-x-12 gap-y-6 rounded-xl border px-6 py-10 sm:px-8;
   }
 
   /* Active package-manager tab. */
   .tab-active {
-    @apply border-indigo-500 text-indigo-600;
+    @apply border-primary text-primary;
   }
 }
 
-/* Shiki snippet blocks (theme supplies colors; github-light bg is white,
-   so add a border against the page background). Margin-free: shiki's
+/* Shiki snippet blocks. Shiki emits dual-theme CSS variables (see the
+   codeToHtml themes option); the rules below flip the block to its dark
+   palette both when the toggle stamps data-theme="dark" and when the
+   system prefers dark with no explicit choice. Margin-free: shiki's
    outerHTML replacement drops any extra classes, so spacing belongs to a
    wrapper element. */
 .shiki {
-  @apply overflow-x-auto rounded-[10px] border border-slate-200 bg-white p-3 px-4 text-[13px] leading-relaxed;
+  @apply border-base-content/10 bg-base-100 overflow-x-auto rounded-[10px] border p-3 px-4 text-[13px] leading-relaxed;
+}
+
+/* !important: shiki inlines the light palette on the elements themselves
+   (style="background-color:#fff;--shiki-dark-bg:…"), and inline styles
+   outrank any selector — this is shiki's own documented dark-mode recipe. */
+[data-theme="dark"] .shiki,
+[data-theme="dark"] .shiki span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .shiki,
+  :root:not([data-theme="light"]) .shiki span {
+    color: var(--shiki-dark) !important;
+    background-color: var(--shiki-dark-bg) !important;
+  }
 }

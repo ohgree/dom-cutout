@@ -1,5 +1,9 @@
 import { createCutout } from "dom-cutout";
 
+import { wireThemeToggle } from "./theme";
+
+wireThemeToggle(document.getElementById("theme-toggle")!);
+
 const content = document.getElementById("hero-content")!;
 const overlay = document.getElementById("hero-overlay")!;
 const star = document.getElementById("hero-star")!;
@@ -76,7 +80,11 @@ const highlightWithin = (root: HTMLElement, lang: "ts" | "sh") => {
     const source = pre.textContent;
     if (!source) continue;
     import("shiki").then(({ codeToHtml }) =>
-      codeToHtml(source, { lang, theme: "github-light-default" }).then((html) => {
+      codeToHtml(source, {
+        lang,
+        themes: { light: "github-light-default", dark: "github-dark-default" },
+        defaultColor: "light",
+      }).then((html) => {
         pre.outerHTML = html;
       }),
     );

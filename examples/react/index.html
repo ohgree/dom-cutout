@@ -4,6 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script>
+      // Apply the stored theme choice before first paint (theme.ts owns the toggle).
+      {
+        const theme = localStorage.getItem("dom-cutout-theme");
+        if (theme) document.documentElement.dataset.theme = theme;
+      }
+    </script>
     <link rel="stylesheet" href="../styles.css" />
     <title>dom-cutout — React</title>
     <meta name="description" content="The React adapter over dom-cutout's zero-dependency core." />
@@ -19,7 +26,7 @@
     <meta property="og:image:height" content="640" />
     <meta name="twitter:card" content="summary_large_image" />
   </head>
-  <body class="bg-slate-100 font-sans text-slate-800 antialiased">
+  <body class="bg-base-200 font-sans text-base-content antialiased">
     <div id="root"></div>
     <script type="module" src="/react/main.tsx"></script>
   </body>

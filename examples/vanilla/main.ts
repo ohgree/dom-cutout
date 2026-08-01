@@ -1,5 +1,9 @@
 import { createCutout, type CutoutInstance } from "dom-cutout";
 
+import { wireThemeToggle } from "../theme";
+
+wireThemeToggle(document.getElementById("theme-toggle")!);
+
 const content = document.getElementById("content")!;
 const overlay = document.getElementById("overlay")!;
 const dot = document.getElementById("dot")!;

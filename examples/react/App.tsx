@@ -3,6 +3,8 @@ import { type ReactNode, type Ref, useEffect, useState } from "react";
 
 import { Cutout } from "dom-cutout/react";
 
+import { wireThemeToggle } from "../theme";
+
 // Colors reference Tailwind's default palette directly; shared surface
 // styles (.chip, .demo-card, .bg-checker, .shiki) live in ../styles.css.
 
@@ -30,7 +32,13 @@ const CodeBlock = ({ code }: { code: string }) => {
     // both example pages import shiki the same way — mixing a static and a
     // dynamic import of it across pages panics rolldown's chunking).
     import("shiki")
-      .then(({ codeToHtml }) => codeToHtml(code, { lang: "tsx", theme: "github-light-default" }))
+      .then(({ codeToHtml }) =>
+        codeToHtml(code, {
+          lang: "tsx",
+          themes: { light: "github-light-default", dark: "github-dark-default" },
+          defaultColor: "light",
+        }),
+      )
       .then((result) => {
         if (!cancelled) setHtml(result);
       });
@@ -65,8 +73,8 @@ const Section = ({
   children: ReactNode;
 }) => (
   <section className="mb-10">
-    <h2 className="mb-1 text-lg font-semibold text-slate-900">{title}</h2>
-    <p className="mb-4 text-sm text-slate-500">{description}</p>
+    <h2 className="mb-1 text-lg font-semibold text-base-content">{title}</h2>
+    <p className="mb-4 text-sm text-base-content/60">{description}</p>
     <div className="demo-card">{children}</div>
     {code && <CodeBlock code={code} />}
   </section>
@@ -141,7 +149,7 @@ const BadgeDemo = () => {
   return (
     <>
       <Cutout overlay={hasWarning && <WarningBadge />}>
-        <Bell size={64} className="stroke-slate-700" strokeWidth={1.5} />
+        <Bell size={64} className="stroke-base-content" strokeWidth={1.5} />
       </Cutout>
       <button className={demoButtonClass} type="button" onClick={() => setHasWarning((v) => !v)}>
         Warning: {hasWarning ? "on" : "off"}
@@ -175,7 +183,7 @@ const ShapeComparisonDemo = () => {
           <Cutout gap={gap} shape={shape} overlay={<StarOverlay />}>
             <PhotoTile />
           </Cutout>
-          <figcaption className="chip mx-auto mt-2.5 block w-fit text-slate-500">
+          <figcaption className="chip mx-auto mt-2.5 block w-fit text-base-content/60">
             shape=&quot;{shape}&quot;
           </figcaption>
         </figure>
@@ -239,13 +247,23 @@ const PillRadiusDemo = () => {
 
 export const App = () => (
   <main className="mx-auto max-w-2xl px-5 py-6">
-    <a href="../" className="text-[13px] text-slate-500 no-underline hover:text-slate-900">
-      &larr; examples
-    </a>
-    <h1 className="mt-2 mb-1 text-2xl font-semibold text-slate-900">
+    <div className="flex items-center justify-between">
+      <a href="../" className="text-[13px] text-base-content/60 no-underline hover:text-base-content">
+        &larr; examples
+      </a>
+      <button
+        ref={(el) => {
+          if (el) wireThemeToggle(el);
+        }}
+        type="button"
+        className="chip cursor-pointer px-2 py-1"
+        aria-label="Toggle theme"
+      />
+    </div>
+    <h1 className="mt-2 mb-1 text-2xl font-semibold text-base-content">
       &lt;Cutout /&gt; &mdash; React
     </h1>
-    <p className="mb-8 text-slate-500">The React adapter over the zero-dependency core.</p>
+    <p className="mb-8 text-base-content/60">The React adapter over the zero-dependency core.</p>
 
     <Section
       title="Avatar status dot"
