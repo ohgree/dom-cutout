@@ -177,20 +177,17 @@ export const computeMaskStyle = (
     // A zero-area overlay (e.g. a display:none badge) renders nothing and
     // must clear the mask rather than trace a phantom gap-sized shape.
     if (targetRect.width === 0 || targetRect.height === 0) return null;
-    // Resolve the radius with CSS overlap semantics before emitting the rect:
-    // CSS scales an over-large radius down uniformly (a rounded-full pill
-    // keeps circular corners), while an SVG rect clamps rx and ry
-    // independently to w/2 and h/2, which turns the same value into
-    // elliptical corners. "infinity" covers Tailwind's rounded-full
-    // (calc(infinity * 1px)), which some engines hand back unresolved and
-    // parseFloat would otherwise read as 0.
+    // Resolve over-large radii the way CSS does (scale down uniformly — a
+    // rounded-full pill keeps circular corners) before emitting the rect,
+    // which would clamp rx/ry independently into elliptical corners.
+    // "infinity" catches calc(infinity * 1px) handed back unresolved, which
+    // parseFloat would read as 0.
     const br = getComputedStyle(target).borderRadius;
     const parsed = br.includes("infinity") ? Infinity : parseFloat(br) || 0;
     let rx: number;
     let ry: number;
     if (br.includes("%")) {
-      // Percentage radii resolve per axis, so corners may legitimately be
-      // elliptical; past 50% CSS scales both axes down together.
+      // Percentage radii resolve per axis: legitimately elliptical corners.
       const fraction = Math.min(parsed, 50) / 100;
       rx = fraction * targetRect.width + gap;
       ry = fraction * targetRect.height + gap;

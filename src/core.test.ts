@@ -134,9 +134,8 @@ describe("computeMaskStyle", () => {
 
       const markup = shapeMarkup(computeMaskStyle(content, overlay));
 
-      // CSS resolves an over-large radius to min(w, h) / 2 = 10 on both
-      // axes; the gap (4) dilates it. An SVG rect clamping rx and ry
-      // independently would give 28×14 elliptical corners instead.
+      // min(w, h) / 2 = 10 on both axes, plus the gap (4) — not the 28×14
+      // elliptical corners of independent SVG rx/ry clamping.
       expect(markup).toContain('rx="14" ry="14"');
     });
 
