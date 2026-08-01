@@ -209,7 +209,12 @@ export const Cutout: FunctionComponent<CutoutProps> = ({ overlay, children, gap,
         data-cutout-layer={id}
         // pointerEvents: none so the layer doesn't swallow clicks aimed at the
         // child; interactive overlay content re-enables its own.
-        style={{ position: "absolute", pointerEvents: "none" }}
+        // overflowAnchor: none — Chrome can pick the anchor-positioned layer
+        // as its scroll-anchoring node (even past overflow-anchor: none on
+        // the scroller), so a layout that changes document height gets its
+        // scroll position yanked as the layer tracks the child. A positioning
+        // shell must never anchor anyone's scroll.
+        style={{ position: "absolute", pointerEvents: "none", overflowAnchor: "none" }}
       >
         {overlay}
       </div>

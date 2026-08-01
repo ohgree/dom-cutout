@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2026-08-02
+
+### Fixed
+
+- Scroll position no longer gets yanked when a layout containing `<Cutout>` changes document height (collapsing headers, accordions): Chrome can select the anchor-positioned overlay layer as its scroll-anchoring node — even with `overflow-anchor: none` on the scroller — and "compensate" the root scroll as the layer tracks its child. The layer now opts out with its own `overflow-anchor: none`.
+
 ## [0.3.0] - 2026-08-02
 
 ### Changed
@@ -66,6 +72,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 Initial release: zero-dependency core (`createCutout`, `computeMaskUrl`, contour/box/auto shapes, stroke-width compensation, `ResizeObserver` syncing) and the React adapter at `dom-cutout/react`.
 
+[0.3.1]: https://github.com/ohgree/dom-cutout/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/ohgree/dom-cutout/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/ohgree/dom-cutout/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/ohgree/dom-cutout/compare/v0.2.0...v0.2.1

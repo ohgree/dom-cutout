@@ -92,6 +92,15 @@ describe("<Cutout />", () => {
     expect(childEl(container).hasAttribute(MASKED_ATTRIBUTE)).toBe(true);
   });
 
+  it("opts the overlay layer out of scroll anchoring", () => {
+    const { container } = renderCutout(<svg viewBox="0 0 10 10" />);
+
+    const overlayLayer = container.querySelector<HTMLElement>("[data-cutout-overlay]")!;
+    // Chrome may otherwise pick the anchored layer as its scroll-anchoring
+    // node and yank scroll when the host layout changes document height.
+    expect(overlayLayer.style.overflowAnchor).toBe("none");
+  });
+
   it("keeps the child clickable: the overlay layer has pointer-events none", () => {
     const { container } = renderCutout(<svg viewBox="0 0 10 10" />);
 
