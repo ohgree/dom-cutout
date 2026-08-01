@@ -21,6 +21,10 @@
    any viewport past the body would otherwise flash the wrong shade. */
 html {
   @apply bg-base-200;
+  /* Proximity, never mandatory: the tour's scene landmarks (Tour.tsx) pull
+     a gesture that ends near a boundary onto it; the rest of the page has
+     no snap targets and scrolls untouched. */
+  scroll-snap-type: y proximity;
 }
 
 /* Masks apply only once each page's module runs, and a mask-image swap

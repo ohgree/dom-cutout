@@ -426,7 +426,20 @@ export const Tour = () => {
   };
 
   return (
-    <div ref={containerRef} style={{ height: `${SCENES.length * 100}vh` }}>
+    <div ref={containerRef} className="relative" style={{ height: `${SCENES.length * 100}vh` }}>
+      {/* Invisible snap landmarks, one per scene. html carries
+          scroll-snap-type: y proximity (styles.css): a gesture that ends
+          near a scene boundary settles exactly on it, everywhere else the
+          page scrolls normally — mandatory snapping would hijack the
+          shared document scroller. */}
+      {SCENES.map((_, i) => (
+        <div
+          key={i}
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 h-screen"
+          style={{ top: `${i * 100}vh`, scrollSnapAlign: "start" }}
+        />
+      ))}
       <div className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden">
         <AnimatePresence>
           <m.div
