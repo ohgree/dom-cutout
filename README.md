@@ -33,6 +33,22 @@ The pattern you've seen on avatar status dots (Discord, Messenger): the badge do
 - **Crisp on every engine** — the mask construction was chosen by elimination against WebKit's rendering quirks ([the full story](./docs/webkit-masking.md))
 - Keeps itself in sync via `ResizeObserver`; SSR-safe
 
+## Contents
+
+- [Install](#install)
+- [React](#react)
+  - [Props](#props)
+  - [useCutout](#usecutout)
+- [Vanilla / other frameworks](#vanilla--other-frameworks)
+- [Shapes](#shapes)
+- [How it works](#how-it-works)
+- [Why not a background-colored ring?](#why-not-a-background-colored-ring)
+- [Browser support](#browser-support)
+- [Caveats](#caveats)
+- [Future plans](#future-plans)
+- [Prior art](#prior-art)
+- [License](#license)
+
 ## Install
 
 ```sh
@@ -127,13 +143,11 @@ On each update, `dom-cutout` measures the content and overlay rects and applies 
 
 The two-layer construction isn't incidental — it's the only one of six approaches that renders crisp at device resolution on every engine _and_ survives iOS: single-image masks with an internal SVG `<mask>` rasterize soft on high-DPI WebKit, and `mask-mode: luminance` masks silently stop masking on iOS past a 512×512 device-px budget ([WebKit bug 282530](https://bugs.webkit.org/show_bug.cgi?id=282530)). The elimination is documented in [docs/webkit-masking.md](./docs/webkit-masking.md).
 
-## Caveats
+## Why not a background-colored ring?
 
-- Measurement uses `getBoundingClientRect`, so CSS transforms on the overlay or its ancestors skew the mask geometry. To rotate/scale an SVG overlay, put the transform inside the SVG (`<g transform="rotate(...)">`) — SVG-attribute transforms live in the markup and stay in sync with the mask.
-- The first paint after mount is unmasked for one frame (the mask needs a layout pass to measure). With server-rendered/static markup the window lasts until your script runs — if it matters, hide the overlay initially (e.g. `visibility: hidden` inline) and reveal it after `createCutout`, or key CSS off the `data-cutout` attribute.
-- `box` shape with a text-only overlay measures the overlay wrapper itself — wrap text in an element for accurate geometry.
-- Stroke-width compensation reads SVG attributes (`stroke-width` on the root or per element); stroke-widths set via CSS classes or inline styles don't survive the markup copy and aren't compensated.
-- The overlay artwork's paint colors are normalized to black in the mask copy (`fill="none"`/`stroke="none"` are respected) — only the silhouette matters, but paints applied via CSS classes don't survive the copy, same as stroke-widths.
+The workaround most UIs ship is a fake gap: give the badge a `border`, `box-shadow` spread, or `outline` in the page's background color. It looks right exactly until the background stops being one flat color — over a gradient, an image, a hover state, glassmorphism, or a themed surface, the "gap" is revealed as an opaque painted ring that doesn't match what's behind it. It also has to be maintained in lockstep with every background it ever sits on (light/dark themes ×2 minimum).
+
+A mask doesn't paint the gap — it _removes_ content pixels, so whatever is actually behind the component shows through, automatically, on any backdrop. That's what the checkerboard in the [live examples](https://ohgree.github.io/dom-cutout/) demonstrates: the gap is genuine transparency, not paint.
 
 ## Browser support
 
@@ -145,16 +159,18 @@ The anchor rules are emitted declaratively (a rendered `<style>` element with da
 
 Why the mask is built this way — and why five simpler constructions were eliminated (soft edges from internal SVG `<mask>` elements, luminance masks silently dying on iOS via [WebKit bug 282530](https://bugs.webkit.org/show_bug.cgi?id=282530), tile seams under pinch zoom) — is documented in [docs/webkit-masking.md](./docs/webkit-masking.md). The playwright suite in [`e2e/`](./e2e) pins each of those failure modes.
 
+## Caveats
+
+- Measurement uses `getBoundingClientRect`, so CSS transforms on the overlay or its ancestors skew the mask geometry. To rotate/scale an SVG overlay, put the transform inside the SVG (`<g transform="rotate(...)">`) — SVG-attribute transforms live in the markup and stay in sync with the mask.
+- The first paint after mount is unmasked for one frame (the mask needs a layout pass to measure). With server-rendered/static markup the window lasts until your script runs — if it matters, hide the overlay initially (e.g. `visibility: hidden` inline) and reveal it after `createCutout`, or key CSS off the `data-cutout` attribute.
+- `box` shape with a text-only overlay measures the overlay wrapper itself — wrap text in an element for accurate geometry.
+- Stroke-width compensation reads SVG attributes (`stroke-width` on the root or per element); stroke-widths set via CSS classes or inline styles don't survive the markup copy and aren't compensated.
+- The overlay artwork's paint colors are normalized to black in the mask copy (`fill="none"`/`stroke="none"` are respected) — only the silhouette matters, but paints applied via CSS classes don't survive the copy, same as stroke-widths.
+
 ## Future plans
 
 - **CSS transform support** — read the overlay's computed transform matrix and transplant it into the generated mask, so rotated/scaled overlays stay in sync without the in-SVG `<g transform>` workaround. Stays vector and synchronous.
 - **Raster silhouettes** — a canvas-backed shape mode that cuts out whatever the overlay actually paints (`<img>` badges, emoji), plus soft/feathered halos. Additive to the SVG path, not a replacement: SVG masks stay resolution-independent and synchronous, which raster can't match for glyph overlays.
-
-## Why not a background-colored ring?
-
-The workaround most UIs ship is a fake gap: give the badge a `border`, `box-shadow` spread, or `outline` in the page's background color. It looks right exactly until the background stops being one flat color — over a gradient, an image, a hover state, glassmorphism, or a themed surface, the "gap" is revealed as an opaque painted ring that doesn't match what's behind it. It also has to be maintained in lockstep with every background it ever sits on (light/dark themes ×2 minimum).
-
-A mask doesn't paint the gap — it _removes_ content pixels, so whatever is actually behind the component shows through, automatically, on any backdrop. That's what the checkerboard in the [live examples](https://ohgree.github.io/dom-cutout/) demonstrates: the gap is genuine transparency, not paint.
 
 ## Prior art
 
