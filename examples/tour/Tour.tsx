@@ -108,15 +108,13 @@ const GapScene = () => {
 
 /* Scene 3 — contour tracing, mirrored split, glyph picker. */
 const GLYPHS = {
-  // No bare exclamation glyph exists in lucide; the triangle alert is the
-  // stronger contour proof anyway — three disjoint paths, three halos.
-  alert: {
-    label: "alert",
+  zap: {
+    label: "zap",
     node: (
-      <TriangleAlert
-        size={42}
-        className="absolute -top-2 right-1 fill-none stroke-red-500"
-        strokeWidth={1.75}
+      <Zap
+        size={48}
+        className="absolute top-1.5 right-1.5 fill-cyan-400 stroke-cyan-800"
+        strokeWidth={1.5}
       />
     ),
   },
@@ -124,18 +122,18 @@ const GLYPHS = {
     label: "star",
     node: (
       <Star
-        size={38}
-        className="absolute -right-1 -bottom-1 fill-amber-400 stroke-amber-800"
+        size={48}
+        className="absolute top-1.5 right-1.5 fill-amber-400 stroke-amber-800"
         strokeWidth={1.5}
       />
     ),
   },
-  zap: {
-    label: "zap",
+  alert: {
+    label: "alert",
     node: (
-      <Zap
-        size={38}
-        className="absolute -right-2 top-0 fill-cyan-400 stroke-cyan-800"
+      <TriangleAlert
+        size={48}
+        className="absolute top-1.5 right-1.5 fill-none stroke-red-500"
         strokeWidth={1.5}
       />
     ),
@@ -143,7 +141,7 @@ const GLYPHS = {
 } as const;
 
 const ContourScene = () => {
-  const [glyph, setGlyph] = useState<keyof typeof GLYPHS>("alert");
+  const [glyph, setGlyph] = useState<keyof typeof GLYPHS>("zap");
   return (
     <div className="grid items-center gap-10 sm:grid-cols-[1fr_auto]">
       <div className="order-2 flex flex-col gap-4 sm:order-1">
@@ -261,7 +259,7 @@ const OfferedPill = ({
     overlay={
       <span
         className={`absolute h-7 w-14 ${color}`}
-        style={{ borderRadius: radius, left: mirrored ? 30 : 42, top: 22 }}
+        style={{ borderRadius: radius, left: mirrored ? 30 : 42, top: 16 }}
       />
     }
   >
