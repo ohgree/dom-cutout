@@ -71,6 +71,12 @@ export const useCutout = <
   return { contentRef, overlayRef, update };
 };
 
+/** Props `<Cutout>` injects into its cloned child. */
+interface InjectedChildProps {
+  ref?: Ref<HTMLElement>;
+  "data-cutout-anchor"?: string;
+}
+
 export interface CutoutProps {
   /**
    * Content whose silhouette is cut out of the child. Rendered in a layer
@@ -83,7 +89,7 @@ export interface CutoutProps {
    * directly, never wrapped. Must take a ref to a DOM element (React 18
    * custom components: `forwardRef`).
    */
-  children: ReactElement<{ ref?: Ref<HTMLElement> }>;
+  children: ReactElement<InjectedChildProps>;
   /**
    * Gap width in rendered pixels between the overlay's silhouette and the
    * child.
@@ -176,7 +182,7 @@ export const Cutout: FunctionComponent<CutoutProps> = ({ overlay, children, gap,
       {cloneElement(child, {
         ref: composeRefs(getElementRef(child), contentRef, stampAnchor),
         "data-cutout-anchor": id,
-      } as Partial<unknown>)}
+      })}
       <div
         ref={overlayRef as RefObject<HTMLDivElement | null>}
         data-cutout-overlay=""
