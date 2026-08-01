@@ -230,7 +230,7 @@ const TextScene = () => {
   );
 };
 
-/* Scene 5 — box shape + border-radius, wide card, radius chips. */
+/* Scene 5 — box shape + border-radius: red pill or blue pill. */
 const RADII = [
   { label: "rounded-full", value: "calc(infinity * 1px)" },
   { label: "8px", value: "8px" },
@@ -238,26 +238,62 @@ const RADII = [
   { label: "0", value: "0" },
 ] as const;
 
+// lucide "hand-helping" paths (ISC); the left hand mirrors INSIDE the svg
+// so the mask copy mirrors with the pixels — a CSS transform would desync.
+const HAND_PATHS = (
+  <>
+    <path d="M11 12h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 14" />
+    <path d="m7 18 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9" />
+    <path d="m2 13 6 6" />
+  </>
+);
+
+const OfferedPill = ({
+  mirrored,
+  color,
+  radius,
+}: {
+  mirrored?: boolean;
+  color: string;
+  radius: string;
+}) => (
+  <Cutout
+    gap={4}
+    overlay={
+      <span
+        className={`absolute h-7 w-14 ${color}`}
+        style={{ borderRadius: radius, left: mirrored ? 30 : 42, top: 22 }}
+      />
+    }
+  >
+    <svg
+      viewBox="0 0 24 24"
+      className="stroke-base-content h-32 w-32 fill-none"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {mirrored ? <g transform="scale(-1 1) translate(-24 0)">{HAND_PATHS}</g> : HAND_PATHS}
+    </svg>
+  </Cutout>
+);
+
 const RadiusScene = () => {
   const [radius, setRadius] = useState<(typeof RADII)[number]>(RADII[0]);
   return (
     <div className="flex flex-col items-center gap-8">
-      <Cutout
-        gap={5}
-        overlay={
-          <span
-            className="absolute -top-3 right-6 bg-cyan-700 px-3 py-1.5 font-mono text-xs font-semibold text-white"
-            style={{ borderRadius: radius.value }}
-          >
-            v0.3.0
-          </span>
-        }
-      >
-        <div className="h-28 w-72 rounded-2xl bg-linear-to-br from-slate-600 to-slate-900" />
-      </Cutout>
+      <div className="flex items-end gap-6 sm:gap-14">
+        <OfferedPill
+          mirrored
+          color="bg-linear-to-b from-red-500 to-red-700"
+          radius={radius.value}
+        />
+        <OfferedPill color="bg-linear-to-b from-blue-500 to-blue-700" radius={radius.value} />
+      </div>
       <SceneTitle
         title="Box shape reads border-radius"
-        blurb="The bounding-box shape follows the overlay's computed corners — over-large radii resolve the way CSS does, so pills stay pills."
+        blurb="Red or blue, the cutout follows each pill's computed corners — rounded-full stays a pill, 0 is just a box. You take the border-radius, the mask shows you how deep it goes."
       />
       <div className="flex flex-wrap justify-center gap-2">
         {RADII.map((r) => (
@@ -344,7 +380,7 @@ const SCENES: Array<{
   },
   {
     component: RadiusScene,
-    wash: "radial-gradient(55% 55% at 50% 65%, color-mix(in oklab, oklch(0.7 0.14 215) 13%, transparent), transparent 70%)",
+    wash: "radial-gradient(45% 55% at 32% 55%, color-mix(in oklab, oklch(0.63 0.21 25) 11%, transparent), transparent 70%), radial-gradient(45% 55% at 68% 55%, color-mix(in oklab, oklch(0.55 0.2 262) 12%, transparent), transparent 70%)",
     enter: { y: 56 },
     exit: { y: -40 },
   },
