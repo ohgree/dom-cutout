@@ -166,24 +166,77 @@
         </div>
       </div>
 
-      <!-- Features -->
+      <!-- Features. Each card is itself a cutout: the icon overhanging the
+           corner is carved out of the card surface, contour-for-contour, so
+           the page background shows through the halo. -->
       <ul class="mt-6 grid gap-3 text-sm text-slate-600 sm:grid-cols-3">
-        <li class="rounded-xl border border-slate-200 bg-white p-4">
-          <strong class="mb-1 block text-slate-900">Zero-dependency core</strong>
-          Plain DOM. Works with any framework or none.
+        <li class="grid *:[grid-area:1/1]">
+          <div id="feat-core" class="rounded-xl border border-slate-200 bg-white p-4">
+            <strong class="mb-1 block text-slate-900">Zero-dependency core</strong>
+            Plain DOM. Works with any framework or none.
+          </div>
+          <div id="feat-core-overlay" class="pointer-events-none relative" style="visibility: hidden">
+            <svg
+              viewBox="0 0 24 24"
+              class="absolute -top-2.5 -left-2.5 h-8 w-8 fill-none stroke-slate-700"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <g transform="rotate(-8 12 12)">
+                <path
+                  d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 8z"
+                />
+                <path d="m3.3 7 8.7 5 8.7-5" />
+                <path d="M12 22V12" />
+              </g>
+            </svg>
+          </div>
         </li>
-        <li class="rounded-xl border border-slate-200 bg-white p-4">
-          <strong class="mb-1 block text-slate-900">Contour-following</strong>
-          SVG overlays are traced glyph-for-glyph, stroke widths compensated.
+        <li class="grid *:[grid-area:1/1]">
+          <div id="feat-contour" class="rounded-xl border border-slate-200 bg-white p-4">
+            <strong class="mb-1 block text-slate-900">Contour-following</strong>
+            SVG overlays are traced glyph-for-glyph, stroke widths compensated.
+          </div>
+          <div id="feat-contour-overlay" class="pointer-events-none relative" style="visibility: hidden">
+            <svg
+              viewBox="0 0 24 24"
+              class="absolute -bottom-2.5 -left-2.5 h-8 w-8 fill-none stroke-slate-700"
+              stroke-width="1.75"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path transform="rotate(-12 12 12)" d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" />
+            </svg>
+          </div>
         </li>
-        <li class="rounded-xl border border-slate-200 bg-white p-4">
-          <strong class="mb-1 block text-slate-900">Crisp on every engine</strong>
-          Chosen by elimination against WebKit's rendering quirks —
-          <a
-            class="text-slate-700 underline hover:text-slate-900"
-            href="https://github.com/ohgree/dom-cutout/blob/main/docs/webkit-masking.md"
-            >the full story</a
-          >.
+        <li class="grid *:[grid-area:1/1]">
+          <div id="feat-crisp" class="rounded-xl border border-slate-200 bg-white p-4">
+            <strong class="mb-1 block text-slate-900">Crisp on every engine</strong>
+            Chosen by elimination against WebKit's rendering quirks —
+            <a
+              class="text-slate-700 underline hover:text-slate-900"
+              href="https://github.com/ohgree/dom-cutout/blob/main/docs/webkit-masking.md"
+              >the full story</a
+            >.
+          </div>
+          <div id="feat-crisp-overlay" class="pointer-events-none relative" style="visibility: hidden">
+            <svg
+              viewBox="0 0 24 24"
+              class="absolute -right-2.5 -bottom-2.5 h-8 w-8 fill-none stroke-slate-700"
+              stroke-width="1.75"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <g transform="rotate(7 12 12)">
+                <rect x="2" y="3" width="20" height="14" rx="2" />
+                <path d="M8 21h8" />
+                <path d="M12 17v4" />
+              </g>
+            </svg>
+          </div>
         </li>
       </ul>
 

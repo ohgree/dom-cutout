@@ -29,11 +29,19 @@ document.getElementById("logo-gap")!.addEventListener("input", (event) => {
   logoInstance.update();
 });
 
+// Feature cards: the corner icon is carved out of the card surface itself.
+const featureOverlays = ["core", "contour", "crisp"].map((name) => {
+  const featureOverlay = document.getElementById(`feat-${name}-overlay`)!;
+  createCutout(document.getElementById(`feat-${name}`)!, featureOverlay, { gap: 3 });
+  return featureOverlay;
+});
+
 // FOUC guard: static markup paints before this module runs; reveal overlays
 // only once their first masks are applied.
 overlay.style.visibility = "";
 titleOverlay.style.visibility = "";
 logoOverlay.style.visibility = "";
+for (const featureOverlay of featureOverlays) featureOverlay.style.visibility = "";
 
 let starShown = true;
 document.getElementById("hero-toggle")!.addEventListener("click", () => {
