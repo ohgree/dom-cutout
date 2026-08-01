@@ -1,7 +1,7 @@
 import { Bell, Star } from "lucide-react";
 import { type ReactNode, type Ref, useEffect, useLayoutEffect, useState } from "react";
 
-import { Cutout } from "dom-cutout/react";
+import { Cutout, useCutout } from "dom-cutout/react";
 
 import { wireReveals } from "../reveal";
 import { wireThemeToggle } from "../theme";
@@ -246,6 +246,21 @@ const PillRadiusDemo = () => {
   );
 };
 
+const HeadlessDemo = () => {
+  const { contentRef, overlayRef } = useCutout<HTMLDivElement, HTMLDivElement>({ gap: 4 });
+  return (
+    <div className="relative">
+      <div
+        ref={contentRef}
+        className="h-20 w-44 rounded-[14px] bg-linear-to-br from-emerald-500 to-teal-700"
+      />
+      <div ref={overlayRef} className="pointer-events-none absolute inset-0">
+        <span className="absolute -top-2 -right-2 block h-5 w-5 rounded-full bg-rose-500" />
+      </div>
+    </div>
+  );
+};
+
 export const App = () => {
   // Pre-paint so above-the-fold sections never flash visible before the
   // pending state lands.
@@ -272,13 +287,17 @@ export const App = () => {
         />
       </div>
       <h1 className="mt-2 mb-1 text-2xl font-semibold text-base-content">
-        &lt;Cutout /&gt; &mdash; React
+        <a href="../" className="text-inherit no-underline">
+          &lt;Cutout /&gt; &mdash; React
+        </a>
       </h1>
-      <p className="mb-8 text-base-content/60">The React adapter over the zero-dependency core.</p>
+      <p className="mb-8 text-base-content/60">
+        How to use the React adapter — each pattern below is a copy-paste start.
+      </p>
 
       <Section
-        title="Avatar status dot"
-        description="The classic: a status dot punching through the avatar. Toggling the dot off clears the mask (nullish overlay renders children unmasked)."
+        title="Wrap the element, pass the overlay"
+        description="The whole API in one line: the child gets masked, the overlay renders on top in a layer covering its box. A nullish overlay clears the mask, so conditional badges are just short-circuits."
         code={dedent`
         <Cutout gap={4} overlay={showDot && <StatusDot />}>
           <Avatar />
@@ -289,8 +308,8 @@ export const App = () => {
       </Section>
 
       <Section
-        title="Warning badge on an icon"
-        description="An exclamation mark cut out of a Bell, contour-for-contour — two disjoint shapes, two traced halos. shape='auto' picks contour tracing because the overlay contains an svg."
+        title="SVG overlays trace their contours"
+        description="shape='auto' picks contour tracing whenever the overlay contains an svg — this exclamation mark is two disjoint shapes, and each gets its own halo."
         code={dedent`
         <Cutout overlay={hasWarning && <ExclamationMark />}>
           <Bell />
@@ -301,8 +320,8 @@ export const App = () => {
       </Section>
 
       <Section
-        title="contour vs box"
-        description="The same star overlay traced two ways. contour follows the glyph outline via stroke expansion; box uses the expanded bounding box with border-radius."
+        title="Choosing a shape"
+        description="The same star traced two ways: contour follows the glyph outline via stroke expansion, box uses the expanded bounding box. gap sets the halo width in pixels."
         code={dedent`
         <Cutout shape="contour" gap={gap} overlay={<Star fill="gold" />}>
           <PhotoTile />
@@ -313,8 +332,8 @@ export const App = () => {
       </Section>
 
       <Section
-        title="Pill badge, any border-radius"
-        description="The box shape follows the overlay's computed border-radius — including Tailwind's rounded-full calc(infinity * 1px), which CSS resolves to circular pill corners and the cutout matches, and 50%, whose corners are legitimately elliptical."
+        title="Rounded overlays"
+        description="The box shape follows the overlay's computed border-radius — including Tailwind's rounded-full calc(infinity * 1px) and percentage radii, whose corners are legitimately elliptical."
         code={dedent`
         <Cutout overlay={<VersionPill className="rounded-full" />}>
           <ReleaseCard />
@@ -322,6 +341,23 @@ export const App = () => {
       `}
       >
         <PillRadiusDemo />
+      </Section>
+
+      <Section
+        title="Headless: useCutout"
+        description="When the component's layer management doesn't fit, the hook inserts no DOM at all — attach contentRef and overlayRef to elements you own and position the overlay yourself."
+        code={dedent`
+          const { contentRef, overlayRef } = useCutout({ gap: 4 });
+
+          <div className="relative">
+            <Card ref={contentRef} />
+            <div ref={overlayRef} className="pointer-events-none absolute inset-0">
+              <Badge className="absolute -top-2 -right-2" />
+            </div>
+          </div>;
+        `}
+      >
+        <HeadlessDemo />
       </Section>
     </main>
   );

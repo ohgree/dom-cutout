@@ -1,6 +1,6 @@
 import { createCutout } from "dom-cutout";
 
-import { Box, createIcons, Sparkles, Spline } from "lucide";
+import { Bell, Box, createIcons, Sparkles, Spline } from "lucide";
 
 import { wireReveals } from "./reveal";
 import { wireThemeToggle } from "./theme";
@@ -10,7 +10,7 @@ wireReveals();
 
 // Feature-card icons come from lucide; render them before the cutouts
 // below measure the overlays.
-createIcons({ icons: { Box, Spline, Sparkles } });
+createIcons({ icons: { Bell, Box, Spline, Sparkles } });
 
 const content = document.getElementById("hero-content")!;
 const overlay = document.getElementById("hero-overlay")!;
@@ -48,12 +48,71 @@ const featureOverlays = ["core", "contour", "crisp"].map((name) => {
   return featureOverlay;
 });
 
+// Feature demos — the zero-dependency core on plain DOM. The bell's
+// exclamation is contour-traced (two disjoint shapes); the tiles compare
+// shapes on one slider; the pill exercises box-shape border-radius.
+const bellOverlay = document.getElementById("bell-overlay")!;
+const bellInstance = createCutout(document.getElementById("bell-content")!, bellOverlay);
+let warningShown = true;
+const bellToggle = document.getElementById("bell-toggle")!;
+bellToggle.addEventListener("click", () => {
+  warningShown = !warningShown;
+  (bellOverlay.firstElementChild as HTMLElement).style.display = warningShown ? "" : "none";
+  bellToggle.textContent = `Warning: ${warningShown ? "on" : "off"}`;
+  bellInstance.update();
+});
+
+const shapeOptions = [
+  { gap: 4, shape: "contour" as const },
+  { gap: 4, shape: "box" as const },
+];
+const shapeInstances = (["contour", "box"] as const).map((shape, i) =>
+  createCutout(
+    document.getElementById(`tile-${shape}`)!,
+    document.getElementById(`tile-${shape}-overlay`)!,
+    shapeOptions[i],
+  ),
+);
+const shapeGapValue = document.getElementById("shape-gap-value")!;
+document.getElementById("shape-gap")!.addEventListener("input", (event) => {
+  const gap = Number((event.target as HTMLInputElement).value);
+  shapeGapValue.textContent = String(gap);
+  shapeOptions.forEach((options, i) => {
+    options.gap = gap;
+    shapeInstances[i].update();
+  });
+});
+
+const pillBadge = document.getElementById("pill-badge")!;
+const pillInstance = createCutout(
+  document.getElementById("pill-content")!,
+  document.getElementById("pill-overlay")!,
+);
+const radii = [
+  { label: "rounded-full", value: "calc(infinity * 1px)" },
+  { label: "8px", value: "8px" },
+  { label: "50%", value: "50%" },
+  { label: "0", value: "0" },
+];
+let radiusIndex = 0;
+const pillRadius = document.getElementById("pill-radius")!;
+pillRadius.addEventListener("click", () => {
+  radiusIndex = (radiusIndex + 1) % radii.length;
+  pillBadge.style.borderRadius = radii[radiusIndex].value;
+  pillRadius.textContent = `radius: ${radii[radiusIndex].label}`;
+  // A radius change isn't a resize, so ResizeObserver can't see it.
+  pillInstance.update();
+});
+
 // FOUC guard: static markup paints before this module runs; reveal overlays
 // only once their first masks are applied.
 overlay.style.visibility = "";
 titleOverlay.style.visibility = "";
 logoOverlay.style.visibility = "";
 for (const featureOverlay of featureOverlays) featureOverlay.style.visibility = "";
+for (const id of ["bell-overlay", "tile-contour-overlay", "tile-box-overlay", "pill-overlay"]) {
+  document.getElementById(id)!.style.visibility = "";
+}
 
 let starShown = true;
 document.getElementById("hero-toggle")!.addEventListener("click", () => {
