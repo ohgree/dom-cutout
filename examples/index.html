@@ -97,14 +97,14 @@
           </a>
         </nav>
       </header>
-      <p class="mt-2 text-lg text-base-content/70">
+      <p class="mt-6 text-lg leading-relaxed text-base-content/70">
         Cut the silhouette of one DOM element out of another — because a background-colored border
         is a promise your gradient will break.
       </p>
 
       <!-- Live hero demo: the package demoing itself. The checkerboard shows
            through wherever the overlay's silhouette is cut out. -->
-      <div id="hero-card" class="demo-card mt-8" data-reveal>
+      <div id="hero-card" class="demo-card mt-12" data-reveal>
         <div class="inline-grid *:[grid-area:1/1]">
           <div id="hero-content">
             <div
@@ -147,7 +147,7 @@
       <!-- Features. Each card is itself a cutout: the icon overhanging the
            corner is carved out of the card surface, contour-for-contour, so
            the page background shows through the halo. -->
-      <ul class="mt-6 grid gap-3 text-sm text-base-content/70 sm:grid-cols-3" data-reveal>
+      <ul class="mt-14 grid gap-4 text-sm text-base-content/70 sm:grid-cols-3" data-reveal>
         <li class="grid *:[grid-area:1/1]">
           <div id="feat-core" class="rounded-xl border border-base-content/10 bg-base-100 p-4">
             <strong class="mb-1 block text-base-content">Zero-dependency core</strong>
@@ -214,8 +214,8 @@
       <div id="tour" class="ml-[calc(50%-50vw)] w-screen"></div>
 
       <!-- Installation -->
-      <h2 class="mt-10 mb-3 text-lg font-semibold text-base-content" data-reveal>Installation</h2>
-      <div id="pm-tabs" class="mb-2 flex gap-1" role="tablist">
+      <h2 class="mt-24 mb-4 text-lg font-semibold text-base-content" data-reveal>Installation</h2>
+      <div id="pm-tabs" class="mb-3 flex gap-1" role="tablist">
         <button data-pm="npm" type="button" class="chip tab-active cursor-pointer">npm</button>
         <button data-pm="pnpm" type="button" class="chip cursor-pointer">pnpm</button>
         <button data-pm="yarn" type="button" class="chip cursor-pointer">yarn</button>
@@ -233,8 +233,31 @@
       </div>
 
       <!-- Usage -->
-      <h2 class="mt-10 mb-3 text-lg font-semibold text-base-content" data-reveal>Usage</h2>
-      <div class="grid gap-3" data-reveal>
+      <h2 class="mt-20 mb-4 text-lg font-semibold text-base-content" data-reveal>Usage</h2>
+      <div class="grid gap-4" data-reveal>
+        <a
+          class="block rounded-xl border border-base-content/10 bg-base-100 p-4 no-underline hover:border-primary"
+          href="vanilla/"
+        >
+          <strong class="flex items-center gap-2 text-base-content">
+            Vanilla DOM
+            <svg
+              viewBox="0 0 24 24"
+              class="h-4 w-4 fill-none stroke-base-content/60"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m16 18 6-6-6-6" />
+              <path d="m8 6-6 6 6 6" />
+            </svg>
+          </strong>
+          <small class="text-base-content/60"
+            >createCutout() with elements you own — attach, live options, teardown. No
+            framework.</small
+          >
+        </a>
         <a
           class="block rounded-xl border border-base-content/10 bg-base-100 p-4 no-underline hover:border-primary"
           href="react/"
@@ -257,7 +280,7 @@
         </a>
       </div>
 
-      <footer class="mt-12 text-sm text-base-content/50">
+      <footer class="mt-24 mb-6 text-sm text-base-content/50">
         MIT · this page is cut by the package it documents
       </footer>
     </main>

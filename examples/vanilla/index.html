@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script>
+      // Apply the stored theme choice before first paint (theme.ts owns the toggle).
+      {
+        const theme = localStorage.getItem("dom-cutout-theme");
+        if (theme) document.documentElement.dataset.theme = theme;
+      }
+    </script>
+    <link rel="stylesheet" href="../styles.css" />
+    <title>dom-cutout — vanilla DOM</title>
+    <meta
+      name="description"
+      content="How to use dom-cutout's zero-dependency core on hand-written markup — no framework."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="dom-cutout — vanilla DOM" />
+    <meta
+      property="og:description"
+      content="How to use dom-cutout's zero-dependency core on hand-written markup — no framework."
+    />
+    <meta property="og:url" content="https://ohgree.github.io/dom-cutout/vanilla/" />
+    <meta property="og:image" content="https://ohgree.github.io/dom-cutout/og.png" />
+    <meta property="og:image:width" content="1280" />
+    <meta property="og:image:height" content="640" />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+  <body class="bg-base-200 font-sans text-base-content antialiased">
+    <main class="mx-auto max-w-2xl px-5 py-6">
+      <div class="flex items-center justify-between">
+        <a class="text-[13px] text-base-content/60 no-underline hover:text-base-content" href="../"
+          >&larr; examples</a
+        >
+        <button
+          id="theme-toggle"
+          type="button"
+          class="chip cursor-pointer px-2 py-1"
+          aria-label="Toggle theme"
+        ></button>
+      </div>
+      <h1 class="mt-2 mb-1 text-2xl font-semibold text-base-content">
+        <a class="text-inherit no-underline" href="../">createCutout() &mdash; vanilla DOM</a>
+      </h1>
+      <p class="mb-1 text-base-content/60">
+        How to use the zero-dependency core on hand-written markup — no framework, no build step
+        beyond your bundler.
+      </p>
+      <div id="import-snippet" class="mb-10">
+        <div class="mt-3">
+          <pre class="shiki"><code>import { createCutout } from "dom-cutout";</code></pre>
+        </div>
+      </div>
+
+      <section class="mb-10" data-reveal>
+        <h2 class="mb-1 text-lg font-semibold text-base-content">Stack, then attach</h2>
+        <p class="mb-4 text-sm text-base-content/60">
+          Two elements you own: the content, and an overlay layer positioned over it (a shared grid
+          cell is the easiest stack). Pass both to createCutout and the overlay's silhouette is cut
+          out of the content — toggling the badge off clears the mask, because an empty overlay
+          means no cutout.
+        </p>
+        <div class="demo-card">
+          <div class="inline-grid *:[grid-area:1/1]">
+            <div id="content">
+              <div
+                class="flex h-18 w-18 items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-violet-600 text-2xl font-semibold text-white"
+              >
+                MJ
+              </div>
+            </div>
+            <!-- hidden until the first mask lands (see main.ts FOUC guard) -->
+            <div id="overlay" class="relative" style="visibility: hidden">
+              <div
+                id="dot"
+                class="absolute right-0.5 bottom-0.5 h-4 w-4 rounded-full bg-emerald-500"
+              ></div>
+            </div>
+          </div>
+          <button id="toggle-dot" type="button" class="chip w-40 cursor-pointer text-left">
+            Dot: shown
+          </button>
+        </div>
+        <div class="mt-3" id="attach-snippet">
+          <pre
+            class="shiki"
+          ><code>const instance = createCutout(content, overlay, { gap: 4 });</code></pre>
+        </div>
+      </section>
+
+      <section class="mb-10" data-reveal>
+        <h2 class="mb-1 text-lg font-semibold text-base-content">Options are read live</h2>
+        <p class="mb-4 text-sm text-base-content/60">
+          The options object is read on every update — mutate it and call update() instead of
+          recreating the instance (recreating would clear the mask while the new one decodes).
+        </p>
+        <div class="demo-card">
+          <div class="inline-grid *:[grid-area:1/1]">
+            <div id="content-2">
+              <div
+                class="flex h-18 w-18 items-center justify-center rounded-full bg-linear-to-br from-rose-400 via-fuchsia-600 to-indigo-600 text-2xl font-semibold text-white"
+              >
+                MJ
+              </div>
+            </div>
+            <div id="overlay-2" class="relative" style="visibility: hidden">
+              <div class="absolute right-0.5 bottom-0.5 h-4 w-4 rounded-full bg-amber-400"></div>
+            </div>
+          </div>
+          <button id="toggle-gap" type="button" class="chip w-40 cursor-pointer text-left">
+            Gap: 4px
+          </button>
+        </div>
+        <div class="mt-3" id="options-snippet">
+          <pre class="shiki"><code>options.gap = 8;
+instance.update(); // also for DOM changes ResizeObserver can't see</code></pre>
+        </div>
+      </section>
+
+      <section class="mb-10" data-reveal>
+        <h2 class="mb-1 text-lg font-semibold text-base-content">Tear down when done</h2>
+        <p class="mb-4 text-sm text-base-content/60">
+          destroy() removes the mask longhands, the data-cutout attribute, and the ResizeObservers.
+          The elements are yours again, untouched.
+        </p>
+        <div class="demo-card">
+          <div class="inline-grid *:[grid-area:1/1]">
+            <div id="content-3">
+              <div
+                class="flex h-18 w-18 items-center justify-center rounded-full bg-linear-to-br from-emerald-500 to-teal-700 text-2xl font-semibold text-white"
+              >
+                MJ
+              </div>
+            </div>
+            <div id="overlay-3" class="relative" style="visibility: hidden">
+              <div class="absolute right-0.5 bottom-0.5 h-4 w-4 rounded-full bg-rose-500"></div>
+            </div>
+          </div>
+          <button
+            id="destroy"
+            type="button"
+            class="chip w-40 cursor-pointer text-left disabled:cursor-default disabled:text-base-content/50"
+          >
+            destroy()
+          </button>
+        </div>
+        <div class="mt-3" id="destroy-snippet">
+          <pre class="shiki"><code>instance.destroy(); // removes mask + observers</code></pre>
+        </div>
+      </section>
+
+      <footer class="mt-16 text-sm text-base-content/50">
+        MIT · this page is cut by the package it documents
+      </footer>
+    </main>
+    <script type="module" src="/vanilla/main.ts"></script>
+  </body>
+</html>

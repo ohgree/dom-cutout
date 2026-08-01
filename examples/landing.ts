@@ -2,6 +2,7 @@ import { createCutout } from "dom-cutout";
 
 import { Box, createIcons, Sparkles, Spline } from "lucide";
 
+import { highlightWithin } from "./highlight";
 import { wireReveals } from "./reveal";
 import { wireThemeToggle } from "./theme";
 
@@ -64,25 +65,6 @@ document.getElementById("hero-bg")!.addEventListener("click", () => {
   heroCard.style.background = backgrounds[backgroundIndex];
 });
 
-// Progressive enhancement: syntax-highlight the static snippets. Dynamic
-// import keeps the highlighter off the demo's critical path; plain blocks
-// stay if it fails. Shiki's replacement drops attributes on the <pre>
-// itself, so visibility/spacing live on the wrapper elements.
-const highlightWithin = (root: HTMLElement, lang: "ts" | "sh") => {
-  for (const pre of root.querySelectorAll("pre")) {
-    const source = pre.textContent;
-    if (!source) continue;
-    import("shiki").then(({ codeToHtml }) =>
-      codeToHtml(source, {
-        lang,
-        themes: { light: "github-light-default", dark: "github-dark-default" },
-        defaultColor: "light",
-      }).then((html) => {
-        pre.outerHTML = html;
-      }),
-    );
-  }
-};
 highlightWithin(document.getElementById("hero-snippet")!, "ts");
 highlightWithin(document.getElementById("install-blocks")!, "sh");
 
