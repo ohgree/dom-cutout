@@ -1,4 +1,4 @@
-import { createCutout, type CutoutOptions } from "dom-cutout";
+import { createCutout } from "dom-cutout";
 
 import { Box, createIcons, Sparkles, Spline } from "lucide";
 
@@ -7,6 +7,8 @@ import { wireThemeToggle } from "./theme";
 
 wireThemeToggle(document.getElementById("theme-toggle")!);
 wireReveals();
+
+import("./tour").then(({ mountTour }) => mountTour(document.getElementById("tour")!));
 
 // Feature-card icons come from lucide; render them before the cutouts
 // below measure the overlays.
@@ -48,144 +50,12 @@ const featureOverlays = ["core", "contour", "crisp"].map((name) => {
   return featureOverlay;
 });
 
-// Scrollytelling stage: one avatar, one overlay layer. Each scroll step
-// swaps the overlay's visible child and the live options, then update() —
-// the exact mutate-and-update pattern the API documents. Scrolling fast
-// through all five scenes is a stress test of the mask-swap coalescing.
-const SCENES: Array<{
-  caption: string;
-  code: string;
-  show: "dot" | "star" | "pill" | null;
-  options: CutoutOptions;
-}> = [
-  {
-    caption: "One call. The overlay's silhouette is cut out of the content behind it.",
-    code: "createCutout(avatar, badge)",
-    show: "dot",
-    options: { gap: 4, shape: "auto" },
-  },
-  {
-    caption: "gap sets the halo width, in rendered pixels.",
-    code: "createCutout(avatar, badge, { gap: 8 })",
-    show: "dot",
-    options: { gap: 8, shape: "auto" },
-  },
-  {
-    caption: "SVG overlays are traced contour-for-contour — concave outlines included.",
-    code: '{ shape: "contour" } // auto, when the overlay is svg',
-    show: "star",
-    options: { gap: 4, shape: "contour" },
-  },
-  {
-    caption: "The box shape follows the overlay's computed border-radius — pills stay pills.",
-    code: '{ shape: "box" } // bounding box + border-radius',
-    show: "pill",
-    options: { gap: 4, shape: "box" },
-  },
-  {
-    caption: "An overlay that renders nothing clears the mask — conditional badges just work.",
-    code: "badge.remove(); instance.update()",
-    show: null,
-    options: { gap: 4, shape: "auto" },
-  },
-];
-
-const storyOverlay = document.getElementById("story-overlay")!;
-const storyOptions: CutoutOptions = { gap: 4, shape: "auto" };
-const storyInstance = createCutout(
-  document.getElementById("story-content")!,
-  storyOverlay,
-  storyOptions,
-);
-// One piece in the overlay at a time — shape: "auto" probes the overlay
-// for ANY svg and the box shape measures its first element child, so
-// display-toggling three siblings would confuse both. replaceChildren
-// mirrors what a framework's conditional render does.
-const storyPieces = {
-  dot: document.getElementById("story-dot")!,
-  star: document.getElementById("story-star")!,
-  pill: document.getElementById("story-pill")!,
-};
-storyPieces.star.remove();
-storyPieces.pill.remove();
-const storyCaption = document.getElementById("story-caption")!;
-const storySnippet = document.getElementById("story-snippet")!;
-const storyDots = document.getElementById("story-dots")!;
-const dots = SCENES.map(() => {
-  const dot = document.createElement("span");
-  dot.className = "h-1.5 w-1.5 rounded-full bg-base-content/20";
-  storyDots.append(dot);
-  return dot;
-});
-
-// Snippets pre-highlight once shiki lands; plain text until then.
-const highlighted: (string | null)[] = SCENES.map(() => null);
-let activeScene = -1;
-const renderSnippet = () => {
-  const html = highlighted[activeScene];
-  if (html) storySnippet.innerHTML = html;
-  else storySnippet.innerHTML = "";
-  if (!html) {
-    const pre = document.createElement("pre");
-    pre.className = "shiki";
-    const code = document.createElement("code");
-    code.textContent = SCENES[activeScene].code;
-    pre.append(code);
-    storySnippet.append(pre);
-  }
-};
-import("shiki").then(({ codeToHtml }) =>
-  SCENES.forEach((scene, i) =>
-    codeToHtml(scene.code, {
-      lang: "ts",
-      themes: { light: "github-light-default", dark: "github-dark-default" },
-      defaultColor: "light",
-    }).then((html) => {
-      highlighted[i] = html;
-      if (i === activeScene) renderSnippet();
-    }),
-  ),
-);
-
-const setScene = (index: number) => {
-  if (index === activeScene) return;
-  activeScene = index;
-  const scene = SCENES[index];
-  if (scene.show) storyOverlay.replaceChildren(storyPieces[scene.show]);
-  else storyOverlay.replaceChildren();
-  Object.assign(storyOptions, scene.options);
-  storyInstance.update();
-  storyCaption.textContent = scene.caption;
-  renderSnippet();
-  dots.forEach((dot, i) => {
-    dot.className = `h-1.5 w-1.5 rounded-full ${i === index ? "bg-primary" : "bg-base-content/20"}`;
-  });
-};
-setScene(0);
-
-const stepObserver = new IntersectionObserver(
-  (entries) => {
-    for (const entry of entries) {
-      if (entry.isIntersecting) {
-        setScene(Number((entry.target as HTMLElement).dataset.storyStep));
-      }
-    }
-  },
-  // A band around the viewport's middle: a step owns the scene while it
-  // crosses the center.
-  { rootMargin: "-45% 0px -45% 0px" },
-);
-for (const step of document.querySelectorAll("[data-story-step]")) {
-  stepObserver.observe(step);
-}
-
 // FOUC guard: static markup paints before this module runs; reveal overlays
 // only once their first masks are applied.
 overlay.style.visibility = "";
 titleOverlay.style.visibility = "";
 logoOverlay.style.visibility = "";
 for (const featureOverlay of featureOverlays) featureOverlay.style.visibility = "";
-document.getElementById("story-overlay")!.style.visibility = "";
 
 let starShown = true;
 document.getElementById("hero-toggle")!.addEventListener("click", () => {
