@@ -26,6 +26,11 @@ jobs:
       # OIDC trusted publishing needs a recent npm CLI.
       - run: npm install -g npm@latest
       - run: pnpm install --frozen-lockfile
+      # The root lint precomputes the Tailwind design system from
+      # examples/styles.css — a separate package whose deps (daisyui) must
+      # be present or every utility class errors.
+      - run: pnpm install --frozen-lockfile
+        working-directory: examples
       - name: Check tag matches package version
         run: |
           pkg="v$(node -p "require('./package.json').version")"
