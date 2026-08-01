@@ -1,8 +1,10 @@
 import { createCutout, type CutoutInstance } from "dom-cutout";
 
+import { wireReveals } from "../reveal";
 import { wireThemeToggle } from "../theme";
 
 wireThemeToggle(document.getElementById("theme-toggle")!);
+wireReveals();
 
 const content = document.getElementById("content")!;
 const overlay = document.getElementById("overlay")!;

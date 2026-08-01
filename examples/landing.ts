@@ -2,9 +2,11 @@ import { createCutout } from "dom-cutout";
 
 import { Box, createIcons, Sparkles, Spline } from "lucide";
 
+import { wireReveals } from "./reveal";
 import { wireThemeToggle } from "./theme";
 
 wireThemeToggle(document.getElementById("theme-toggle")!);
+wireReveals();
 
 // Feature-card icons come from lucide; render them before the cutouts
 // below measure the overlays.

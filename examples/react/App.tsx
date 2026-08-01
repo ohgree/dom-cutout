@@ -1,8 +1,9 @@
 import { Bell, Star } from "lucide-react";
-import { type ReactNode, type Ref, useEffect, useState } from "react";
+import { type ReactNode, type Ref, useEffect, useLayoutEffect, useState } from "react";
 
 import { Cutout } from "dom-cutout/react";
 
+import { wireReveals } from "../reveal";
 import { wireThemeToggle } from "../theme";
 
 // Colors reference Tailwind's default palette directly; shared surface
@@ -72,7 +73,7 @@ const Section = ({
   code?: string;
   children: ReactNode;
 }) => (
-  <section className="mb-10">
+  <section className="mb-10" data-reveal>
     <h2 className="mb-1 text-lg font-semibold text-base-content">{title}</h2>
     <p className="mb-4 text-sm text-base-content/60">{description}</p>
     <div className="demo-card">{children}</div>
@@ -179,7 +180,7 @@ const ShapeComparisonDemo = () => {
   return (
     <>
       {(["contour", "box"] as const).map((shape) => (
-        <figure key={shape} className="m-0 text-center">
+        <figure key={shape} className="m-0 flex flex-col items-center">
           <Cutout gap={gap} shape={shape} overlay={<StarOverlay />}>
             <PhotoTile />
           </Cutout>
@@ -245,75 +246,83 @@ const PillRadiusDemo = () => {
   );
 };
 
-export const App = () => (
-  <main className="mx-auto max-w-2xl px-5 py-6">
-    <div className="flex items-center justify-between">
-      <a
-        href="../"
-        className="text-[13px] text-base-content/60 no-underline hover:text-base-content"
-      >
-        &larr; examples
-      </a>
-      <button
-        ref={(el) => {
-          if (el) wireThemeToggle(el);
-        }}
-        type="button"
-        className="chip cursor-pointer px-2 py-1"
-        aria-label="Toggle theme"
-      />
-    </div>
-    <h1 className="mt-2 mb-1 text-2xl font-semibold text-base-content">
-      &lt;Cutout /&gt; &mdash; React
-    </h1>
-    <p className="mb-8 text-base-content/60">The React adapter over the zero-dependency core.</p>
+export const App = () => {
+  // Pre-paint so above-the-fold sections never flash visible before the
+  // pending state lands.
+  useLayoutEffect(() => {
+    wireReveals();
+  }, []);
 
-    <Section
-      title="Avatar status dot"
-      description="The classic: a status dot punching through the avatar. Toggling the dot off clears the mask (nullish overlay renders children unmasked)."
-      code={dedent`
+  return (
+    <main className="mx-auto max-w-2xl px-5 py-6">
+      <div className="flex items-center justify-between">
+        <a
+          href="../"
+          className="text-[13px] text-base-content/60 no-underline hover:text-base-content"
+        >
+          &larr; examples
+        </a>
+        <button
+          ref={(el) => {
+            if (el) wireThemeToggle(el);
+          }}
+          type="button"
+          className="chip cursor-pointer px-2 py-1"
+          aria-label="Toggle theme"
+        />
+      </div>
+      <h1 className="mt-2 mb-1 text-2xl font-semibold text-base-content">
+        &lt;Cutout /&gt; &mdash; React
+      </h1>
+      <p className="mb-8 text-base-content/60">The React adapter over the zero-dependency core.</p>
+
+      <Section
+        title="Avatar status dot"
+        description="The classic: a status dot punching through the avatar. Toggling the dot off clears the mask (nullish overlay renders children unmasked)."
+        code={dedent`
         <Cutout gap={4} overlay={showDot && <StatusDot />}>
           <Avatar />
         </Cutout>
       `}
-    >
-      <AvatarStatusDemo />
-    </Section>
+      >
+        <AvatarStatusDemo />
+      </Section>
 
-    <Section
-      title="Warning badge on an icon"
-      description="An exclamation mark cut out of a Bell, contour-for-contour — two disjoint shapes, two traced halos. shape='auto' picks contour tracing because the overlay contains an svg."
-      code={dedent`
+      <Section
+        title="Warning badge on an icon"
+        description="An exclamation mark cut out of a Bell, contour-for-contour — two disjoint shapes, two traced halos. shape='auto' picks contour tracing because the overlay contains an svg."
+        code={dedent`
         <Cutout overlay={hasWarning && <ExclamationMark />}>
           <Bell />
         </Cutout>
       `}
-    >
-      <BadgeDemo />
-    </Section>
+      >
+        <BadgeDemo />
+      </Section>
 
-    <Section
-      title="contour vs box"
-      description="The same star overlay traced two ways. contour follows the glyph outline via stroke expansion; box uses the expanded bounding box with border-radius."
-      code={dedent`
+      <Section
+        title="contour vs box"
+        description="The same star overlay traced two ways. contour follows the glyph outline via stroke expansion; box uses the expanded bounding box with border-radius."
+        code={dedent`
         <Cutout shape="contour" gap={gap} overlay={<Star fill="gold" />}>
           <PhotoTile />
         </Cutout>
       `}
-    >
-      <ShapeComparisonDemo />
-    </Section>
+      >
+        <ShapeComparisonDemo />
+      </Section>
 
-    <Section
-      title="Pill badge, any border-radius"
-      description="The box shape follows the overlay's computed border-radius — including Tailwind's rounded-full calc(infinity * 1px), which CSS resolves to circular pill corners and the cutout matches, and 50%, whose corners are legitimately elliptical."
-      code={dedent`
+      <Section
+        title="Pill badge, any border-radius"
+        description="The box shape follows the overlay's computed border-radius — including Tailwind's rounded-full calc(infinity * 1px), which CSS resolves to circular pill corners and the cutout matches, and 50%, whose corners are legitimately elliptical."
+        code={dedent`
         <Cutout overlay={<VersionPill className="rounded-full" />}>
           <ReleaseCard />
         </Cutout>
       `}
-    >
-      <PillRadiusDemo />
-    </Section>
-  </main>
-);
+      >
+        <PillRadiusDemo />
+      </Section>
+    </main>
+  );
+};
