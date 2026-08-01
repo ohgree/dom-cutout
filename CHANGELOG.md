@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking:** `<Cutout>` no longer wraps its children — the child element is cloned with a merged ref and masked directly, and the overlay renders in a single absolutely-positioned sibling layer pinned to the child's box via CSS anchor positioning (Baseline 2026: Chrome 125+, Firefox 132+, Safari 26+). Wrapping something in `<Cutout>` can no longer change how it lays out. The anchor rules are emitted as a rendered `<style>` element (declarative, polyfillable with `@oddbird/css-anchor-positioning`); engines without anchor support keep the layer's `inset: 0` base — it stretches the nearest positioned ancestor, like a hand-positioned badge — and a one-time console warning names the requirement and the polyfill. In exchange, `children` must now be a single element that accepts a ref (on React 18, custom components need `forwardRef`), and the wrapper-era `className`/`style`/div props and `ref` prop are gone since there is no wrapper to receive them.
+
+### Added
+
+- `useCutout` — headless React hook: attach `contentRef`/`overlayRef` to elements you own and the library inserts no DOM at all. The `<Cutout>` component is now a thin layer over it.
+
 ### Fixed
 
 - Box-shape cutouts around pill-shaped overlays: an over-large `border-radius` (Tailwind's `rounded-full` `calc(infinity * 1px)`, or conventional `999px`-style values) produced elliptical corners instead of the element's actual pill silhouette — an SVG `<rect>` clamps `rx`/`ry` per axis, while CSS scales an over-large radius down uniformly. The radius is now resolved with CSS overlap semantics before the rect is emitted, `calc(infinity * 1px)` is recognized even where the engine hands it back unresolved, and percentage radii resolve per axis (elliptical corners preserved) with both `rx` and `ry` written to the mask.

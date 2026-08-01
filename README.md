@@ -50,7 +50,7 @@ import { Cutout } from "dom-cutout/react";
 </Cutout>;
 ```
 
-The overlay renders on top of the children; its silhouette (expanded by `gap` pixels) is cut out of them. An overlay that renders nothing — nullish/`false`, or hidden via `display: none` — clears the mask, so conditional badges just work:
+The overlay renders on top of the child; its silhouette (expanded by `gap` pixels) is cut out of it. An overlay that renders nothing — nullish/`false`, or hidden via `display: none` — clears the mask, so conditional badges just work:
 
 ```tsx
 <Cutout overlay={hasUnread && <NotificationDot />}>
@@ -58,17 +58,38 @@ The overlay renders on top of the children; its silhouette (expanded by `gap` pi
 </Cutout>
 ```
 
+`<Cutout>` inserts no box around the child: the child element is cloned with a merged ref and masked directly, and the overlay renders in one absolutely-positioned sibling layer pinned to the child's box with [CSS anchor positioning](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_anchor_positioning) — out of flow, so wrapping something in `<Cutout>` never changes how it lays out.
+
 ### Props
 
-| Prop       | Type                           | Default  |                                                                                                                        |
-| ---------- | ------------------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `overlay`  | `ReactNode`                    | —        | Content whose silhouette is cut out of `children`. Position it within the overlay layer (e.g. `position: 'absolute'`). |
-| `children` | `ReactNode`                    | —        | Content the cutout is carved out of.                                                                                   |
-| `gap`      | `number`                       | `4`      | Gap width in rendered pixels between the overlay's silhouette and the content. Default exported as `DEFAULT_GAP`.      |
-| `shape`    | `'auto' \| 'contour' \| 'box'` | `'auto'` | How the silhouette is traced (see below).                                                                              |
-| `ref`      | `Ref<HTMLDivElement>`          | —        | Ref to the wrapper element stacking the two layers.                                                                    |
+| Prop       | Type                           | Default  |                                                                                                                                                                 |
+| ---------- | ------------------------------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `overlay`  | `ReactNode`                    | —        | Content whose silhouette is cut out of the child. Position it within the overlay layer (e.g. `position: 'absolute'`); the layer covers exactly the child's box. |
+| `children` | `ReactElement`                 | —        | The single element the cutout is carved out of. Must accept a ref to a DOM element — on React 18, custom components need `forwardRef`.                          |
+| `gap`      | `number`                       | `4`      | Gap width in rendered pixels between the overlay's silhouette and the child. Default exported as `DEFAULT_GAP`.                                                 |
+| `shape`    | `'auto' \| 'contour' \| 'box'` | `'auto'` | How the silhouette is traced (see below).                                                                                                                       |
 
-Plus any `div` props — the wrapper is an `inline-grid` stacking the two layers. The overlay layer carries `pointer-events: none` so `children` stay interactive; interactive overlay content re-enables itself with its own `pointer-events: auto`.
+The overlay layer carries `pointer-events: none` so the child stays interactive; interactive overlay content re-enables itself with its own `pointer-events: auto`.
+
+### useCutout
+
+The headless variant — wire the refs to elements you own and the hook inserts no DOM at all:
+
+```tsx
+import { useCutout } from "dom-cutout/react";
+
+const { contentRef, overlayRef, update } = useCutout({ gap: 6 });
+
+<article ref={contentRef} className="card">
+  …
+  {/* position the overlay layer yourself, e.g. inside a positioned parent */}
+</article>
+<div ref={overlayRef} style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+  <Badge />
+</div>
+```
+
+Both refs must be attached during the first commit. The mask follows re-renders and size changes automatically; call `update()` after DOM changes done outside React. Note the overlay elements must not be descendants of the content element — the mask would cut them away with everything else.
 
 ## Vanilla / other frameworks
 
@@ -117,6 +138,10 @@ The two-layer construction isn't incidental — it's the only one of six approac
 ## Browser support
 
 The composite mask needs `mask-composite` — [Baseline widely available](https://developer.mozilla.org/en-US/docs/Web/CSS/mask-composite) (Safari 15.4+, Chrome/Edge 120+, Firefox 53+). On older engines the layers combine into an all-opaque mask and the cutout simply doesn't appear: content and overlay render normally, just without the gap.
+
+The React `<Cutout>` component additionally pins its overlay layer with [CSS anchor positioning](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_anchor_positioning) — Baseline 2026 (Chrome/Edge 125+, Firefox 132+, Safari 26+). On engines without it the layer keeps its `inset: 0` base and stretches the nearest positioned ancestor instead, exactly like a hand-positioned badge, and a one-time console warning explains what happened; the `useCutout` hook and the vanilla API have no anchor dependency at all.
+
+The anchor rules are emitted declaratively (a rendered `<style>` element with data-attribute selectors, never `style.setProperty`), so [`@oddbird/css-anchor-positioning`](https://github.com/oddbird/css-anchor-positioning) can polyfill them on older engines — run the polyfill after your React tree has mounted, since it only processes rules that exist at invocation time.
 
 Why the mask is built this way — and why five simpler constructions were eliminated (soft edges from internal SVG `<mask>` elements, luminance masks silently dying on iOS via [WebKit bug 282530](https://bugs.webkit.org/show_bug.cgi?id=282530), tile seams under pinch zoom) — is documented in [docs/webkit-masking.md](./docs/webkit-masking.md). The playwright suite in [`e2e/`](./e2e) pins each of those failure modes.
 

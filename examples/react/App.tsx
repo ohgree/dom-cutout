@@ -1,5 +1,5 @@
 import { Bell, Star } from "lucide-react";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, type Ref, useEffect, useState } from "react";
 
 import { Cutout } from "dom-cutout/react";
 
@@ -80,8 +80,11 @@ const Controls = ({ children }: { children: ReactNode }) => (
 // resizing buttons would shift the card layout.
 const demoButtonClass = "chip w-46 cursor-pointer text-left";
 
-const Avatar = () => (
-  <div className="flex h-18 w-18 items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-violet-600 text-2xl font-semibold text-white">
+const Avatar = ({ ref }: { ref?: Ref<HTMLDivElement> }) => (
+  <div
+    ref={ref}
+    className="flex h-18 w-18 items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-violet-600 text-2xl font-semibold text-white"
+  >
     MJ
   </div>
 );
@@ -155,8 +158,11 @@ const StarOverlay = () => (
   />
 );
 
-const PhotoTile = () => (
-  <div className="h-20 w-20 rounded-[14px] bg-linear-to-br from-rose-400 via-fuchsia-600 to-indigo-600" />
+const PhotoTile = ({ ref }: { ref?: Ref<HTMLDivElement> }) => (
+  <div
+    ref={ref}
+    className="h-20 w-20 rounded-[14px] bg-linear-to-br from-rose-400 via-fuchsia-600 to-indigo-600"
+  />
 );
 
 const ShapeComparisonDemo = () => {
