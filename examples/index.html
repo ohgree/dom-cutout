@@ -268,6 +268,12 @@
       <h2 class="mt-10 mb-3 text-lg font-semibold text-base-content" data-reveal>
         Contour tracing: two shapes, two halos
       </h2>
+      <p class="mb-3 max-w-prose text-sm text-base-content/60" data-reveal>
+        <code class="font-mono text-[0.92em]">shape: &quot;auto&quot;</code> (the default) picks
+        contour tracing whenever the overlay contains an svg: the outline is stroke-expanded,
+        artwork stroke-widths are compensated, and every disjoint shape gets its own halo. An
+        overlay that renders nothing clears the mask — try the toggle.
+      </p>
       <!-- A glyph with two disjoint shapes, halo on each. -->
       <div class="demo-card" data-reveal>
         <div class="inline-grid *:[grid-area:1/1]">
@@ -298,6 +304,14 @@
       <h2 class="mt-10 mb-3 text-lg font-semibold text-base-content" data-reveal>
         Shape modes: contour vs box
       </h2>
+      <p class="mb-3 max-w-prose text-sm text-base-content/60" data-reveal>
+        <code class="font-mono text-[0.92em]">shape: &quot;contour&quot;</code> follows the glyph
+        outline; <code class="font-mono text-[0.92em]">shape: &quot;box&quot;</code> uses the
+        overlay&#39;s bounding box, expanded by the gap and following its border-radius;
+        <code class="font-mono text-[0.92em]">&quot;auto&quot;</code> picks contour for svg overlays
+        and box otherwise. <code class="font-mono text-[0.92em]">gap</code> is the halo width in
+        rendered pixels (default 4).
+      </p>
       <div class="demo-card" data-reveal>
         <figure class="m-0 text-center">
           <div class="inline-grid *:[grid-area:1/1]">
@@ -360,6 +374,11 @@
       <h2 class="mt-10 mb-3 text-lg font-semibold text-base-content" data-reveal>
         Border-radius: pills included
       </h2>
+      <p class="mb-3 max-w-prose text-sm text-base-content/60" data-reveal>
+        A box cutout reads the overlay&#39;s computed border-radius. Over-large radii resolve the
+        way CSS does — <code class="font-mono text-[0.92em]">rounded-full</code> stays a pill — and
+        percentage radii keep their elliptical corners.
+      </p>
       <div class="demo-card" data-reveal>
         <div class="inline-grid *:[grid-area:1/1]">
           <span id="pill-content">
