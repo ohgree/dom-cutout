@@ -194,6 +194,49 @@ const ShapeComparisonDemo = () => {
   );
 };
 
+// Non-square on purpose: over-large radii only diverge from CSS on
+// rectangles (SVG clamps rx/ry per axis; CSS scales uniformly), so a pill
+// is the shape that proves the mask matches the badge.
+const RADII = [
+  { label: "rounded-full", value: "calc(infinity * 1px)" },
+  { label: "8px", value: "8px" },
+  { label: "50%", value: "50%" },
+  { label: "0", value: "0" },
+] as const;
+
+const VersionPill = ({ radius }: { radius: string }) => (
+  <div
+    className="absolute -top-2.5 right-4 bg-cyan-700 px-2.5 py-1 font-mono text-[11px] font-semibold text-white"
+    style={{ borderRadius: radius }}
+  >
+    v0.3.0
+  </div>
+);
+
+const ReleaseCard = ({ ref }: { ref?: Ref<HTMLDivElement> }) => (
+  <div ref={ref} className="h-20 w-44 rounded-[14px] bg-linear-to-br from-slate-600 to-slate-900" />
+);
+
+const PillRadiusDemo = () => {
+  const [index, setIndex] = useState(0);
+  const radius = RADII[index];
+
+  return (
+    <>
+      <Cutout overlay={<VersionPill radius={radius.value} />}>
+        <ReleaseCard />
+      </Cutout>
+      <button
+        className={demoButtonClass}
+        type="button"
+        onClick={() => setIndex((i) => (i + 1) % RADII.length)}
+      >
+        border-radius: {radius.label}
+      </button>
+    </>
+  );
+};
+
 export const App = () => (
   <main className="mx-auto max-w-2xl px-5 py-6">
     <a href="../" className="text-[13px] text-slate-500 no-underline hover:text-slate-900">
@@ -238,6 +281,18 @@ export const App = () => (
       `}
     >
       <ShapeComparisonDemo />
+    </Section>
+
+    <Section
+      title="Pill badge, any border-radius"
+      description="The box shape follows the overlay's computed border-radius — including Tailwind's rounded-full calc(infinity * 1px), which CSS resolves to circular pill corners and the cutout matches, and 50%, whose corners are legitimately elliptical."
+      code={dedent`
+        <Cutout overlay={<VersionPill className="rounded-full" />}>
+          <ReleaseCard />
+        </Cutout>
+      `}
+    >
+      <PillRadiusDemo />
     </Section>
   </main>
 );
