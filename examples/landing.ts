@@ -27,22 +27,6 @@ createCutout(document.getElementById("title-content")!, titleOverlay, {
   gap: 2,
 });
 
-// Logo demo card: the wordmark at display size, gap on a slider. Options
-// are read live — mutate and update(), no recreate.
-const logoOverlay = document.getElementById("logo-overlay")!;
-const logoOptions = { gap: 4 };
-const logoInstance = createCutout(
-  document.getElementById("logo-content")!,
-  logoOverlay,
-  logoOptions,
-);
-const logoGapValue = document.getElementById("logo-gap-value")!;
-document.getElementById("logo-gap")!.addEventListener("input", (event) => {
-  logoOptions.gap = Number((event.target as HTMLInputElement).value);
-  logoGapValue.textContent = String(logoOptions.gap);
-  logoInstance.update();
-});
-
 // Feature cards: the corner icon is carved out of the card surface itself.
 const featureOverlays = ["core", "contour", "crisp"].map((name) => {
   const featureOverlay = document.getElementById(`feat-${name}-overlay`)!;
@@ -54,7 +38,6 @@ const featureOverlays = ["core", "contour", "crisp"].map((name) => {
 // only once their first masks are applied.
 overlay.style.visibility = "";
 titleOverlay.style.visibility = "";
-logoOverlay.style.visibility = "";
 for (const featureOverlay of featureOverlays) featureOverlay.style.visibility = "";
 
 let starShown = true;

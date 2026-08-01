@@ -175,7 +175,62 @@ const ContourScene = () => {
   );
 };
 
-/* Scene 4 — box shape + border-radius, wide card, radius chips. */
+/* Scene 4 — text glyphs, scissors mid-cut, gap slider. */
+const TextScene = () => {
+  const [gap, setGap] = useState(4);
+  return (
+    <div className="flex flex-col items-center gap-8 text-center">
+      <Cutout
+        gap={gap}
+        overlay={
+          // Sized in em against a font-size-matched wrapper: the overlay
+          // layer is a sibling of the wordmark, so em units would otherwise
+          // resolve against the page font, not the 5xl glyphs.
+          <span className="absolute inset-0 text-5xl sm:text-6xl" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              className="stroke-base-content absolute -top-[0.01em] left-[31%] h-[0.8em] w-[0.8em] overflow-visible fill-none"
+              strokeWidth={1.75}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              {/* Rotation lives INSIDE the svg so the mask copy rotates with
+                  the pixels — a CSS transform would desync them. */}
+              <g transform="rotate(30 12 12)">
+                <circle cx="6" cy="6" r="3" />
+                <path d="M8.12 8.12 12 12" />
+                <path d="M20 4 8.12 15.88" />
+                <circle cx="6" cy="18" r="3" />
+                <path d="M14.8 14.8 20 20" />
+              </g>
+            </svg>
+          </span>
+        }
+      >
+        <span className="text-base-content text-5xl font-semibold tracking-tight sm:text-6xl">
+          dom-cutout
+        </span>
+      </Cutout>
+      <SceneTitle
+        title="Text is fair game"
+        blurb="Glyphs are just painted pixels to a mask — the scissors carve straight through the wordmark, and the gap stays adjustable."
+      />
+      <label className="chip flex w-fit items-center gap-2">
+        <span className="min-w-14 font-mono tabular-nums">gap: {gap}px</span>
+        <input
+          type="range"
+          min={0}
+          max={8}
+          value={gap}
+          onChange={(e) => setGap(Number(e.target.value))}
+        />
+      </label>
+      <Code>{`createCutout(wordmark, scissors, { gap: ${gap} })`}</Code>
+    </div>
+  );
+};
+
+/* Scene 5 — box shape + border-radius, wide card, radius chips. */
 const RADII = [
   { label: "rounded-full", value: "calc(infinity * 1px)" },
   { label: "8px", value: "8px" },
@@ -221,7 +276,7 @@ const RadiusScene = () => {
   );
 };
 
-/* Scene 5 — live sync, caption above, size slider. */
+/* Scene 6 — live sync, caption above, size slider. */
 const LiveScene = () => {
   const [size, setSize] = useState(28);
   return (
@@ -280,6 +335,12 @@ const SCENES: Array<{
     wash: "radial-gradient(60% 60% at 80% 50%, color-mix(in oklab, oklch(0.8 0.16 86) 13%, transparent), transparent 70%)",
     enter: { x: 56 },
     exit: { x: -56 },
+  },
+  {
+    component: TextScene,
+    wash: "radial-gradient(55% 55% at 50% 40%, color-mix(in oklab, var(--color-primary) 10%, transparent), transparent 72%)",
+    enter: { y: -48 },
+    exit: { y: 36 },
   },
   {
     component: RadiusScene,

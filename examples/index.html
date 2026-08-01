@@ -144,40 +144,6 @@
         </div>
       </div>
 
-      <!-- Logo demo: the wordmark cut by the package, gap on a slider.
-           Same construction as the header title, at display size. -->
-      <div class="demo-card mt-4" data-reveal>
-        <div class="flex flex-col items-center gap-4">
-          <span
-            class="inline-grid text-5xl font-semibold tracking-tight text-base-content *:[grid-area:1/1]"
-          >
-            <span id="logo-content">dom-cutout</span>
-            <span id="logo-overlay" class="relative" style="visibility: hidden">
-              <svg
-                viewBox="0 0 24 24"
-                class="absolute -top-[0.01em] left-[31%] h-[0.8em] w-[0.8em] overflow-visible fill-none stroke-base-content"
-                stroke-width="1.75"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <g transform="rotate(30 12 12)">
-                  <circle cx="6" cy="6" r="3" />
-                  <path d="M8.12 8.12 12 12" />
-                  <path d="M20 4 8.12 15.88" />
-                  <circle cx="6" cy="18" r="3" />
-                  <path d="M14.8 14.8 20 20" />
-                </g>
-              </svg>
-            </span>
-          </span>
-          <label class="chip flex items-center gap-2 text-sm text-base-content/70">
-            <span class="min-w-13 tabular-nums whitespace-nowrap"
-              >gap: <span id="logo-gap-value">4</span>px</span
-            >
-            <input id="logo-gap" type="range" min="0" max="8" value="4" />
-          </label>
-        </div>
-      </div>
 
       <!-- Features. Each card is itself a cutout: the icon overhanging the
            corner is carved out of the card surface, contour-for-contour, so
