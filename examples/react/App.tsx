@@ -239,7 +239,7 @@ const PillRadiusDemo = () => {
         type="button"
         onClick={() => setIndex((i) => (i + 1) % RADII.length)}
       >
-        border-radius: {radius.label}
+        radius: {radius.label}
       </button>
     </>
   );
@@ -248,7 +248,10 @@ const PillRadiusDemo = () => {
 export const App = () => (
   <main className="mx-auto max-w-2xl px-5 py-6">
     <div className="flex items-center justify-between">
-      <a href="../" className="text-[13px] text-base-content/60 no-underline hover:text-base-content">
+      <a
+        href="../"
+        className="text-[13px] text-base-content/60 no-underline hover:text-base-content"
+      >
         &larr; examples
       </a>
       <button
