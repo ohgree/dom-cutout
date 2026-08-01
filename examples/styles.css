@@ -23,6 +23,22 @@ html {
   @apply bg-base-200;
 }
 
+/* Masks apply only once each page's module runs, and a mask-image swap
+   can't be transitioned — so a short fade covers the unmasked first
+   frames instead. CSS-only: if the script never runs, the page still
+   fades in and simply shows unmasked content. */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes page-fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  body {
+    animation: page-fade-in 0.25s ease-out;
+  }
+}
+
 @layer components {
   /* Solid chip for controls and labels sitting on the checkerboard. */
   .chip {
