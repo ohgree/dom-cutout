@@ -54,16 +54,11 @@ export type CutoutMaskStyle = Record<(typeof MASK_PROPERTIES)[number], string>;
  *
  * The mask is two composited alpha layers: a full-coverage gradient canvas,
  * `subtract`-ed by a small SVG image containing only the (dilated) shape.
- * This construction is deliberate, the survivor of a long WebKit
- * elimination (docs/webkit-masking.md):
- * - no internal `<mask>` in any mask image — WebKit rasterizes mask images
- *   containing one at CSS-pixel resolution (~1px soft edges on high-DPI);
- * - no `mask-mode: luminance` — WebKit silently stops honoring it past a
- *   pattern-tile budget of 512×512 device px on iOS (bug 282530), which an
- *   ordinary element crosses at rest;
- * - no repeated image tiles — antialiased tile edges seam into a visible
- *   grid at fractional zoom scales. The gradient canvas is a generated
- *   image: full coverage, no tiles, no budget.
+ * The construction is deliberate — the survivor of the WebKit elimination
+ * recorded in docs/webkit-masking.md: no internal `<mask>` (WebKit
+ * rasterizes those at CSS-pixel resolution — soft edges on high-DPI), no
+ * `mask-mode: luminance` (dies past a 512×512 device-px tile budget on
+ * iOS, bug 282530), no repeated tiles (seams at fractional zoom).
  *
  * Pure measurement + string building: applies nothing to the DOM.
  *
@@ -82,11 +77,10 @@ export const computeMaskStyle = (
   overlay: Element,
   { gap = DEFAULT_GAP, shape = "auto" }: CutoutOptions = {},
 ): CutoutMaskStyle | null => {
-  // An empty overlay means "no cutout". Whitespace and comment nodes don't
-  // count as content (hand-written markup always contains them). Without
-  // this, the box branch would measure the overlay element itself — often
-  // stretched to the content's full size by the host layout — and cut out
-  // everything.
+  // An empty overlay means "no cutout"; whitespace/comment nodes don't count
+  // (hand-written markup always has them). Without this, the box branch
+  // measures the overlay element itself — often stretched to the content's
+  // full size by the host layout — and cuts out everything.
   if (!overlay.querySelector("*") && !overlay.textContent?.trim()) return null;
 
   const contentRect = content.getBoundingClientRect();
@@ -97,13 +91,11 @@ export const computeMaskStyle = (
   // The shape layer: a small standalone SVG image covering just the dilated
   // silhouette, placed over the content via mask-position/mask-size.
   //
-  // The layer's geometry is snapped to the device-pixel grid, and the SAME
-  // snapped values feed the SVG's intrinsic width/height and the mask-size:
-  // any mismatch stretches the image by a sub-pixel factor, which reads as
-  // a hairline ring at gap 0 (Chromium) or a subtle shift of the whole
-  // cutout (Safari, which rounds the stretch the other way). Snapping the
-  // position also keeps iOS from rounding the element raster and the mask
-  // placement in different directions.
+  // Geometry is snapped to the device-pixel grid, and the SAME snapped
+  // values feed the SVG's intrinsic size and the mask-size: any mismatch
+  // stretches the image sub-pixel — a hairline ring at gap 0 (Chromium), a
+  // shifted cutout (Safari, rounding the other way). Snapped positions also
+  // keep iOS from rounding element raster and mask placement apart.
   const dpr = typeof devicePixelRatio === "number" && devicePixelRatio > 0 ? devicePixelRatio : 1;
   const snap = (value: number) => Math.round(value * dpr) / dpr;
   let shapeSvg: string;
@@ -329,12 +321,10 @@ export const createCutout = (
     };
 
     if (content.hasAttribute(MASKED_ATTRIBUTE)) {
-      // Swap (e.g. a gap change): Safari hides the masked element while ANY
-      // image in its mask list is still loading, and only a mask value the
-      // engine has already resolved swaps cleanly. Convert every first use
-      // into that case: apply the IDENTICAL mask longhands to a hidden warm
-      // element (value-text-keyed reuse), let them settle for two frames,
-      // then swap. The old mask stays applied in the meantime.
+      // Swap (e.g. a gap change): only a mask value Safari has already
+      // resolved swaps without blinking the children out, so warm the
+      // identical longhands first (see warmMask) and swap two frames later.
+      // The old mask stays applied in the meantime.
       warmMask(style);
       nextFrame(applyWithRepair);
       return;
