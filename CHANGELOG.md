@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Box-shape cutouts around pill-shaped overlays: an over-large `border-radius` (Tailwind's `rounded-full` `calc(infinity * 1px)`, or conventional `999px`-style values) produced elliptical corners instead of the element's actual pill silhouette — an SVG `<rect>` clamps `rx`/`ry` per axis, while CSS scales an over-large radius down uniformly. The radius is now resolved with CSS overlap semantics before the rect is emitted, `calc(infinity * 1px)` is recognized even where the engine hands it back unresolved, and percentage radii resolve per axis (elliptical corners preserved) with both `rx` and `ry` written to the mask.
+
 ## [0.2.2] - 2026-07-31
 
 ### Fixed

@@ -118,6 +118,53 @@ describe("computeMaskStyle", () => {
     expect(markup).not.toContain("<g ");
   });
 
+  describe("box border-radius", () => {
+    // A non-square 48×20 badge, so circular vs elliptical corners differ.
+    const pillSetup = (radius: string) => {
+      const { content, overlay } = setup(`<div style="border-radius: ${radius}"></div>`, {
+        measured: false,
+      });
+      measure(content, 100, 100);
+      measure(overlay.firstElementChild!, 48, 20);
+      return { content, overlay };
+    };
+
+    it("keeps circular corners for rounded-full (calc(infinity * 1px))", () => {
+      const { content, overlay } = pillSetup("calc(infinity * 1px)");
+
+      const markup = shapeMarkup(computeMaskStyle(content, overlay));
+
+      // CSS resolves an over-large radius to min(w, h) / 2 = 10 on both
+      // axes; the gap (4) dilates it. An SVG rect clamping rx and ry
+      // independently would give 28×14 elliptical corners instead.
+      expect(markup).toContain('rx="14" ry="14"');
+    });
+
+    it("clamps a large finite radius the way CSS does", () => {
+      const { content, overlay } = pillSetup("9999px");
+
+      const markup = shapeMarkup(computeMaskStyle(content, overlay));
+
+      expect(markup).toContain('rx="14" ry="14"');
+    });
+
+    it("passes a small radius through, dilated by the gap", () => {
+      const { content, overlay } = pillSetup("6px");
+
+      const markup = shapeMarkup(computeMaskStyle(content, overlay));
+
+      expect(markup).toContain('rx="10" ry="10"');
+    });
+
+    it("resolves percentage radii per axis (elliptical corners)", () => {
+      const { content, overlay } = pillSetup("50%");
+
+      const markup = shapeMarkup(computeMaskStyle(content, overlay));
+
+      expect(markup).toContain('rx="28" ry="14"');
+    });
+  });
+
   it("normalizes artwork paint colors to black", () => {
     const { content, overlay } = setup(
       '<svg viewBox="0 0 24 24"><path d="M4 4h16" fill="#facc15" stroke="none" /></svg>',
