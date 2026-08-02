@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./docs/assets/logo-dark.png" />
-    <img src="./docs/assets/logo.png" alt="dom-cutout" width="460" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ohgree/dom-cutout/main/docs/assets/logo-dark.png" />
+    <img src="https://raw.githubusercontent.com/ohgree/dom-cutout/main/docs/assets/logo.png" alt="dom-cutout" width="460" />
   </picture>
 </p>
 
@@ -19,7 +19,7 @@ Cut the silhouette of one DOM element out of another — because a background-co
 
 <p align="center">
   <img
-    src="./docs/assets/demo.webp"
+    src="https://raw.githubusercontent.com/ohgree/dom-cutout/main/docs/assets/demo.webp"
     alt="The same badge twice: a painted background-colored outline exposed by gradient and checkerboard backgrounds, versus a dom-cutout hole showing every background through — then the gap sweeps live"
     width="480"
   />
@@ -30,7 +30,7 @@ The pattern you've seen on avatar status dots (Discord, Messenger): the badge do
 - **Zero-dependency core** — plain DOM, works with any framework or none
 - **React adapter** at `dom-cutout/react`
 - **Contour-following** — SVG overlays are traced via stroke expansion, so the gap reads as a halo around the actual glyph, not a box
-- **Crisp on every engine** — the mask construction was chosen by elimination against WebKit's rendering quirks ([the full story](./docs/webkit-masking.md))
+- **Crisp on every engine** — the mask construction was chosen by elimination against WebKit's rendering quirks ([the full story](https://github.com/ohgree/dom-cutout/blob/main/docs/webkit-masking.md))
 - Keeps itself in sync via `ResizeObserver`; SSR-safe
 
 ## Contents
@@ -141,7 +141,7 @@ While a mask is applied, the content element carries a `data-cutout` attribute (
 
 On each update, `dom-cutout` measures the content and overlay rects and applies a two-layer composite mask: a full-coverage gradient canvas (`linear-gradient(#000,#000)`), minus a small standalone SVG containing just the dilated silhouette, positioned over the overlay via `mask-position` and combined with `mask-composite: subtract`. No shared `<defs>`, no extra DOM, no stacking-context tricks. `ResizeObserver` re-runs measurement on size changes; the React adapter additionally recomputes before every paint, deduped by comparing the generated properties.
 
-The two-layer construction isn't incidental — it's the only one of six approaches that renders crisp at device resolution on every engine _and_ survives iOS: single-image masks with an internal SVG `<mask>` rasterize soft on high-DPI WebKit, and `mask-mode: luminance` masks silently stop masking on iOS past a 512×512 device-px budget ([WebKit bug 282530](https://bugs.webkit.org/show_bug.cgi?id=282530)). The elimination is documented in [docs/webkit-masking.md](./docs/webkit-masking.md).
+The two-layer construction isn't incidental — it's the only one of six approaches that renders crisp at device resolution on every engine _and_ survives iOS: single-image masks with an internal SVG `<mask>` rasterize soft on high-DPI WebKit, and `mask-mode: luminance` masks silently stop masking on iOS past a 512×512 device-px budget ([WebKit bug 282530](https://bugs.webkit.org/show_bug.cgi?id=282530)). The elimination is documented in [docs/webkit-masking.md](https://github.com/ohgree/dom-cutout/blob/main/docs/webkit-masking.md).
 
 ## Why not a background-colored ring?
 
@@ -157,7 +157,7 @@ The React `<Cutout>` component additionally pins its overlay layer with [CSS anc
 
 The anchor rules are emitted declaratively (a rendered `<style>` element with data-attribute selectors, never `style.setProperty`), so [`@oddbird/css-anchor-positioning`](https://github.com/oddbird/css-anchor-positioning) can polyfill them on older engines — run the polyfill after your React tree has mounted, since it only processes rules that exist at invocation time.
 
-Why the mask is built this way — and why five simpler constructions were eliminated (soft edges from internal SVG `<mask>` elements, luminance masks silently dying on iOS via [WebKit bug 282530](https://bugs.webkit.org/show_bug.cgi?id=282530), tile seams under pinch zoom) — is documented in [docs/webkit-masking.md](./docs/webkit-masking.md). The playwright suite in [`e2e/`](./e2e) pins each of those failure modes.
+Why the mask is built this way — and why five simpler constructions were eliminated (soft edges from internal SVG `<mask>` elements, luminance masks silently dying on iOS via [WebKit bug 282530](https://bugs.webkit.org/show_bug.cgi?id=282530), tile seams under pinch zoom) — is documented in [docs/webkit-masking.md](https://github.com/ohgree/dom-cutout/blob/main/docs/webkit-masking.md). The playwright suite in [`e2e/`](https://github.com/ohgree/dom-cutout/tree/main/e2e) pins each of those failure modes.
 
 ## Caveats
 
