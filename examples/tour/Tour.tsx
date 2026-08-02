@@ -1,6 +1,6 @@
 import { Bell, Star, TriangleAlert, Zap } from "lucide-react";
 import { AnimatePresence, m, useMotionValueEvent, useReducedMotion, useScroll } from "motion/react";
-import { type ReactNode, type Ref, useRef, useState } from "react";
+import { type CSSProperties, type ReactNode, type Ref, useRef, useState } from "react";
 
 import { Cutout } from "dom-cutout/react";
 
@@ -12,6 +12,44 @@ import { Cutout } from "dom-cutout/react";
 // a cutout: translation shifts content and overlay rects equally, so masks
 // measured mid-animation stay correct — scale or rotation would skew them.
 
+// Photos are hot-linked from the Unsplash CDN, never committed here: the
+// Unsplash API guidelines ask for hot-linking over re-hosting, and the
+// examples stay free of binary assets. Animals rather than people — the
+// Unsplash License covers the photograph, not a subject's likeness.
+// The gradient underneath is the offline/loading fallback, so the shapes
+// (and therefore the cutouts) read even when the CDN doesn't answer.
+// 512² so the largest avatar (160 CSS px) still has pixels to spare on a 3x
+// display; webp keeps that under ~40 kB.
+const photo = (id: string) => `https://images.unsplash.com/${id}?w=512&h=512&fit=crop&fm=webp&q=80`;
+
+// Photo and initials avatars mixed, the way a real stack renders: uploaded
+// pictures next to generated fallbacks. `tint` is the gradient — the whole
+// avatar for an initials face, the offline placeholder behind a photo.
+interface Face {
+  tint: string;
+  src?: string;
+  initials?: string;
+}
+
+const FACES: Face[] = [
+  // cat
+  {
+    tint: "from-stone-400 to-stone-600",
+    src: photo("photo-1698495076223-0adb87d95eac"),
+  },
+  { tint: "from-emerald-500 to-teal-600", initials: "AS" },
+  // duck
+  {
+    tint: "from-teal-400 to-cyan-600",
+    src: photo("photo-1578102487209-9229fa2b1cfb"),
+  },
+  // hamster
+  {
+    tint: "from-amber-300 to-orange-500",
+    src: photo("photo-1721327900411-b315dce4388e"),
+  },
+];
+
 // ref-forwarding matters: <Cutout> masks its child by cloned ref, so a
 // component that drops the ref silently never gets a mask.
 // Safari fringe workaround: the paint AND the radius live on an inner
@@ -20,15 +58,27 @@ import { Cutout } from "dom-cutout/react";
 // antialiasing (docs/webkit-masking.md §8) — a sharp-cornered masked box has
 // no corner AA to double.
 const Avatar = ({
-  className = "h-28 w-28 text-4xl",
+  className = "h-28 w-28",
+  face = FACES[0],
+  style,
   ref,
 }: {
   className?: string;
+  face?: Face;
+  style?: CSSProperties;
   ref?: Ref<HTMLDivElement>;
 }) => (
-  <div ref={ref} className={className}>
-    <div className="flex h-full w-full items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-violet-600 font-semibold text-white">
-      MJ
+  // Font size is inherited, so a caller sizing the avatar with `text-*` sizes
+  // the initials with it.
+  <div ref={ref} className={className} style={style}>
+    <div
+      className={`flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-linear-to-br ${face.tint} font-semibold text-white`}
+    >
+      {face.src ? (
+        <img src={face.src} alt="" className="h-full w-full object-cover" />
+      ) : (
+        face.initials
+      )}
     </div>
   </div>
 );
@@ -60,7 +110,7 @@ const CutScene = () => {
           )
         }
       >
-        <Avatar className="h-40 w-40 text-6xl" />
+        <Avatar className="h-40 w-40" />
       </Cutout>
       <SceneTitle
         title="The overlay punches through"
@@ -74,25 +124,69 @@ const CutScene = () => {
   );
 };
 
-/* Scene 2 — gap, split layout, slider. */
+/* Scene 2 — gap, demoed on an overlapping "seen by" avatar stack. */
+
+// Geometry the stack and the cuts share: each avatar is AVATAR_SIZE wide and
+// starts STACK_STEP after the previous one, so the neighbour's circle sits at
+// x = STACK_STEP inside the avatar it overlaps.
+const AVATAR_SIZE = 64;
+const STACK_STEP = 44;
+
+// Descending z-index reverses the natural paint order so the FIRST avatar
+// sits on top and each one after tucks in behind its left neighbour.
+const StackAvatar = ({ index, ref }: { index: number; ref?: Ref<HTMLDivElement> }) => (
+  <Avatar
+    ref={ref}
+    face={FACES[index]}
+    className="relative shrink-0 text-lg"
+    style={{
+      width: AVATAR_SIZE,
+      height: AVATAR_SIZE,
+      marginLeft: index === 0 ? 0 : STACK_STEP - AVATAR_SIZE,
+      zIndex: FACES.length - index,
+    }}
+  />
+);
+
 const GapScene = () => {
   const [gap, setGap] = useState(6);
   return (
     <div className="grid items-center gap-10 sm:grid-cols-[auto_1fr]">
-      <div className="justify-self-center">
-        <Cutout
-          gap={gap}
-          overlay={
-            <span className="absolute right-0.5 bottom-0.5 block h-7 w-7 rounded-full bg-emerald-500" />
-          }
-        >
-          <Avatar />
-        </Cutout>
+      {/* Each avatar is overlapped by — and therefore cut by — the one to its
+          left. The first sits on top and cuts nobody. */}
+      <div className="flex justify-self-center">
+        {FACES.map((face, i) =>
+          i === 0 ? (
+            <StackAvatar key={face.src ?? face.initials} index={i} />
+          ) : (
+            <Cutout
+              key={face.src ?? face.initials}
+              gap={gap}
+              overlay={
+                // A geometric stand-in for the left neighbour, not a second
+                // copy of it: the mask only reads the silhouette, and the real
+                // avatar paints itself in flow right on top of this.
+                <span
+                  className="absolute top-0 rounded-full opacity-0"
+                  style={{
+                    left: -STACK_STEP,
+                    width: AVATAR_SIZE,
+                    height: AVATAR_SIZE,
+                  }}
+                />
+              }
+            >
+              <StackAvatar index={i} />
+            </Cutout>
+          ),
+        )}
       </div>
-      <div className="flex flex-col gap-4">
+      {/* Single column below sm: the copy centres under the stack instead of
+          hanging off its left edge. */}
+      <div className="flex flex-col items-center gap-4 text-center sm:items-start sm:text-left">
         <SceneTitle
           title="gap"
-          blurb="The halo width, in rendered pixels. Options are read live — drag and the mask recomputes."
+          blurb="How far the cut is pushed out past the overlay's silhouette, in rendered pixels. Options are read live — drag and every mask recomputes."
         />
         <label className="chip flex w-fit items-center gap-2">
           <span className="min-w-14 font-mono tabular-nums">gap: {gap}px</span>
@@ -104,7 +198,7 @@ const GapScene = () => {
             onChange={(e) => setGap(Number(e.target.value))}
           />
         </label>
-        <Code>{`createCutout(avatar, badge, { gap: ${gap} })`}</Code>
+        <Code>{`createCutout(avatar, nextAvatar, { gap: ${gap} })`}</Code>
       </div>
     </div>
   );
@@ -148,7 +242,7 @@ const ContourScene = () => {
   const [glyph, setGlyph] = useState<keyof typeof GLYPHS>("zap");
   return (
     <div className="grid items-center gap-10 sm:grid-cols-[1fr_auto]">
-      <div className="order-2 flex flex-col gap-4 sm:order-1">
+      <div className="order-2 flex flex-col items-center gap-4 text-center sm:order-1 sm:items-start sm:text-left">
         <SceneTitle
           title="Contours, not boxes"
           blurb="SVG overlays are traced glyph-for-glyph via stroke expansion — concave outlines, disjoint shapes, stroke widths compensated. shape: 'auto' picks it whenever the overlay contains an svg."
@@ -331,7 +425,7 @@ const LiveScene = () => {
           />
         }
       >
-        <Avatar />
+        <Avatar face={FACES[3]} />
       </Cutout>
       <label className="chip flex w-fit items-center gap-2">
         <span className="min-w-18 font-mono tabular-nums">badge: {size}px</span>
