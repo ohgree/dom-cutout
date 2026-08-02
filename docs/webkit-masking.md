@@ -250,3 +250,17 @@ Chromium then renders masked corners byte-identical to unmasked
 computed style) but ignores it in rendering — its fringe measures the
 same either way and joins the known-limitations list next to the iOS
 gap-0 seam.
+
+Verified no-ops on WebKit, all measuring an identical 776 px on the
+five-variant differential — don't re-suggest them: `-webkit-mask-clip:
+no-clip`, an explicit `mask-clip: border-box`, and `mask-origin:
+border-box`. WebKit's mask path simply does not consult the clip
+properties, so no CSS the library can emit reaches this fringe.
+
+The consumer-side workaround measures 0 on both engines, and the
+important detail is that the **`border-radius`** must move, not just
+the paint: give the masked element a sharp rectangular box and put the
+radius (with the background) on an inner child. A sharp-cornered masked
+box has no corner antialiasing to double. Moving only the background
+while the radius stays on the masked element still fringes — measured.
+The examples' React demos ship this shape.

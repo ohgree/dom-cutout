@@ -14,6 +14,11 @@ import { Cutout } from "dom-cutout/react";
 
 // ref-forwarding matters: <Cutout> masks its child by cloned ref, so a
 // component that drops the ref silently never gets a mask.
+// Safari fringe workaround: the paint AND the radius live on an inner
+// element, so the masked box stays a sharp rectangle. WebKit clips masks to
+// the rounded border box regardless of mask-clip, double-applying corner
+// antialiasing (docs/webkit-masking.md §6) — a sharp-cornered masked box has
+// no corner AA to double.
 const Avatar = ({
   className = "h-28 w-28 text-4xl",
   ref,
@@ -21,11 +26,10 @@ const Avatar = ({
   className?: string;
   ref?: Ref<HTMLDivElement>;
 }) => (
-  <div
-    ref={ref}
-    className={`flex items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-violet-600 font-semibold text-white ${className}`}
-  >
-    MJ
+  <div ref={ref} className={className}>
+    <div className="flex h-full w-full items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-violet-600 font-semibold text-white">
+      MJ
+    </div>
   </div>
 );
 

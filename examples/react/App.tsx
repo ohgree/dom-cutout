@@ -89,12 +89,16 @@ const Controls = ({ children }: { children: ReactNode }) => (
 // resizing buttons would shift the card layout.
 const demoButtonClass = "chip w-46 cursor-pointer text-left";
 
+// Safari fringe workaround: the paint AND the radius live on an inner
+// element, so the masked box stays a sharp rectangle. WebKit clips masks to
+// the rounded border box regardless of mask-clip, double-applying corner
+// antialiasing (docs/webkit-masking.md §6) — a sharp-cornered masked box has
+// no corner AA to double.
 const Avatar = ({ ref }: { ref?: Ref<HTMLDivElement> }) => (
-  <div
-    ref={ref}
-    className="flex h-18 w-18 items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-violet-600 text-2xl font-semibold text-white"
-  >
-    MJ
+  <div ref={ref} className="h-18 w-18">
+    <div className="flex h-full w-full items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-violet-600 text-2xl font-semibold text-white">
+      MJ
+    </div>
   </div>
 );
 
@@ -138,10 +142,9 @@ const StarOverlay = () => (
 );
 
 const PhotoTile = ({ ref }: { ref?: Ref<HTMLDivElement> }) => (
-  <div
-    ref={ref}
-    className="h-20 w-20 rounded-[14px] bg-linear-to-br from-rose-400 via-fuchsia-600 to-indigo-600"
-  />
+  <div ref={ref} className="h-20 w-20">
+    <div className="h-full w-full rounded-[14px] bg-linear-to-br from-rose-400 via-fuchsia-600 to-indigo-600" />
+  </div>
 );
 
 const ShapeComparisonDemo = () => {
@@ -177,10 +180,9 @@ const HeadlessDemo = () => {
   const { contentRef, overlayRef } = useCutout<HTMLDivElement, HTMLDivElement>({ gap: 4 });
   return (
     <div className="relative">
-      <div
-        ref={contentRef}
-        className="h-20 w-44 rounded-[14px] bg-linear-to-br from-emerald-500 to-teal-700"
-      />
+      <div ref={contentRef} className="h-20 w-44">
+        <div className="h-full w-full rounded-[14px] bg-linear-to-br from-emerald-500 to-teal-700" />
+      </div>
       <div ref={overlayRef} className="pointer-events-none absolute inset-0">
         <span className="absolute -top-2 -right-2 block h-5 w-5 rounded-full bg-rose-500" />
       </div>
