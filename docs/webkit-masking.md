@@ -253,14 +253,15 @@ The examples' React demos ship this shape.
 
 ## Timeline of failure modes, for the record
 
-| approach                       | desktop WebKit | iOS WebKit                | verdict                             |
-| ------------------------------ | -------------- | ------------------------- | ----------------------------------- |
-| alpha + internal `<mask>`      | ~1px soft      | works                     | shipped in 0.1.x                    |
-| SVG reference mask             | ignored        | ignored                   | dead end                            |
-| `svg > foreignObject` wrap     | crisp          | crisp                     | rejected: restructures consumer DOM |
-| luminance, simple SVG          | crisp          | **vanishes** (bug 282530) | reverted                            |
-| composite, tiled canvas        | crisp          | survives, **tile seams**  | superseded                          |
-| **composite, gradient canvas** | **crisp**      | **crisp, survives pinch** | **current**                         |
+| approach                              | desktop WebKit       | iOS WebKit                | verdict                             |
+| ------------------------------------- | -------------------- | ------------------------- | ----------------------------------- |
+| alpha + internal `<mask>`             | ~1px soft            | works                     | shipped in 0.1.x                    |
+| SVG reference mask                    | ignored              | ignored                   | dead end                            |
+| `svg > foreignObject` wrap            | crisp                | crisp                     | rejected: restructures consumer DOM |
+| luminance, simple SVG                 | crisp                | **vanishes** (bug 282530) | reverted                            |
+| composite, tiled canvas               | crisp                | survives, **tile seams**  | superseded                          |
+| **composite, gradient canvas**        | **crisp**            | **crisp, survives pinch** | **current**                         |
+| rounded corners: `mask-clip: no-clip` | ignored, ≤1px fringe | same                      | current; consumer moves the radius  |
 
 The playwright suite in [`e2e/`](../e2e) guards each of these failure modes
 against regressions.
