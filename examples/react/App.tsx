@@ -92,7 +92,7 @@ const demoButtonClass = "chip w-46 cursor-pointer text-left";
 // Safari fringe workaround: the paint AND the radius live on an inner
 // element, so the masked box stays a sharp rectangle. WebKit clips masks to
 // the rounded border box regardless of mask-clip, double-applying corner
-// antialiasing (docs/webkit-masking.md §6) — a sharp-cornered masked box has
+// antialiasing (docs/webkit-masking.md §8) — a sharp-cornered masked box has
 // no corner AA to double.
 const Avatar = ({ ref }: { ref?: Ref<HTMLDivElement> }) => (
   <div ref={ref} className="h-18 w-18">

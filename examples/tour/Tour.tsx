@@ -17,7 +17,7 @@ import { Cutout } from "dom-cutout/react";
 // Safari fringe workaround: the paint AND the radius live on an inner
 // element, so the masked box stays a sharp rectangle. WebKit clips masks to
 // the rounded border box regardless of mask-clip, double-applying corner
-// antialiasing (docs/webkit-masking.md §6) — a sharp-cornered masked box has
+// antialiasing (docs/webkit-masking.md §8) — a sharp-cornered masked box has
 // no corner AA to double.
 const Avatar = ({
   className = "h-28 w-28 text-4xl",

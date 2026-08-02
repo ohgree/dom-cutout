@@ -211,21 +211,7 @@ positions alone shift nothing on desktop engines — measured symmetric at
 every quarter-pixel offset — so the snap exists for geometry agreement and
 iOS raster alignment, not as a general fraction-phobia.)
 
-## Timeline of failure modes, for the record
-
-| approach                       | desktop WebKit | iOS WebKit                | verdict                             |
-| ------------------------------ | -------------- | ------------------------- | ----------------------------------- |
-| alpha + internal `<mask>`      | ~1px soft      | works                     | shipped in 0.1.x                    |
-| SVG reference mask             | ignored        | ignored                   | dead end                            |
-| `svg > foreignObject` wrap     | crisp          | crisp                     | rejected: restructures consumer DOM |
-| luminance, simple SVG          | crisp          | **vanishes** (bug 282530) | reverted                            |
-| composite, tiled canvas        | crisp          | survives, **tile seams**  | superseded                          |
-| **composite, gradient canvas** | **crisp**      | **crisp, survives pinch** | **current**                         |
-
-The playwright suite in [`e2e/`](../e2e) guards each of these failure modes
-against regressions.
-
-## 6. Rounded corners: the double-antialiasing fringe
+## 8. Rounded corners: the double-antialiasing fringe
 
 Found via a masked-vs-unmasked screenshot differential (any pixel the mask
 changes outside the hole is an artifact): on every engine, applying the
@@ -264,3 +250,17 @@ radius (with the background) on an inner child. A sharp-cornered masked
 box has no corner antialiasing to double. Moving only the background
 while the radius stays on the masked element still fringes — measured.
 The examples' React demos ship this shape.
+
+## Timeline of failure modes, for the record
+
+| approach                       | desktop WebKit | iOS WebKit                | verdict                             |
+| ------------------------------ | -------------- | ------------------------- | ----------------------------------- |
+| alpha + internal `<mask>`      | ~1px soft      | works                     | shipped in 0.1.x                    |
+| SVG reference mask             | ignored        | ignored                   | dead end                            |
+| `svg > foreignObject` wrap     | crisp          | crisp                     | rejected: restructures consumer DOM |
+| luminance, simple SVG          | crisp          | **vanishes** (bug 282530) | reverted                            |
+| composite, tiled canvas        | crisp          | survives, **tile seams**  | superseded                          |
+| **composite, gradient canvas** | **crisp**      | **crisp, survives pinch** | **current**                         |
+
+The playwright suite in [`e2e/`](../e2e) guards each of these failure modes
+against regressions.
