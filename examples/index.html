@@ -29,8 +29,14 @@
     <meta property="og:image:height" content="640" />
     <meta name="twitter:card" content="summary_large_image" />
   </head>
-  <body class="bg-base-200 font-sans text-base-content antialiased">
-    <main class="mx-auto max-w-2xl px-5 py-6">
+  <!-- No background on body: the section washes sit at a negative z-index, and
+       an opaque background here would paint over them. html carries the shade
+       (styles.css), so the page still looks the same with or without JS. -->
+  <body class="font-sans text-base-content antialiased">
+    <!-- pt only: the footer owns the page's bottom padding, so main adding its
+         own on top made the space under the footer text twice the space above
+         it. -->
+    <main class="mx-auto max-w-2xl px-5 pt-6">
       <!-- Hero -->
       <header
         class="sticky top-0 z-20 -mx-5 flex items-center justify-between bg-base-200/85 px-5 py-3 backdrop-blur"
@@ -97,190 +103,253 @@
           </a>
         </nav>
       </header>
-      <p class="mt-6 text-lg leading-relaxed text-base-content/70">
-        Cut the silhouette of one DOM element out of another — because a background-colored border
-        is a promise your gradient will break.
-      </p>
+      <!-- Hero. Margins are explicit rather than a flex gap: the deck belongs
+           to the wordmark above it, so the viewport-scaled air goes BELOW the
+           deck, separating claim from demo. Putting it above only orphaned the
+           deck between a distant header and a centred card. Nothing is added
+           after the features either — the tour's first scene centres itself in
+           100vh and already opens with half a screen. -->
+      <section class="relative pt-6">
+        <div
+          class="wash"
+          aria-hidden="true"
+          style="
+            background: radial-gradient(
+              60% 55% at 50% 42%,
+              color-mix(in oklab, var(--color-primary) 9%, transparent),
+              transparent 70%
+            );
+          "
+        ></div>
+        <p class="text-lg leading-relaxed text-base-content/70">
+          Cut the silhouette of one DOM element out of another — because a background-colored
+          border is a promise your gradient will break.
+        </p>
 
-      <!-- Live hero demo: the package demoing itself. The checkerboard shows
-           through wherever the overlay's silhouette is cut out. -->
-      <div id="hero-card" class="demo-card mt-12" data-reveal>
-        <div class="inline-grid *:[grid-area:1/1]">
-          <div id="hero-content">
-            <div
-              class="flex h-24 w-24 items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-violet-600 text-3xl font-semibold text-white"
-            >
-              MJ
+        <!-- Live hero demo: the package demoing itself. The checkerboard shows
+             through wherever the overlay's silhouette is cut out. -->
+        <div id="hero-card" class="demo-card mt-hero" data-reveal>
+          <div class="inline-grid *:[grid-area:1/1]">
+            <div id="hero-content">
+              <div
+                class="flex h-24 w-24 items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-violet-600 text-3xl font-semibold text-white"
+              >
+                MJ
+              </div>
+            </div>
+            <div id="hero-overlay" class="relative" style="visibility: hidden">
+              <!-- A star (not a dot): its concave outline shows the mask
+                   following contours, which a circle can't prove. -->
+              <svg
+                id="hero-star"
+                viewBox="0 0 24 24"
+                class="absolute -right-2 -bottom-2 h-9 w-9 fill-amber-400 stroke-amber-800"
+                stroke-width="1.5"
+                stroke-linejoin="round"
+              >
+                <path
+                  d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"
+                />
+              </svg>
             </div>
           </div>
-          <div id="hero-overlay" class="relative" style="visibility: hidden">
-            <!-- A star (not a dot): its concave outline shows the mask
-                 following contours, which a circle can't prove. -->
-            <svg
-              id="hero-star"
-              viewBox="0 0 24 24"
-              class="absolute -right-2 -bottom-2 h-9 w-9 fill-amber-400 stroke-amber-800"
-              stroke-width="1.5"
-              stroke-linejoin="round"
-            >
-              <path
-                d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"
-              />
-            </svg>
+          <div class="flex min-w-0 flex-col gap-4 text-sm text-base-content/70">
+            <div id="hero-snippet">
+              <pre class="shiki"><code>createCutout(avatar, star, { gap: 4 })</code></pre>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button id="hero-toggle" type="button" class="chip w-fit cursor-pointer">
+                Toggle star
+              </button>
+              <button id="hero-bg" type="button" class="chip w-fit cursor-pointer">
+                Change background
+              </button>
+            </div>
           </div>
         </div>
-        <div class="flex min-w-0 flex-col gap-2 text-sm text-base-content/70">
-          <div id="hero-snippet">
-            <pre class="shiki"><code>createCutout(avatar, star, { gap: 4 })</code></pre>
-          </div>
-          <div class="flex flex-wrap gap-2">
-            <button id="hero-toggle" type="button" class="chip w-fit cursor-pointer">
-              Toggle star
-            </button>
-            <button id="hero-bg" type="button" class="chip w-fit cursor-pointer">
-              Change background
-            </button>
-          </div>
-        </div>
-      </div>
 
-      <!-- Features. Each card is itself a cutout: the icon overhanging the
-           corner is carved out of the card surface, contour-for-contour, so
-           the page background shows through the halo. -->
-      <ul class="mt-14 grid gap-4 text-sm text-base-content/70 sm:grid-cols-3" data-reveal>
-        <li class="grid *:[grid-area:1/1]">
-          <div id="feat-core" class="rounded-xl border border-base-content/10 bg-base-100 p-4">
-            <strong class="mb-1 block text-base-content">Zero-dependency core</strong>
-            Plain DOM. Works with any framework or none.
-          </div>
-          <div
-            id="feat-core-overlay"
-            class="pointer-events-none relative"
-            style="visibility: hidden"
-          >
-            <i
-              data-lucide="box"
-              class="absolute -top-2.5 -left-2.5 h-8 w-8 stroke-base-content"
-              stroke-width="1.75"
-              aria-hidden="true"
-            ></i>
-          </div>
-        </li>
-        <li class="grid *:[grid-area:1/1]">
-          <div id="feat-contour" class="rounded-xl border border-base-content/10 bg-base-100 p-4">
-            <strong class="mb-1 block text-base-content">Contour-following</strong>
-            SVG overlays are traced glyph-for-glyph, stroke widths compensated.
-          </div>
-          <div
-            id="feat-contour-overlay"
-            class="pointer-events-none relative"
-            style="visibility: hidden"
-          >
-            <i
-              data-lucide="spline"
-              class="absolute -top-2.5 -left-2.5 h-8 w-8 stroke-base-content"
-              stroke-width="1.75"
-              aria-hidden="true"
-            ></i>
-          </div>
-        </li>
-        <li class="grid *:[grid-area:1/1]">
-          <div id="feat-crisp" class="rounded-xl border border-base-content/10 bg-base-100 p-4">
-            <strong class="mb-1 block text-base-content">Crisp on every engine</strong>
-            Chosen by elimination against WebKit's rendering quirks —
-            <a
-              class="text-base-content/80 underline hover:text-base-content"
-              href="https://github.com/ohgree/dom-cutout/blob/main/docs/webkit-masking.md"
-              >the full story</a
-            >.
-          </div>
-          <div
-            id="feat-crisp-overlay"
-            class="pointer-events-none relative"
-            style="visibility: hidden"
-          >
-            <i
-              data-lucide="sparkles"
-              class="absolute -top-2.5 -left-2.5 h-8 w-8 stroke-base-content"
-              stroke-width="1.75"
-              aria-hidden="true"
-            ></i>
-          </div>
-        </li>
-      </ul>
+        <!-- Features. Each card is itself a cutout: the icon overhanging the
+             corner is carved out of the card surface, contour-for-contour, so
+             the page background shows through the halo.
+             Stays inside the measure. The tour is this page's one escape from
+             it and goes fully full-bleed; a partial breakout read as neither,
+             and widening the columns was only ever propping up titles that
+             were too long. Three columns of ~197px leave 149px of text width,
+             which every title now fits on one line — so the three bodies all
+             start at the same height. Keep new titles under that. -->
+        <ul
+          class="mt-hero grid gap-5 text-sm leading-relaxed text-base-content/70 sm:grid-cols-3"
+          data-reveal
+        >
+          <li class="grid *:[grid-area:1/1]">
+            <div id="feat-core" class="surface">
+              <strong class="mb-2 block text-base-content">Zero dependencies</strong>
+              Plain DOM. Works with any framework or none.
+            </div>
+            <div
+              id="feat-core-overlay"
+              class="pointer-events-none relative"
+              style="visibility: hidden"
+            >
+              <i
+                data-lucide="box"
+                class="absolute -top-2.5 -left-2.5 h-8 w-8 stroke-base-content"
+                stroke-width="1.75"
+                aria-hidden="true"
+              ></i>
+            </div>
+          </li>
+          <li class="grid *:[grid-area:1/1]">
+            <div id="feat-contour" class="surface">
+              <strong class="mb-2 block text-base-content">Contour-following</strong>
+              SVG overlays are traced glyph-for-glyph, stroke widths compensated.
+            </div>
+            <div
+              id="feat-contour-overlay"
+              class="pointer-events-none relative"
+              style="visibility: hidden"
+            >
+              <i
+                data-lucide="spline"
+                class="absolute -top-2.5 -left-2.5 h-8 w-8 stroke-base-content"
+                stroke-width="1.75"
+                aria-hidden="true"
+              ></i>
+            </div>
+          </li>
+          <li class="grid *:[grid-area:1/1]">
+            <div id="feat-crisp" class="surface">
+              <strong class="mb-2 block text-base-content">Crisp everywhere</strong>
+              Chosen by elimination against WebKit's rendering quirks —
+              <a
+                class="text-base-content/80 underline hover:text-base-content"
+                href="https://github.com/ohgree/dom-cutout/blob/main/docs/webkit-masking.md"
+                >the full story</a
+              >.
+            </div>
+            <div
+              id="feat-crisp-overlay"
+              class="pointer-events-none relative"
+              style="visibility: hidden"
+            >
+              <i
+                data-lucide="sparkles"
+                class="absolute -top-2.5 -left-2.5 h-8 w-8 stroke-base-content"
+                stroke-width="1.75"
+                aria-hidden="true"
+              ></i>
+            </div>
+          </li>
+        </ul>
+      </section>
 
       <!-- Full-page options tour: a React island (tour/), everything above
            stays plain DOM. Breakout via margins, not transforms. -->
       <div id="tour" class="ml-[calc(50%-50vw)] w-screen"></div>
 
-      <!-- Installation -->
-      <h2 class="mt-24 mb-4 text-lg font-semibold text-base-content" data-reveal>Installation</h2>
-      <div id="pm-tabs" class="mb-3 flex gap-1" role="tablist">
-        <button data-pm="npm" type="button" class="chip tab-active cursor-pointer">npm</button>
-        <button data-pm="pnpm" type="button" class="chip cursor-pointer">pnpm</button>
-        <button data-pm="yarn" type="button" class="chip cursor-pointer">yarn</button>
-      </div>
-      <div id="install-blocks" data-reveal>
-        <div data-pm="npm">
-          <pre class="shiki"><code>npm install dom-cutout</code></pre>
-        </div>
-        <div data-pm="pnpm" class="hidden">
-          <pre class="shiki"><code>pnpm add dom-cutout</code></pre>
-        </div>
-        <div data-pm="yarn" class="hidden">
-          <pre class="shiki"><code>yarn add dom-cutout</code></pre>
-        </div>
-      </div>
+      <!-- Closing sections. Same reasoning as the hero, mirrored: the tour's
+           last scene is centred in its own 100vh and so trails half a screen
+           of air already. Nothing is added on top of it here. -->
+      <section class="relative flex flex-col gap-section">
+        <div
+          class="wash"
+          aria-hidden="true"
+          style="
+            background: radial-gradient(
+              55% 60% at 50% 55%,
+              color-mix(in oklab, var(--color-primary) 7%, transparent),
+              transparent 72%
+            );
+          "
+        ></div>
 
-      <!-- Usage -->
-      <h2 class="mt-20 mb-4 text-lg font-semibold text-base-content" data-reveal>Usage</h2>
-      <div class="grid gap-4" data-reveal>
-        <a
-          class="block rounded-xl border border-base-content/10 bg-base-100 p-4 no-underline hover:border-primary"
-          href="vanilla/"
-        >
-          <strong class="flex items-center gap-2 text-base-content">
-            Vanilla DOM
-            <svg
-              viewBox="0 0 24 24"
-              class="h-4 w-4 fill-none stroke-base-content/60"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
+        <!-- Installation -->
+        <div>
+          <div class="mb-head" data-reveal>
+            <h2 class="section-title">Installation</h2>
+            <p class="section-blurb">
+              One dependency-free package. The React adapter ships in the same tarball, behind its
+              own entry point.
+            </p>
+          </div>
+          <div id="pm-tabs" class="mb-3 flex gap-1" role="tablist">
+            <button data-pm="npm" type="button" class="chip tab-active cursor-pointer">npm</button>
+            <button data-pm="pnpm" type="button" class="chip cursor-pointer">pnpm</button>
+            <button data-pm="yarn" type="button" class="chip cursor-pointer">yarn</button>
+          </div>
+          <div id="install-blocks" data-reveal>
+            <div data-pm="npm">
+              <pre class="shiki"><code>npm install dom-cutout</code></pre>
+            </div>
+            <div data-pm="pnpm" class="hidden">
+              <pre class="shiki"><code>pnpm add dom-cutout</code></pre>
+            </div>
+            <div data-pm="yarn" class="hidden">
+              <pre class="shiki"><code>yarn add dom-cutout</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Usage -->
+        <div>
+          <div class="mb-head" data-reveal>
+            <h2 class="section-title">Usage</h2>
+            <p class="section-blurb">
+              Every demo on this page, walked through as code you can paste — pick the one that
+              matches your stack.
+            </p>
+          </div>
+          <div class="grid gap-5" data-reveal>
+            <a
+              class="surface block no-underline transition-colors hover:border-primary"
+              href="vanilla/"
             >
-              <path d="m16 18 6-6-6-6" />
-              <path d="m8 6-6 6 6 6" />
-            </svg>
-          </strong>
-          <small class="text-base-content/60"
-            >createCutout() with elements you own — attach, live options, teardown. No
-            framework.</small
-          >
-        </a>
-        <a
-          class="block rounded-xl border border-base-content/10 bg-base-100 p-4 no-underline hover:border-primary"
-          href="react/"
-        >
-          <strong class="flex items-center gap-2 text-base-content">
-            React
-            <svg viewBox="-12 -12 24 24" class="h-4 w-4 stroke-base-content/60" aria-hidden="true">
-              <circle r="2.1" class="fill-base-content/60" stroke="none" />
-              <g fill="none" stroke-width="1.2">
-                <ellipse rx="10.5" ry="4.2" />
-                <ellipse rx="10.5" ry="4.2" transform="rotate(60)" />
-                <ellipse rx="10.5" ry="4.2" transform="rotate(120)" />
-              </g>
-            </svg>
-          </strong>
-          <small class="text-base-content/60"
-            >Step-by-step usage of &lt;Cutout&gt; and the headless useCutout hook — every demo
-            above, as copy-paste code</small
-          >
-        </a>
-      </div>
+              <strong class="flex items-center gap-2 text-base-content">
+                Vanilla DOM
+                <svg
+                  viewBox="0 0 24 24"
+                  class="h-4 w-4 fill-none stroke-base-content/60"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="m16 18 6-6-6-6" />
+                  <path d="m8 6-6 6 6 6" />
+                </svg>
+              </strong>
+              <small class="mt-2 block leading-relaxed text-base-content/60"
+                >createCutout() with elements you own — attach, live options, teardown. No
+                framework.</small
+              >
+            </a>
+            <a
+              class="surface block no-underline transition-colors hover:border-primary"
+              href="react/"
+            >
+              <strong class="flex items-center gap-2 text-base-content">
+                React
+                <svg viewBox="-12 -12 24 24" class="h-4 w-4 stroke-base-content/60" aria-hidden="true">
+                  <circle r="2.1" class="fill-base-content/60" stroke="none" />
+                  <g fill="none" stroke-width="1.2">
+                    <ellipse rx="10.5" ry="4.2" />
+                    <ellipse rx="10.5" ry="4.2" transform="rotate(60)" />
+                    <ellipse rx="10.5" ry="4.2" transform="rotate(120)" />
+                  </g>
+                </svg>
+              </strong>
+              <small class="mt-2 block leading-relaxed text-base-content/60"
+                >Step-by-step usage of &lt;Cutout&gt; and the headless useCutout hook — every demo
+                above, as copy-paste code</small
+              >
+            </a>
+          </div>
+        </div>
+      </section>
 
-      <footer class="mt-24 mb-6 text-sm text-base-content/50">
+      <footer
+        class="mt-section border-t border-base-content/10 py-8 text-sm text-base-content/50"
+      >
         MIT · this page is cut by the package it documents
       </footer>
     </main>

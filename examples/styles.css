@@ -9,6 +9,27 @@
     dark --prefersdark;
 }
 
+/* Vertical rhythm, viewport-tracking on purpose. The tour centres each scene
+   in 100vh, so its air grows with the screen; fixed px margins elsewhere
+   don't, and past ~1000px of viewport height the static sections read
+   clenched against a tour that has bloomed. Clamped at both ends: the low
+   end preserves the spacing a ~740px-tall window already had, the high end
+   stops a 4K display from drifting into parody. Note what is NOT here: air at
+   either tour boundary. The tour's first and last scenes each centre in their
+   own 100vh, so both edges already open with half a screen — anything added
+   from this side doubles it. */
+@theme {
+  /* Between major sections. */
+  --spacing-section: clamp(4rem, 10vh, 10rem);
+  /* A section head to the content it introduces. */
+  --spacing-head: clamp(1.25rem, 3vh, 2rem);
+  /* The hero's internal rhythm — deck to demo, demo to feature cards. One
+     value for both: the cards' cutout icons overhang their top edge by 14px,
+     so a smaller gap here leaves them almost touching the card above, and
+     that same overhang is what keeps the two gaps from looking mechanical. */
+  --spacing-hero: clamp(2.5rem, 9vh, 7rem);
+}
+
 /* Design-tool transparency checkerboard — the universal "see-through here"
    texture, which is exactly what the cutout gap is. Built from base tokens
    so it adapts to the theme. */
@@ -18,7 +39,9 @@
 }
 
 /* On html, not just body: daisyUI paints :root base-100, so overscroll and
-   any viewport past the body would otherwise flash the wrong shade. */
+   any viewport past the body would otherwise flash the wrong shade. Carrying
+   it here alone also leaves body transparent, which is what lets the section
+   washes paint from behind the content (see @utility wash). */
 html {
   @apply bg-base-200;
 }
@@ -48,13 +71,49 @@ html {
   /* Demo card: the checkerboard stage the cutouts sit on. flex-wrap keeps
      artwork + controls usable on narrow viewports. */
   .demo-card {
-    @apply bg-checker border-base-content/10 flex flex-wrap items-center justify-center gap-x-12 gap-y-6 rounded-xl border px-6 py-10 sm:px-8;
+    @apply bg-checker border-base-content/10 flex flex-wrap items-center justify-center gap-x-12 gap-y-8 rounded-xl border px-6 py-12 sm:px-10;
   }
 
   /* Active package-manager tab. */
   .tab-active {
     @apply border-primary text-primary;
   }
+
+  /* Section head in the same voice as the tour's SceneTitle: a 2xl title over
+     a short blurb at a capped measure. Without the blurb a heading reads as a
+     label glued to its content, which is most of why these sections felt
+     tighter than the scenes. */
+  .section-title {
+    @apply text-base-content text-2xl font-semibold tracking-tight;
+  }
+
+  .section-blurb {
+    @apply text-base-content/60 mt-2 max-w-90 text-sm leading-relaxed;
+  }
+
+  /* Card surface. p-6 rather than p-4 is load-bearing on the feature cards:
+     the cutout icon overhangs the top-left corner, and its halo needs to
+     clear the title before the two start colliding. */
+  .surface {
+    @apply border-base-content/10 bg-base-100 rounded-xl border p-6;
+  }
+}
+
+/* Full-bleed wash — the tour anchors every scene with one, and without it the
+   static sections read as a lonely 672px ribbon on a wide screen. Decorative
+   only; each section sets its own gradient inline. Same breakout arithmetic as
+   the tour container, so no horizontal scrollbar.
+   The section holding one MUST be position: relative. inset-block: 0 means
+   "as tall as my containing block" — without it that resolves to the initial
+   containing block, and the wash lands at the top of the document one viewport
+   tall instead of covering its own section. */
+@utility wash {
+  position: absolute;
+  inset-block: 0;
+  left: calc(50% - 50vw);
+  z-index: -10;
+  width: 100vw;
+  pointer-events: none;
 }
 
 /* Scroll-reveal (reveal.ts). The pending state is JS-applied so content
