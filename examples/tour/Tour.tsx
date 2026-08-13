@@ -176,10 +176,7 @@ const CutScene = ({ progress, range }: SceneProps) => {
         gap={5}
         overlay={
           shown && (
-            <m.span
-              className="absolute inset-0 block"
-              style={{ rotate, willChange: "auto" }}
-            >
+            <m.span className="absolute inset-0 block" style={{ rotate, willChange: "auto" }}>
               <m.span
                 className="absolute block h-12 w-12"
                 style={{ left: ORBIT_X, top: ORBIT_Y, rotate: counterRotate, willChange: "auto" }}
