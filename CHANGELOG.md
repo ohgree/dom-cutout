@@ -4,6 +4,20 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-08-13
+
+### Added
+
+- `follow` option: how the mask tracks overlay motion that ResizeObserver can't see (CSS transitions/animations, JS-driven transforms, scroll-linked movement). The default is reactive: a MutationObserver on the overlay subtree catches JS animation drivers (they write inline styles every frame), `transitionrun`/`animationstart` arm a per-frame loop that lives exactly as long as a subtree animation is running, and a passive capture-phase scroll listener covers scroll-linked movement, so an idle cutout costs nothing. Measurements run in the ResizeObserver delivery slot (after every animation-frame callback, before paint), so the mask lands in the same paint as the overlay. `follow: 'frame'` remeasures every frame unconditionally, for motion the detectors can't see (pure `element.animate()`, layout shifts from outside the overlay); `follow: false` disables tracking. Available on `createCutout`, `useCutout`, and `<Cutout>`; read live like every option.
+
+### Changed
+
+- Position-only geometry changes (the overlay moved; same silhouette) apply `mask-position` synchronously instead of taking the deferred Safari-safe swap path. The swap choreography protects against decode blinks on images the engine hasn't seen; an unchanged image is already resolved in the CSS image cache, and deferring per-frame position updates let each pending swap supersede the last, freezing the mask until motion stopped.
+
+### Fixed
+
+- Mask images are byte-stable against floating-point measurement dust: composed ancestor transforms (a rotating carrier, a scaling wrapper) perturb `getBoundingClientRect` at the 1e-13 level, and any digit change in the serialized SVG was a new mask URI, demoting every frame of a tracked animation to the deferred swap path. Measured sizes are steadied to 0.001px before they feed the markup.
+
 ## [0.3.2] - 2026-08-02
 
 ### Fixed
