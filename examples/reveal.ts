@@ -21,6 +21,11 @@ export const wireReveals = () => {
     { rootMargin: "0px 0px -10% 0px" },
   );
   for (const el of targets) {
+    // Optional stagger: data-reveal-delay="120" holds this element's rise
+    // back by that many ms, so siblings revealed together appear in
+    // sequence.
+    const delay = (el as HTMLElement).dataset.revealDelay;
+    if (delay) (el as HTMLElement).style.transitionDelay = `${delay}ms`;
     el.classList.add("reveal-pending");
     observer.observe(el);
   }

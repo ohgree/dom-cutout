@@ -23,11 +23,6 @@
   --spacing-section: clamp(4rem, 10vh, 10rem);
   /* A section head to the content it introduces. */
   --spacing-head: clamp(1.25rem, 3vh, 2rem);
-  /* The hero's internal rhythm — deck to demo, demo to feature cards. One
-     value for both: the cards' cutout icons overhang their top edge by 14px,
-     so a smaller gap here leaves them almost touching the card above, and
-     that same overhang is what keeps the two gaps from looking mechanical. */
-  --spacing-hero: clamp(2.5rem, 9vh, 7rem);
 }
 
 /* Design-tool transparency checkerboard — the universal "see-through here"
@@ -44,6 +39,16 @@
    washes paint from behind the content (see @utility wash). */
 html {
   @apply bg-base-200;
+}
+
+/* Double-tapping a control must never zoom the page (iOS): manipulation
+   keeps pinch-zoom but drops the double-tap gesture on interactive
+   elements, so rapid toggling of the demo chips stays toggling. */
+button,
+a,
+label,
+input {
+  touch-action: manipulation;
 }
 
 /* Masks apply only once each page's module runs, and a mask-image swap
@@ -68,6 +73,14 @@ html {
     @apply border-base-content/20 bg-base-100 text-base-content rounded-lg border px-3 py-1.5 text-[13px];
   }
 
+  /* Chips that are actually pressable say so at a glance - a soft lift off
+     the surface - and respond: hover tint, press sink. Border is left to
+     state classes (.tab-active, the tour's active chips), so active
+     styling survives hover. Label chips (slider wrappers) stay flat. */
+  :is(button, a).chip {
+    @apply cursor-pointer shadow-xs transition-[background-color,box-shadow,translate] duration-150 hover:bg-base-300/60 active:translate-y-px active:shadow-none;
+  }
+
   /* Demo card: the checkerboard stage the cutouts sit on. flex-wrap keeps
      artwork + controls usable on narrow viewports. */
   .demo-card {
@@ -77,6 +90,16 @@ html {
   /* Active package-manager tab. */
   .tab-active {
     @apply border-primary text-primary;
+  }
+
+  /* Corner copy button on the install commands (landing.ts). */
+  .copy-btn {
+    @apply border-base-content/20 bg-base-100 text-base-content/60 absolute top-1/2 right-2 -translate-y-1/2 cursor-pointer rounded-md border p-1.5 shadow-xs transition-[background-color,box-shadow,color] duration-150;
+    @apply hover:bg-base-300/60 hover:text-base-content active:shadow-none;
+  }
+
+  .copy-btn.copied {
+    @apply border-success/40 text-success;
   }
 
   /* Section head in the same voice as the tour's SceneTitle: a 2xl title over

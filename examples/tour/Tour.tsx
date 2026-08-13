@@ -1,11 +1,20 @@
-import { Bell, Star, TriangleAlert, Zap } from "lucide-react";
-import { AnimatePresence, m, useMotionValueEvent, useReducedMotion, useScroll } from "motion/react";
+import { Bell, Flame, Star, Zap } from "lucide-react";
+import {
+  AnimatePresence,
+  m,
+  type MotionValue,
+  useMotionValueEvent,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+} from "motion/react";
 import { type CSSProperties, type ReactNode, type Ref, useRef, useState } from "react";
 
 import { Cutout } from "dom-cutout/react";
 
-// Full-page scroll tour: the container spans one viewport-height per scene,
-// a sticky stage pins to the screen, and scroll progress picks the scene.
+// Full-page scroll tour: the container spans each scene's `span` in
+// viewport-heights (default 1), a sticky stage pins to the screen, and
+// scroll progress picks the scene.
 // Every demo is the wrapperless <Cutout> from the package itself.
 //
 // Enter/exit animations are opacity + translate ONLY on anything containing
@@ -97,16 +106,65 @@ const SceneTitle = ({ title, blurb }: { title: string; blurb: string }) => (
 const chip = "chip cursor-pointer";
 const chipActive = "chip cursor-pointer border-primary text-primary";
 
-/* Scene 1 — the cut itself, centered and huge. */
-const CutScene = () => {
+interface SceneProps {
+  progress: MotionValue<number>;
+  /** This scene's [start, end] slice of the page scroll progress. */
+  range: readonly [number, number];
+}
+
+/* Scene 1 — the cut itself, centered and huge. The flame rides the scroll
+   along the avatar's circular border, top-right down to its bottom-right
+   home (dead zones bracket the move), so default follow tracking is on
+   display from the first scene. */
+const BADGE = 48;
+const AVATAR = 160;
+const INSET = 4; // corner inset of the flame's bottom-right home
+const CENTER = AVATAR / 2;
+// Arc radius through the home point; the flame parks at the arc's
+// rightmost point inside a carrier that rotates about the avatar center.
+const ORBIT_R = (AVATAR - INSET - BADGE / 2 - CENTER) * Math.SQRT2;
+const ORBIT_X = CENTER + ORBIT_R - BADGE / 2;
+const ORBIT_Y = CENTER - BADGE / 2;
+
+const CutScene = ({ progress, range }: SceneProps) => {
   const [shown, setShown] = useState(true);
+  // The flame rests top-right through the first 20% of this scene's slice,
+  // arcs until 80%, then sits at its home - both ends inspectable at rest.
+  const traversal = (p: number) => {
+    const [start, end] = range;
+    const local = Math.min(1, Math.max(0, (p - start) / (end - start)));
+    return Math.min(1, Math.max(0, (local - 0.2) / 0.6));
+  };
+  // The arc is driven by ROTATION, not left/top: WebKit raster-snaps layout
+  // positions to whole device pixels, so two-axis coordinate motion
+  // staircases visibly, while transformed content renders sub-pixel in
+  // every engine. The flame counter-rotates so the glyph stays upright
+  // (net identity, so the measured box matches the mask copy), and
+  // will-change stays off so neither layer leaves the main-thread paint
+  // world the mask commits in.
+  const rotate = useTransform(progress, (p) => (traversal(p) - 0.5) * 90);
+  const counterRotate = useTransform(rotate, (deg) => -deg);
   return (
     <div className="flex flex-col items-center gap-8 text-center">
       <Cutout
         gap={5}
         overlay={
           shown && (
-            <span className="absolute right-1 bottom-1 block h-9 w-9 rounded-full bg-emerald-500" />
+            <m.span
+              className="absolute inset-0 block"
+              style={{ rotate, willChange: "auto" }}
+            >
+              <m.span
+                className="absolute block h-12 w-12"
+                style={{ left: ORBIT_X, top: ORBIT_Y, rotate: counterRotate, willChange: "auto" }}
+              >
+                <Flame
+                  size={BADGE}
+                  className="fill-orange-500 stroke-orange-800"
+                  strokeWidth={1.5}
+                />
+              </m.span>
+            </m.span>
           )
         }
       >
@@ -226,12 +284,12 @@ const GLYPHS = {
       />
     ),
   },
-  alert: {
-    label: "alert",
+  flame: {
+    label: "flame",
     node: (
-      <TriangleAlert
+      <Flame
         size={48}
-        className="absolute top-1.5 right-1.5 fill-none stroke-red-500"
+        className="absolute top-1.5 right-1.5 fill-orange-500 stroke-orange-800"
         strokeWidth={1.5}
       />
     ),
@@ -442,50 +500,67 @@ const LiveScene = () => {
   );
 };
 
-/* Per-scene background washes and enter/exit directions. */
+/* Per-scene background washes, enter/exit directions, and scroll spans.
+   `span` is the scene's scroll length in viewport-heights (default 1) -
+   scroll-scrubbed scenes take more so the scrub isn't over in a flick. */
 const SCENES: Array<{
-  component: () => ReactNode;
+  component: (props: SceneProps) => ReactNode;
   wash: string;
   enter: { x?: number; y?: number };
   exit: { x?: number; y?: number };
+  span?: number;
 }> = [
   {
     component: CutScene,
     wash: "radial-gradient(55% 55% at 50% 35%, color-mix(in oklab, var(--color-primary) 12%, transparent), transparent 70%)",
     enter: { y: 40 },
     exit: { y: -28 },
+    span: 2,
   },
   {
     component: GapScene,
     wash: "radial-gradient(60% 60% at 20% 50%, color-mix(in oklab, oklch(0.72 0.17 162) 12%, transparent), transparent 70%)",
     enter: { x: -56 },
     exit: { x: 56 },
+    span: 1.5,
   },
   {
     component: ContourScene,
     wash: "radial-gradient(60% 60% at 80% 50%, color-mix(in oklab, oklch(0.8 0.16 86) 13%, transparent), transparent 70%)",
     enter: { x: 56 },
     exit: { x: -56 },
+    span: 1.5,
   },
   {
     component: TextScene,
     wash: "radial-gradient(55% 55% at 50% 40%, color-mix(in oklab, var(--color-primary) 10%, transparent), transparent 72%)",
     enter: { y: -48 },
     exit: { y: 36 },
+    span: 1.5,
   },
   {
     component: RadiusScene,
     wash: "radial-gradient(45% 55% at 32% 55%, color-mix(in oklab, oklch(0.63 0.21 25) 11%, transparent), transparent 70%), radial-gradient(45% 55% at 68% 55%, color-mix(in oklab, oklch(0.55 0.2 262) 12%, transparent), transparent 70%)",
     enter: { y: 56 },
     exit: { y: -40 },
+    span: 1.5,
   },
   {
     component: LiveScene,
     wash: "radial-gradient(55% 55% at 50% 40%, color-mix(in oklab, oklch(0.65 0.2 12) 11%, transparent), transparent 70%)",
     enter: { y: 32 },
     exit: { y: -24 },
+    span: 1.5,
   },
 ];
+
+const TOTAL_SPAN = SCENES.reduce((sum, s) => sum + (s.span ?? 1), 0);
+let cursor = 0;
+const SCENE_RANGES = SCENES.map((s) => {
+  const spanRange = [cursor / TOTAL_SPAN, (cursor + (s.span ?? 1)) / TOTAL_SPAN] as const;
+  cursor += s.span ?? 1;
+  return spanRange;
+});
 
 export const Tour = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -497,7 +572,8 @@ export const Tour = () => {
   });
 
   useMotionValueEvent(scrollYProgress, "change", (progress) => {
-    setScene(Math.min(SCENES.length - 1, Math.max(0, Math.floor(progress * SCENES.length))));
+    const next = SCENE_RANGES.findIndex(([, end]) => progress < end);
+    setScene(next === -1 ? SCENES.length - 1 : next);
   });
 
   const active = SCENES[scene];
@@ -520,11 +596,16 @@ export const Tour = () => {
     const container = containerRef.current;
     if (!container) return;
     const top = container.getBoundingClientRect().top + window.scrollY;
-    window.scrollTo({ top: top + index * window.innerHeight + 8, behavior: "smooth" });
+    // Progress runs over the container height MINUS one sticky viewport.
+    const scrollable = (TOTAL_SPAN - 1) * window.innerHeight;
+    window.scrollTo({
+      top: top + SCENE_RANGES[index][0] * scrollable + 8,
+      behavior: "smooth",
+    });
   };
 
   return (
-    <div ref={containerRef} style={{ height: `${SCENES.length * 100}vh` }}>
+    <div ref={containerRef} style={{ height: `${TOTAL_SPAN * 100}vh` }}>
       <div className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden">
         <AnimatePresence>
           <m.div
@@ -541,7 +622,7 @@ export const Tour = () => {
 
         <AnimatePresence mode="wait">
           <m.div key={scene} className="relative w-full max-w-2xl px-6" {...motionProps}>
-            <ActiveScene />
+            <ActiveScene progress={scrollYProgress} range={SCENE_RANGES[scene]} />
           </m.div>
         </AnimatePresence>
 
