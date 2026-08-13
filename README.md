@@ -84,6 +84,7 @@ The overlay renders on top of the child; its silhouette (expanded by `gap` pixel
 | `children` | `ReactElement`                 | —        | The single element the cutout is carved out of. Must accept a ref to a DOM element — on React 18, custom components need `forwardRef`.                          |
 | `gap`      | `number`                       | `4`      | Gap width in rendered pixels between the overlay's silhouette and the child. Default exported as `DEFAULT_GAP`.                                                 |
 | `shape`    | `'auto' \| 'contour' \| 'box'` | `'auto'` | How the silhouette is traced (see below).                                                                                                                       |
+| `follow`   | `boolean \| 'frame'`           | `true`   | How the mask tracks overlay motion. The default is reactive: mutation, transition/animation, and scroll detectors remeasure only when something actually happens (idle cutouts cost nothing), applying in the same paint as the overlay. `'frame'` remeasures every frame unconditionally, for motion the detectors can't see (pure `element.animate()`, layout shifts from outside the overlay); `false` disables tracking. |
 
 The overlay layer carries `pointer-events: none` so the child stays interactive; interactive overlay content re-enables itself with its own `pointer-events: auto`.
 
@@ -167,6 +168,8 @@ Why the mask is built this way — and why five simpler constructions were elimi
 - Stroke-width compensation reads SVG attributes (`stroke-width` on the root or per element); stroke-widths set via CSS classes or inline styles don't survive the markup copy and aren't compensated.
 - Masked elements with `border-radius` get a thin corner fringe from double antialiasing (the mask's clip follows the rounded box). The mask opts out via `mask-clip: no-clip`, which fixes Chromium and Firefox; WebKit ignores the value entirely and keeps a ≤1px fringe. Workaround where Safari matters: mask a sharp-cornered element and move the **`border-radius`** — not just the background — onto an inner child. That measures pixel-identical to unmasked on both engines.
 - The overlay artwork's paint colors are normalized to black in the mask copy (`fill="none"`/`stroke="none"` are respected) — only the silhouette matters, but paints applied via CSS classes don't survive the copy, same as stroke-widths.
+- A moving overlay promoted to its own compositor layer (`will-change: transform`, `translateZ(0)`, 3D transforms) can visually outrun the mask under raster load in Chromium: composited transforms apply on the compositor thread while mask longhands repaint on the main thread. Keep tracked overlays un-promoted: drive motion with `left`/`top` or plain 2D transforms without compositing hints, as the examples do. (WebKit commits style and paint atomically, so Safari doesn't show this.)
+- Snap a tracked overlay's motion to the device-pixel grid (`Math.round(v * devicePixelRatio) / devicePixelRatio`), as the examples do. The mask layer is device-pixel-aligned, and WebKit pixel-snaps element raster while honoring fractional mask placement, so a sub-pixel-positioned overlay wobbles against its halo on Safari.
 
 ## Future plans
 

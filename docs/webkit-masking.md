@@ -207,9 +207,21 @@ subtle cutout shift on Safari (which rounds the stretch the other way).
 The layer geometry is snapped to the device-pixel grid once, the same
 values feed the SVG markup and both mask longhands, and the artwork is
 re-centered inside the snapped canvas. (Empirically, fractional element
-positions alone shift nothing on desktop engines — measured symmetric at
-every quarter-pixel offset — so the snap exists for geometry agreement and
-iOS raster alignment, not as a general fraction-phobia.)
+positions alone shift nothing on desktop engines at rest — measured
+symmetric at every quarter-pixel offset.)
+
+The position half of the snap was briefly removed when `follow` tracking
+landed, on the theory that a snapped halo steps down the device-pixel grid
+behind a sub-pixel-animated overlay. Safari promptly falsified the theory
+from the other side: WebKit pixel-snaps the element's raster but honors
+fractional mask placement, so the unsnapped halo sat still while the
+overlay wobbled up to half a device pixel inside it (desktop and iOS
+alike), while Chromium renders both fractionally and stays locked. The
+engines disagree about WHICH half of the pair to round, and the only
+alignment both honor is the whole device-pixel grid, so positions are
+snapped again. The practical guidance for tracked overlays: snap their
+motion to the device grid too (the examples do), which makes element
+raster, mask placement, and measurement agree in every engine.
 
 ## 8. Rounded corners: the double-antialiasing fringe
 

@@ -6,11 +6,12 @@ import { MASKED_ATTRIBUTE, computeMaskStyle, createCutout } from "./core";
 // the mask, so setup() pins real geometry by default: content 100×100 and
 // the overlay's visible element 24×24 — with a 24-unit viewBox that makes
 // scale 1, so dilation = 2 × gap in both px and viewBox units.
-const rect = (width: number, height: number) => ({ left: 0, top: 0, width, height }) as DOMRect;
+const rect = (width: number, height: number, left = 0, top = 0) =>
+  ({ left, top, width, height }) as DOMRect;
 
-const measure = (el: Element, width: number, height: number) => {
+const measure = (el: Element, width: number, height: number, left = 0, top = 0) => {
   Object.defineProperty(el, "getBoundingClientRect", {
-    value: () => rect(width, height),
+    value: () => rect(width, height, left, top),
     configurable: true,
   });
 };
@@ -174,6 +175,20 @@ describe("computeMaskStyle", () => {
     });
   });
 
+  it("keeps the mask image byte-stable against floating-point measurement dust", () => {
+    const { content, overlay } = setup('<svg viewBox="0 0 24 24"></svg>');
+    const before = computeMaskStyle(content, overlay)!;
+
+    // Composed ancestor transforms (e.g. a rotating carrier) perturb
+    // getBoundingClientRect at the 1e-13 level; any digit change in the
+    // markup is a new URI and demotes tracking off the fast path.
+    measure(overlay.querySelector("svg")!, 24.0000000000001, 23.9999999999999);
+    const after = computeMaskStyle(content, overlay)!;
+
+    expect(after["mask-image"]).toBe(before["mask-image"]);
+    expect(after["mask-size"]).toBe(before["mask-size"]);
+  });
+
   it("normalizes artwork paint colors to black", () => {
     const { content, overlay } = setup(
       '<svg viewBox="0 0 24 24"><path d="M4 4h16" fill="#facc15" stroke="none" /></svg>',
@@ -266,6 +281,85 @@ describe("createCutout", () => {
     instance.update();
 
     expect(content.hasAttribute(MASKED_ATTRIBUTE)).toBe(false);
+  });
+
+  it("applies a position-only move synchronously (same image, no warm/defer)", async () => {
+    const { content, overlay } = setup('<svg viewBox="0 0 24 24"></svg>');
+
+    const instance = createCutout(content, overlay, { gap: 3 });
+    await settleMask();
+    // Settled at the origin (repair nudges may have shifted x sub-pixel).
+    expect(content.style.getPropertyValue("mask-position")).toMatch(/^0 0,-(4|3\.9\d+)px -4px$/);
+
+    // Move the overlay without resizing it: identical shape image, so the
+    // deferred swap choreography must be skipped - per-frame overlay
+    // tracking depends on the write landing before update() returns.
+    measure(overlay.querySelector("svg")!, 24, 24, 10, 20);
+    instance.update();
+
+    expect(content.style.getPropertyValue("mask-position")).toBe("0 0,6px 16px");
+    expect(content.style.getPropertyValue("mask-size")).toContain("32px 32px");
+  });
+
+  it("tracks overlay mutations by default (reactive follow)", async () => {
+    const { content, overlay } = setup('<svg viewBox="0 0 24 24"></svg>');
+
+    const instance = createCutout(content, overlay, { gap: 3 });
+    await settleMask();
+
+    // No update() call. The rect mock alone mutates nothing; the style
+    // write is what a JS animation driver does each frame, and is what the
+    // MutationObserver detects.
+    measure(overlay.querySelector("svg")!, 24, 24, 10, 20);
+    overlay.querySelector("svg")!.setAttribute("style", "translate: 10px 20px");
+    await settleMask();
+
+    // Repair nudges may have shifted x sub-pixel after the poke applied.
+    expect(content.style.getPropertyValue("mask-position")).toMatch(/^0 0,6(\.0\d+)?px 16px$/);
+    instance.destroy();
+  });
+
+  it("tracks silent geometry changes per frame with follow: 'frame'", async () => {
+    const { content, overlay } = setup('<svg viewBox="0 0 24 24"></svg>');
+
+    const instance = createCutout(content, overlay, { gap: 3, follow: "frame" });
+    await settleMask();
+
+    // No mutation, no event - only the unconditional loop can see this.
+    measure(overlay.querySelector("svg")!, 24, 24, 10, 20);
+    await settleMask();
+
+    expect(content.style.getPropertyValue("mask-position")).toMatch(/^0 0,6(\.0\d+)?px 16px$/);
+    instance.destroy();
+  });
+
+  it("does not track mutations with follow: false", async () => {
+    const { content, overlay } = setup('<svg viewBox="0 0 24 24"></svg>');
+
+    createCutout(content, overlay, { gap: 3, follow: false });
+    await settleMask();
+
+    measure(overlay.querySelector("svg")!, 24, 24, 10, 20);
+    overlay.querySelector("svg")!.setAttribute("style", "translate: 10px 20px");
+    await settleMask();
+
+    expect(content.style.getPropertyValue("mask-position")).not.toContain("6px 16px");
+  });
+
+  it("stops tracking on destroy()", async () => {
+    const { content, overlay } = setup('<svg viewBox="0 0 24 24"></svg>');
+
+    const instance = createCutout(content, overlay, { gap: 3 });
+    await settleMask();
+
+    instance.destroy();
+    measure(overlay.querySelector("svg")!, 24, 24, 10, 20);
+    overlay.querySelector("svg")!.setAttribute("style", "translate: 10px 20px");
+    await settleMask();
+
+    // A live detector would re-apply the mask after the move.
+    expect(content.hasAttribute(MASKED_ATTRIBUTE)).toBe(false);
+    expect(content.style.getPropertyValue("mask-position")).toBe("");
   });
 
   it("keeps the old mask applied while a swap warms, then applies the new one", async () => {

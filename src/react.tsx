@@ -50,7 +50,7 @@ export interface UseCutoutResult<
 export const useCutout = <
   Content extends HTMLElement = HTMLElement,
   Overlay extends HTMLElement = HTMLElement,
->({ gap, shape }: CutoutOptions = {}): UseCutoutResult<Content, Overlay> => {
+>({ gap, shape, follow }: CutoutOptions = {}): UseCutoutResult<Content, Overlay> => {
   const contentRef = useRef<Content>(null);
   const overlayRef = useRef<Overlay>(null);
   const instanceRef = useRef<CutoutInstance | null>(null);
@@ -60,6 +60,7 @@ export const useCutout = <
   const optionsRef = useRef<CutoutOptions>({});
   optionsRef.current.gap = gap;
   optionsRef.current.shape = shape;
+  optionsRef.current.follow = follow;
 
   useIsomorphicLayoutEffect(() => {
     const content = contentRef.current;
@@ -114,6 +115,11 @@ export interface CutoutProps {
    * @default 'auto'
    */
   shape?: CutoutShape;
+  /**
+   * How overlay motion is tracked — see `CutoutOptions['follow']`.
+   * @default true (reactive)
+   */
+  follow?: boolean | "frame";
 }
 
 // React 19 keeps an element's ref in props, React 18 on the element — and
@@ -163,9 +169,15 @@ let warnedNoAnchor = false;
  * </Cutout>
  * ```
  */
-export const Cutout: FunctionComponent<CutoutProps> = ({ overlay, children, gap, shape }) => {
+export const Cutout: FunctionComponent<CutoutProps> = ({
+  overlay,
+  children,
+  gap,
+  shape,
+  follow,
+}) => {
   const child = Children.only(children);
-  const { contentRef, overlayRef } = useCutout({ gap, shape });
+  const { contentRef, overlayRef } = useCutout({ gap, shape, follow });
   // useId's colons aren't valid in a <dashed-ident> or an attribute selector.
   const id = useId().replace(/[^a-zA-Z0-9-]/g, "");
   const anchorName = `--dom-cutout-${id}`;
