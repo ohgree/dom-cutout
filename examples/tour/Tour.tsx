@@ -254,8 +254,14 @@ const GapScene = ({ progress, range }: SceneProps) => {
   return (
     <div className="grid items-center gap-10 sm:grid-cols-[auto_1fr]">
       {/* Each avatar is overlapped by — and therefore cut by — the one to its
-          left. The first sits on top and cuts nobody. */}
-      <div className="flex justify-self-center">
+          left. The first sits on top and cuts nobody. The row shifts right
+          by half the not-yet-landed width so the visible subset stays
+          centered; the shift translates every cutout WITH its overlay
+          layer, so the ensembles stay rigid and no mask needs remeasuring. */}
+      <div
+        className="flex justify-self-center transition-[translate] duration-500 ease-out"
+        style={{ translate: `${((FACES.length - visibleCount) * STACK_STEP) / 2}px 0` }}
+      >
         {FACES.map((face, i) =>
           i === 0 ? (
             <StackAvatar key={face.src ?? face.initials} index={i} />
