@@ -112,6 +112,32 @@ interface SceneProps {
   range: readonly [number, number];
 }
 
+// Scroll-cycled selection: the scene's slice divides into equal zones, and
+// crossing a boundary picks that zone's option. Selection only changes ON
+// the crossing, so the picker buttons still work as direct overrides - a
+// click holds until the next boundary. Each crossing is one discrete mask
+// swap through the Safari-safe warm path, the same cost as a click.
+const useScrollCycle = (
+  progress: MotionValue<number>,
+  range: readonly [number, number],
+  count: number,
+  onZone: (zone: number) => void,
+) => {
+  const lastZone = useRef(-1);
+  useMotionValueEvent(progress, "change", (p) => {
+    const [start, end] = range;
+    const local = Math.min(1, Math.max(0, (p - start) / (end - start)));
+    // Dead zones bracket the cycle: the first and last options hold through
+    // the slice's outer 15%, so both ends are inspectable at rest.
+    const t = Math.min(1, Math.max(0, (local - 0.15) / 0.7));
+    const zone = Math.min(count - 1, Math.floor(t * count));
+    if (zone !== lastZone.current) {
+      lastZone.current = zone;
+      onZone(zone);
+    }
+  });
+};
+
 /* Scene 1 — the cut itself, centered and huge. The flame rides the scroll
    along the avatar's circular border, top-right down to its bottom-right
    home (dead zones bracket the move), so default follow tracking is on
@@ -192,7 +218,18 @@ const STACK_STEP = 44;
 
 // Descending z-index reverses the natural paint order so the FIRST avatar
 // sits on top and each one after tucks in behind its left neighbour.
-const StackAvatar = ({ index, ref }: { index: number; ref?: Ref<HTMLDivElement> }) => (
+// Entrance is opacity ONLY: the mask rides the avatar it is cut from, so a
+// translating avatar would carry its bite off the neighbour mid-flight -
+// content-side motion is what the follow detectors deliberately don't watch.
+const StackAvatar = ({
+  index,
+  visible = true,
+  ref,
+}: {
+  index: number;
+  visible?: boolean;
+  ref?: Ref<HTMLDivElement>;
+}) => (
   <Avatar
     ref={ref}
     face={FACES[index]}
@@ -202,12 +239,18 @@ const StackAvatar = ({ index, ref }: { index: number; ref?: Ref<HTMLDivElement> 
       height: AVATAR_SIZE,
       marginLeft: index === 0 ? 0 : STACK_STEP - AVATAR_SIZE,
       zIndex: FACES.length - index,
+      opacity: visible ? 1 : 0,
+      transition: "opacity 0.45s ease",
     }}
   />
 );
 
-const GapScene = () => {
+const GapScene = ({ progress, range }: SceneProps) => {
   const [gap, setGap] = useState(6);
+  // The stack builds as you scroll: each zone crossing lands one more
+  // avatar, arriving with its bite already cut by the neighbour before it.
+  const [visibleCount, setVisibleCount] = useState(1);
+  useScrollCycle(progress, range, FACES.length, (zone) => setVisibleCount(zone + 1));
   return (
     <div className="grid items-center gap-10 sm:grid-cols-[auto_1fr]">
       {/* Each avatar is overlapped by — and therefore cut by — the one to its
@@ -234,7 +277,7 @@ const GapScene = () => {
                 />
               }
             >
-              <StackAvatar index={i} />
+              <StackAvatar index={i} visible={i < visibleCount} />
             </Cutout>
           ),
         )}
@@ -262,14 +305,15 @@ const GapScene = () => {
   );
 };
 
-/* Scene 3 — contour tracing, mirrored split, glyph picker. */
+/* Scene 3 — contour tracing, mirrored split. Scroll cycles the glyph; the
+   picker buttons override until the next zone boundary. */
 const GLYPHS = {
   zap: {
     label: "zap",
     node: (
       <Zap
         size={48}
-        className="absolute top-1.5 right-1.5 fill-cyan-400 stroke-cyan-800"
+        className="absolute top-1.5 right-1.5 fill-base-content stroke-base-content"
         strokeWidth={1.5}
       />
     ),
@@ -279,7 +323,7 @@ const GLYPHS = {
     node: (
       <Star
         size={48}
-        className="absolute top-1.5 right-1.5 fill-amber-400 stroke-amber-800"
+        className="absolute top-1.5 right-1.5 fill-base-content stroke-base-content"
         strokeWidth={1.5}
       />
     ),
@@ -289,15 +333,18 @@ const GLYPHS = {
     node: (
       <Flame
         size={48}
-        className="absolute top-1.5 right-1.5 fill-orange-500 stroke-orange-800"
+        className="absolute top-1.5 right-1.5 fill-base-content stroke-base-content"
         strokeWidth={1.5}
       />
     ),
   },
 } as const;
 
-const ContourScene = () => {
+const GLYPH_KEYS = Object.keys(GLYPHS) as Array<keyof typeof GLYPHS>;
+
+const ContourScene = ({ progress, range }: SceneProps) => {
   const [glyph, setGlyph] = useState<keyof typeof GLYPHS>("zap");
+  useScrollCycle(progress, range, GLYPH_KEYS.length, (zone) => setGlyph(GLYPH_KEYS[zone]));
   return (
     <div className="grid items-center gap-10 sm:grid-cols-[1fr_auto]">
       <div className="order-2 flex flex-col items-center gap-4 text-center sm:order-1 sm:items-start sm:text-left">
@@ -321,7 +368,7 @@ const ContourScene = () => {
       </div>
       <div className="order-1 justify-self-center sm:order-2">
         <Cutout gap={5} overlay={GLYPHS[glyph].node}>
-          <Bell size={128} className="stroke-base-content" strokeWidth={1.25} />
+          <Bell size={128} className="fill-base-content stroke-base-content" strokeWidth={1.25} />
         </Cutout>
       </div>
     </div>
@@ -383,7 +430,8 @@ const TextScene = () => {
   );
 };
 
-/* Scene 5 — box shape + border-radius: red pill or blue pill. */
+/* Scene 5 — box shape + border-radius: red pill or blue pill. Scroll
+   cycles the radius; the chips override until the next zone boundary. */
 const RADII = [
   { label: "rounded-full", value: "calc(infinity * 1px)" },
   { label: "8px", value: "8px" },
@@ -432,8 +480,9 @@ const OfferedPill = ({
   </Cutout>
 );
 
-const RadiusScene = () => {
+const RadiusScene = ({ progress, range }: SceneProps) => {
   const [radius, setRadius] = useState<(typeof RADII)[number]>(RADII[0]);
+  useScrollCycle(progress, range, RADII.length, (zone) => setRadius(RADII[zone]));
   return (
     <div className="flex flex-col items-center gap-8">
       <div className="flex items-end gap-6 sm:gap-14">
@@ -522,14 +571,14 @@ const SCENES: Array<{
     wash: "radial-gradient(60% 60% at 20% 50%, color-mix(in oklab, oklch(0.72 0.17 162) 12%, transparent), transparent 70%)",
     enter: { x: -56 },
     exit: { x: 56 },
-    span: 1.5,
+    span: 3,
   },
   {
     component: ContourScene,
     wash: "radial-gradient(60% 60% at 80% 50%, color-mix(in oklab, oklch(0.8 0.16 86) 13%, transparent), transparent 70%)",
     enter: { x: 56 },
     exit: { x: -56 },
-    span: 1.5,
+    span: 2.5,
   },
   {
     component: TextScene,
@@ -543,7 +592,7 @@ const SCENES: Array<{
     wash: "radial-gradient(45% 55% at 32% 55%, color-mix(in oklab, oklch(0.63 0.21 25) 11%, transparent), transparent 70%), radial-gradient(45% 55% at 68% 55%, color-mix(in oklab, oklch(0.55 0.2 262) 12%, transparent), transparent 70%)",
     enter: { y: 56 },
     exit: { y: -40 },
-    span: 1.5,
+    span: 3.5,
   },
   {
     component: LiveScene,
